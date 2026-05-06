@@ -159,8 +159,8 @@ export default function App() {
   return (
     <main className="min-h-screen overflow-hidden px-4 py-6 text-slate-100 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur md:flex-row md:items-center md:justify-between">
-          <div>
+        <header className="flex flex-col gap-5 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 flex-1">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
               <Sparkles size={14} /> Fintech meeting ops
             </div>
@@ -169,7 +169,7 @@ export default function App() {
               Suivez le cash-burn des reunions en direct et liberez les expertises au moment ou elles ne creent plus de valeur.
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex w-full shrink-0 flex-col gap-2 rounded-2xl border border-white/10 bg-slate-950/45 p-2 shadow-lg shadow-black/20 sm:w-auto sm:flex-row md:ml-auto md:self-start">
             <button className="btn-secondary" onClick={connectGoogle}>
               <CalendarDays size={18} /> Connecter Google
             </button>
