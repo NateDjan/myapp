@@ -10,7 +10,19 @@ import {
 } from "recharts";
 import { formatCurrency, formatDuration } from "../lib/format";
 
-export function CashBurnPanel({ meeting, snapshot }) {
+export function CashBurnPanel({ meeting, snapshot, copy }) {
+  const text = {
+    title: "Cash-burn live",
+    elapsed: "ecoulees",
+    remaining: "restantes",
+    savings: "Economies generees",
+    burnRate: "Burn-rate",
+    plannedBudget: "Budget prevu",
+    margin: "Marge",
+    overrun: "Depassement",
+    ...copy,
+  };
+
   if (!meeting || !snapshot) {
     return (
       <section className="glass-panel p-6">
@@ -27,19 +39,19 @@ export function CashBurnPanel({ meeting, snapshot }) {
       <div className="border-b border-white/10 p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">Cash-burn live</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">{text.title}</p>
             <h2 className="mt-3 text-3xl font-semibold text-white md:text-5xl">
               {formatCurrency(snapshot.current_cost)}
             </h2>
             <p className="mt-3 text-sm text-slate-400">
-              {formatDuration(snapshot.elapsed_seconds)} ecoulees - {formatDuration(snapshot.remaining_seconds)} restantes
+              {formatDuration(snapshot.elapsed_seconds)} {text.elapsed} - {formatDuration(snapshot.remaining_seconds)} {text.remaining}
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
               <div className="flex items-center gap-2 text-emerald-200">
                 <TrendingDown size={18} />
-                <span className="text-sm">Economies generees</span>
+                <span className="text-sm">{text.savings}</span>
               </div>
               <p className="mt-2 text-2xl font-semibold text-white">
                 {formatCurrency(snapshot.savings_generated)}
@@ -48,7 +60,7 @@ export function CashBurnPanel({ meeting, snapshot }) {
             <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4">
               <div className="flex items-center gap-2 text-cyan-200">
                 <DollarSign size={18} />
-                <span className="text-sm">Burn-rate</span>
+                <span className="text-sm">{text.burnRate}</span>
               </div>
               <p className="mt-2 text-2xl font-semibold text-white">
                 {formatCurrency(snapshot.current_burn_rate_per_hour)}/h
@@ -58,8 +70,8 @@ export function CashBurnPanel({ meeting, snapshot }) {
         </div>
         <div className="mt-6">
           <div className="mb-2 flex justify-between text-xs text-slate-400">
-            <span>Budget prevu {formatCurrency(snapshot.planned_budget)}</span>
-            <span>{budgetDelta >= 0 ? "Marge" : "Depassement"} {formatCurrency(Math.abs(budgetDelta))}</span>
+            <span>{text.plannedBudget} {formatCurrency(snapshot.planned_budget)}</span>
+            <span>{budgetDelta >= 0 ? text.margin : text.overrun} {formatCurrency(Math.abs(budgetDelta))}</span>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-slate-800">
             <div
