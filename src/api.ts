@@ -15,8 +15,27 @@ export type Child = {
   history_level: number;
 };
 
-function resolveApiBase() {
-  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+/** Persisted / bundled override (see App.tsx + app.config.js). */
+let apiBaseOverride: string | null = null;
+
+export function setApiBase(url: string | null) {
+  const trimmed = url?.trim().replace(/\/$/, "") ?? "";
+  apiBaseOverride = trimmed.length > 0 ? trimmed : null;
+}
+
+export function getApiBase(): string {
+  return resolveApiBase();
+}
+
+function resolveApiBase(): string {
+  if (apiBaseOverride) return apiBaseOverride;
+
+  const bundled = (Constants.expoConfig?.extra?.apiUrl as string | undefined)?.trim();
+  if (bundled) return bundled.replace(/\/$/, "");
+
+  if (process.env.EXPO_PUBLIC_API_URL?.trim()) {
+    return process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/$/, "");
+  }
 
   if (Platform.OS === "web" && typeof window !== "undefined") {
     return `${window.location.protocol}//${window.location.hostname}:4000`;
@@ -27,15 +46,27 @@ function resolveApiBase() {
     (Constants as any).manifest2?.extra?.expoGo?.debuggerHost ||
     (Constants as any).manifest?.debuggerHost;
 
-  if (hostUri) {
-    const host = String(hostUri).split(":")[0];
+  const hostStr = hostUri ? String(hostUri) : "";
+  const tunnelLike =
+    hostStr.includes("exp.direct") || hostStr.includes("exp.host") || hostStr.includes("anonymous");
+
+  if (hostUri && !tunnelLike) {
+    const host = hostStr.split(":")[0];
     return `http://${host}:4000`;
   }
 
   return "http://localhost:4000";
 }
 
-const API_BASE = resolveApiBase();
+async function parseResponseBody(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
 
 async function request<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
   const headers: Record<string, string> = {
@@ -44,12 +75,30 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  const data = await response.json();
+  const base = resolveApiBase();
+  let response: Response;
+  try {
+    response = await fetch(`${base}${path}`, { ...options, headers });
+  } catch (err) {
+    throw new Error(
+      `Reseau impossible vers ${base}. Verifie l'URL serveur (Wi-Fi / tunnel / pare-feu).`
+    );
+  }
+
+  const data = (await parseResponseBody(response)) as any;
 
   if (!response.ok) {
-    throw new Error(data?.error ? JSON.stringify(data.error) : "API error");
+    const msg =
+      typeof data === "string"
+        ? data
+        : data?.error
+          ? typeof data.error === "string"
+            ? data.error
+            : JSON.stringify(data.error)
+          : `Erreur HTTP ${response.status}`;
+    throw new Error(msg);
   }
+
   return data as T;
 }
 
@@ -61,15 +110,15 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   loginParent: (payload: { email: string; password: string }) =>
-    request<{ token: string; accessToken: string; refreshToken: string; parent: { id: number; name: string } }>(
+    request<{ token: string; accessToken?: string; refreshToken: string; parent: { id: number; name: string } }>(
       "/api/parents/login",
       {
-      method: "POST",
-      body: JSON.stringify(payload),
+        method: "POST",
+        body: JSON.stringify(payload),
       }
     ),
   refreshParentToken: (payload: { refreshToken: string }) =>
-    request<{ token: string; accessToken: string; refreshToken: string }>("/api/parents/refresh", {
+    request<{ token: string; accessToken?: string; refreshToken: string }>("/api/parents/refresh", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

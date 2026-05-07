@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -9,11 +11,13 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, type Child } from "./src/api";
+import Constants from "expo-constants";
+import { api, getApiBase, setApiBase, type Child } from "./src/api";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
 type Subject = "Francais" | "Maths" | "Histoire";
 const SESSION_STORAGE_KEY = "educoach.session.v1";
+const API_URL_STORAGE_KEY = "educoach.apiBase.v1";
 
 export default function App() {
   const [token, setToken] = useState("");
@@ -53,6 +57,8 @@ export default function App() {
   const [curriculumSources, setCurriculumSources] = useState<string[]>([]);
   const [curriculumNote, setCurriculumNote] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [apiUrlInput, setApiUrlInput] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
 
   const selectedChild = useMemo(
     () => children.find((c) => c.id === selectedChildId) ?? null,
@@ -60,6 +66,8 @@ export default function App() {
   );
 
   useEffect(() => {
+    let cancelled = false;
+
     const hydrateSession = async () => {
       try {
         const saved = await AsyncStorage.getItem(SESSION_STORAGE_KEY);
@@ -79,7 +87,7 @@ export default function App() {
           }
         }
 
-        if (kids) {
+        if (kids && !cancelled) {
           setToken(activeToken);
           setRefreshToken(activeRefresh);
           setParentName(parsed.parentName || "");
@@ -93,44 +101,107 @@ export default function App() {
         }
       } catch {
         await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
-      } finally {
-        setSessionLoading(false);
       }
     };
 
-    api.health()
-      .then(() => setApiMessage("API connectee"))
-      .catch(() => setApiMessage("API indisponible (demarrer npm run api)"));
-    api
-      .getCurriculum()
-      .then((data) => {
-        setCurriculumSources(data.metadata.sources);
-        setCurriculumNote(data.metadata.notes);
-      })
-      .catch(() => undefined);
-    hydrateSession();
+    const bootstrap = async () => {
+      try {
+        const savedApi = await AsyncStorage.getItem(API_URL_STORAGE_KEY);
+        const bundledApi = (Constants.expoConfig?.extra?.apiUrl as string | undefined)?.trim();
+        if (savedApi?.trim()) {
+          setApiBase(savedApi.trim());
+        } else if (bundledApi) {
+          setApiBase(bundledApi);
+        }
+        if (!cancelled) setApiUrlInput(getApiBase());
+
+        try {
+          await api.health();
+          if (!cancelled) setApiMessage(`API OK (${getApiBase()})`);
+        } catch {
+          if (!cancelled)
+            setApiMessage(`API inaccessible (${getApiBase()}). Collez l'URL HTTPS ci-dessous puis « Enregistrer ».`);
+        }
+
+        await api
+          .getCurriculum()
+          .then((data) => {
+            if (!cancelled) {
+              setCurriculumSources(data.metadata.sources);
+              setCurriculumNote(data.metadata.notes);
+            }
+          })
+          .catch(() => undefined);
+
+        await hydrateSession();
+      } finally {
+        if (!cancelled) setSessionLoading(false);
+      }
+    };
+
+    bootstrap();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const persistApiUrl = async () => {
+    const raw = apiUrlInput.trim().replace(/\/$/, "");
+    setErrorMessage("");
+    try {
+      if (!raw) {
+        await AsyncStorage.removeItem(API_URL_STORAGE_KEY);
+        setApiBase(null);
+      } else {
+        await AsyncStorage.setItem(API_URL_STORAGE_KEY, raw);
+        setApiBase(raw);
+      }
+      setApiUrlInput(getApiBase());
+      await api.health();
+      setApiMessage(`API OK (${getApiBase()})`);
+      Alert.alert("Connexion serveur", `API joignable : ${getApiBase()}`);
+    } catch (e) {
+      const msg = String(e);
+      setApiMessage(`API KO (${getApiBase()})`);
+      Alert.alert("Serveur introuvable", msg);
+    }
+  };
 
   const runAuth = async () => {
     setErrorMessage("");
+    if (!email.trim()) {
+      Alert.alert("Email manquant", "Saisis ton email.");
+      return;
+    }
+    if (password.length < 8) {
+      Alert.alert("Mot de passe trop court", "Minimum 8 caracteres.");
+      return;
+    }
+    setAuthBusy(true);
     try {
       if (authMode === "register") {
-        await api.registerParent({ name: parentName || "Parent", email, password });
+        await api.registerParent({ name: parentName || "Parent", email: email.trim(), password });
       }
-      const logged = await api.loginParent({ email, password });
-      setToken(logged.token);
-      setRefreshToken(logged.refreshToken);
+      const logged = await api.loginParent({ email: email.trim(), password });
+      const access = logged.token || logged.accessToken || "";
+      const rt = logged.refreshToken || "";
+      setToken(access);
+      setRefreshToken(rt);
       setParentName(logged.parent.name);
       setRole("setup");
-      const kids = await api.getChildren(logged.token);
+      const kids = await api.getChildren(access);
       setChildren(kids);
       if (kids.length > 0) setSelectedChildId(kids[0].id);
       await AsyncStorage.setItem(
         SESSION_STORAGE_KEY,
-        JSON.stringify({ token: logged.token, refreshToken: logged.refreshToken, parentName: logged.parent.name })
+        JSON.stringify({ token: access, refreshToken: rt, parentName: logged.parent.name })
       );
     } catch (error) {
-      setErrorMessage(String(error));
+      const msg = String(error);
+      setErrorMessage(msg);
+      Alert.alert("Connexion impossible", msg);
+    } finally {
+      setAuthBusy(false);
     }
   };
 
@@ -316,17 +387,41 @@ export default function App() {
   if (role === "auth") {
     return (
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <Text style={styles.title}>EduCoach FR</Text>
           <Text style={styles.subtitle}>{apiMessage}</Text>
+          <Text style={styles.hint}>Serveur API : {getApiBase()}</Text>
           {sessionLoading && <Text style={styles.hint}>Restauration de session en cours...</Text>}
+          <Text style={styles.sectionTitle}>URL du serveur (obligatoire hors Wi-Fi local)</Text>
+          <Text style={styles.hint}>
+            Expo Go en tunnel ne peut pas joindre ton PC sur le port 4000. Colle ici l&apos;URL HTTPS publique de
+            l&apos;API (fournie par l&apos;equipe), puis touche « Enregistrer ».
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="https://xxxx.serveousercontent.com"
+            value={apiUrlInput}
+            onChangeText={setApiUrlInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TouchableOpacity style={styles.secondaryBtn} onPress={persistApiUrl}>
+            <Text style={styles.btnText}>Enregistrer l&apos;URL API</Text>
+          </TouchableOpacity>
+
           <Text style={styles.sectionTitle}>Authentification parent/tuteur</Text>
 
           <View style={styles.row}>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setAuthMode("register")}>
+            <TouchableOpacity
+              style={[styles.secondaryBtn, authMode === "register" ? styles.subjectBtnActive : undefined]}
+              onPress={() => setAuthMode("register")}
+            >
               <Text style={styles.btnText}>Inscription</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setAuthMode("login")}>
+            <TouchableOpacity
+              style={[styles.secondaryBtn, authMode === "login" ? styles.subjectBtnActive : undefined]}
+              onPress={() => setAuthMode("login")}
+            >
               <Text style={styles.btnText}>Connexion</Text>
             </TouchableOpacity>
           </View>
@@ -342,8 +437,12 @@ export default function App() {
           <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
           <TextInput style={styles.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry />
 
-          <TouchableOpacity style={styles.primaryBtn} onPress={runAuth}>
-            <Text style={styles.btnText}>{authMode === "register" ? "Creer puis se connecter" : "Se connecter"}</Text>
+          <TouchableOpacity style={styles.primaryBtn} onPress={runAuth} disabled={authBusy}>
+            {authBusy ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.btnText}>{authMode === "register" ? "Creer puis se connecter" : "Se connecter"}</Text>
+            )}
           </TouchableOpacity>
           {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         </ScrollView>
@@ -354,7 +453,7 @@ export default function App() {
   if (role === "setup") {
     return (
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <Text style={styles.title}>Configuration</Text>
           <Text style={styles.subtitle}>Parent: {parentName}</Text>
 
@@ -397,7 +496,7 @@ export default function App() {
   if (role === "parent") {
     return (
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <Text style={styles.title}>Espace Parent</Text>
           <Text style={styles.subtitle}>Suivi multi-enfants et devoirs</Text>
 
@@ -454,7 +553,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <Text style={styles.title}>Espace Eleve</Text>
         {!selectedChild ? (
           <Text>Selectionner un enfant depuis la configuration.</Text>
