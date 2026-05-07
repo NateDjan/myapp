@@ -3,9 +3,14 @@ const cors = require('cors');
 const Database = require('better-sqlite3');
 const { z } = require('zod');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const db = new Database('educoach.db');
 db.pragma('journal_mode = WAL');
+const curriculum = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'content', 'curriculum.fr.json'), 'utf8')
+);
 
 function setupDb() {
   db.exec(`
@@ -131,6 +136,10 @@ function auth(req, res, next) {
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get('/api/curriculum', (_req, res) => {
+  res.json(curriculum);
 });
 
 app.post('/api/parents/register', (req, res) => {
@@ -344,6 +353,42 @@ app.get('/api/parents/dashboard', auth, (req, res) => {
   });
 
   res.json({ totals, progress });
+});
+
+app.get('/api/recommendations/:childId', auth, (req, res) => {
+  const childId = Number(req.params.childId);
+  const child = db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(childId, req.parentId);
+  if (!child) return res.status(404).json({ error: 'Child not found' });
+
+  const gradeData = curriculum.grades.find((g) => g.grade === child.grade);
+  if (!gradeData) {
+    return res.json({
+      grade: child.grade,
+      recommendations: [],
+      note: 'Aucun contenu grade exact. Utiliser parcours niveau voisin.'
+    });
+  }
+
+  const weaknessText = (child.weaknesses || '').toLowerCase();
+  const subjects = Object.keys(gradeData.subjects);
+  const recommendations = subjects.map((subjectName) => {
+    const subjectData = gradeData.subjects[subjectName];
+    const matchedCompetencies = subjectData.competencies.filter((item) =>
+      weaknessText.length > 0 ? item.toLowerCase().includes(weaknessText.split(' ')[0]) : true
+    );
+    return {
+      subject: subjectName,
+      competencies: matchedCompetencies.length > 0 ? matchedCompetencies : subjectData.competencies.slice(0, 2),
+      microLessons: subjectData.microLessons.slice(0, 2),
+    };
+  });
+
+  res.json({
+    grade: child.grade,
+    cycle: gradeData.cycle,
+    recommendations,
+    sources: curriculum.metadata.sources,
+  });
 });
 
 const PORT = process.env.PORT || 4000;

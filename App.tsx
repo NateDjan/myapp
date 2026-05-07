@@ -45,6 +45,9 @@ export default function App() {
   const [dashboard, setDashboard] = useState<any[]>([]);
   const [homeworkTitle, setHomeworkTitle] = useState("");
   const [homeworkList, setHomeworkList] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [curriculumSources, setCurriculumSources] = useState<string[]>([]);
+  const [curriculumNote, setCurriculumNote] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const selectedChild = useMemo(
@@ -56,6 +59,13 @@ export default function App() {
     api.health()
       .then(() => setApiMessage("API connectee"))
       .catch(() => setApiMessage("API indisponible (demarrer npm run api)"));
+    api
+      .getCurriculum()
+      .then((data) => {
+        setCurriculumSources(data.metadata.sources);
+        setCurriculumNote(data.metadata.notes);
+      })
+      .catch(() => undefined);
   }, []);
 
   const runAuth = async () => {
@@ -195,6 +205,17 @@ export default function App() {
     }
   };
 
+  const loadRecommendations = async () => {
+    if (!token || !selectedChild) return;
+    try {
+      const result = await api.getRecommendations(token, selectedChild.id);
+      setRecommendations(result.recommendations);
+      setCurriculumSources(result.sources);
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
   const addHomework = async () => {
     if (!token || !selectedChild || !homeworkTitle.trim()) return;
     try {
@@ -224,6 +245,10 @@ export default function App() {
 
   useEffect(() => {
     refreshHomework();
+  }, [selectedChildId, token]);
+
+  useEffect(() => {
+    loadRecommendations();
   }, [selectedChildId, token]);
 
   if (role === "auth") {
@@ -334,6 +359,22 @@ export default function App() {
             </View>
           ))}
 
+          <Text style={styles.sectionTitle}>Recommandations pedagogiques (programme FR)</Text>
+          {recommendations.map((rec, idx) => (
+            <View style={styles.card} key={`${rec.subject}-${idx}`}>
+              <Text style={styles.cardTitle}>{rec.subject}</Text>
+              <Text style={styles.hint}>Competences prioritaires:</Text>
+              {rec.competencies?.map((c: string, i: number) => (
+                <Text key={`${rec.subject}-c-${i}`}>- {c}</Text>
+              ))}
+              <Text style={styles.hint}>Micro-programmes proposes:</Text>
+              {rec.microLessons?.map((m: any, i: number) => (
+                <Text key={`${rec.subject}-m-${i}`}>- {m.title} ({m.durationMin} min)</Text>
+              ))}
+            </View>
+          ))}
+          {!!curriculumNote && <Text style={styles.hint}>{curriculumNote}</Text>}
+
           <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("setup")}>
             <Text style={styles.btnText}>Retour</Text>
           </TouchableOpacity>
@@ -407,10 +448,29 @@ export default function App() {
                 <Text style={styles.btnText}>Continuer</Text>
               </TouchableOpacity>
             </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Programme conseille pour {selectedChild.grade}</Text>
+              {recommendations
+                .filter((r) => r.subject === subject)
+                .flatMap((r) => r.microLessons || [])
+                .slice(0, 3)
+                .map((lesson: any, idx: number) => (
+                  <Text key={`lesson-${idx}`}>- {lesson.title} ({lesson.durationMin} min)</Text>
+                ))}
+            </View>
           </>
         )}
 
         {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+        {curriculumSources.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Sources pedagogiques en ligne</Text>
+            {curriculumSources.slice(0, 4).map((src, idx) => (
+              <Text style={styles.hint} key={`src-${idx}`}>{src}</Text>
+            ))}
+          </View>
+        )}
         <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("setup")}>
           <Text style={styles.btnText}>Retour</Text>
         </TouchableOpacity>

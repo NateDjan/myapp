@@ -24,6 +24,8 @@ Application smartphone (Expo React Native) + API Node.js/SQLite pour aider les e
 - Espace parent avec dashboard de progression
 - Ajout manuel de devoirs (base pour import Pronote)
 - Structure de contenus pour Francais, Maths, Histoire
+- Base pedagogique structuree CP -> Terminale dans `content/curriculum.fr.json`
+- Endpoint de recommandations personnalisees par profil: `GET /api/recommendations/:childId`
 
 ## Lancer le backend
 
@@ -61,6 +63,8 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 - `POST /api/homework/:childId`
 - `GET /api/homework/:childId`
 - `GET /api/parents/dashboard`
+- `GET /api/curriculum`
+- `GET /api/recommendations/:childId`
 
 ## Limites encore presentes
 
@@ -71,3 +75,4 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 - Pas encore de voice dictation / TTS / ASR
 - Pas de tests auto (unitaires/e2e) pour l'instant
 - Conformite RGPD/CNIL a finaliser avant production
+- Certaines pages officielles (Education.gouv / Eduscol) bloquent le scraping direct; les contenus sont structures depuis references accessibles puis doivent etre verifies par une equipe enseignante

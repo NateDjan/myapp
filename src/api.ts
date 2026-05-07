@@ -89,4 +89,12 @@ export const api = {
   getHomework: (token: string, childId: number) => request<any[]>(`/api/homework/${childId}`, {}, token),
   getDashboard: (token: string) =>
     request<{ totals: { points: number; children: number }; progress: any[] }>("/api/parents/dashboard", {}, token),
+  getCurriculum: () =>
+    request<{ metadata: { sources: string[]; notes: string }; grades: any[] }>("/api/curriculum"),
+  getRecommendations: (token: string, childId: number) =>
+    request<{ grade: string; cycle: string; recommendations: any[]; sources: string[] }>(
+      `/api/recommendations/${childId}`,
+      {},
+      token
+    ),
 };
