@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "api": "node backend/server.js",
-    "test:backend": "node --test backend/server.test.js"
+    "test:backend": "node --test backend/server.test.js",
+    "loadtest:api": "node scripts/loadtest-api.js"
   },
   "repository": {
     "type": "git",

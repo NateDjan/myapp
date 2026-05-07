@@ -44,6 +44,20 @@ API sur `http://localhost:4000`.
 npm run test:backend
 ```
 
+## Test de charge API (basique)
+
+Demarrer d'abord le serveur API puis lancer:
+
+```bash
+npm run loadtest:api
+```
+
+Options:
+
+```bash
+API_BASE=http://localhost:4000 LOAD_CONCURRENCY=8 LOAD_ITERATIONS=15 npm run loadtest:api
+```
+
 ## Lancer l'app mobile
 
 Dans un autre terminal:
@@ -83,6 +97,7 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 - Pas de refresh token ni rotation de session multi-appareil
 - Rate limiting en memoire (non distribue) a remplacer par Redis en production
 - Verrouillage progressif du compte apres echecs de connexion repetees (policy locale)
+- Logs structures JSON (request-id + evenements de securite) disponibles cote serveur
 - Pas de synchronisation cloud multi-device (SQLite locale serveur)
 - Pas d'integration Pronote officielle (workflow manuel uniquement)
 - Pas encore de voice dictation / TTS / ASR

@@ -15,9 +15,26 @@ const curriculum = JSON.parse(
 const ACCESS_TOKEN_TTL_SEC = 60 * 60 * 8;
 const REFRESH_TOKEN_TTL_SEC = 60 * 60 * 24 * 30;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const SERVICE_NAME = 'educoach-api';
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function log(level, event, data = {}) {
+  const payload = {
+    ts: nowIso(),
+    level,
+    service: SERVICE_NAME,
+    event,
+    ...data,
+  };
+  const line = JSON.stringify(payload);
+  if (level === 'error') {
+    console.error(line);
+    return;
+  }
+  console.log(line);
 }
 
 function addDays(days) {
@@ -173,6 +190,22 @@ function createApp(db) {
   const app = express();
   app.use(cors());
   app.use(express.json());
+  app.use((req, res, next) => {
+    req.requestId = crypto.randomUUID();
+    const start = Date.now();
+    res.setHeader('x-request-id', req.requestId);
+    res.on('finish', () => {
+      log('info', 'http_request', {
+        requestId: req.requestId,
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        durationMs: Date.now() - start,
+      });
+    });
+    next();
+  });
+
   const authAttempts = new Map();
   const MAX_FAILED_LOGINS = 5;
   const BASE_LOCK_MINUTES = 5;
@@ -200,6 +233,7 @@ function createApp(db) {
     db.prepare(
       'INSERT INTO security_audit_events (parent_id, email, event_type, ip, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)'
     ).run(parentId, email, eventType, ip, JSON.stringify(payload), nowIso());
+    log('info', 'security_event', { requestId: payload.requestId, parentId, email, eventType, ip });
   }
 
   function getLoginAttempt(email) {
@@ -261,7 +295,28 @@ function createApp(db) {
   }
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true });
+    try {
+      const dbOk = db.prepare('SELECT 1 as ok').get().ok === 1;
+      const activeAccess = db
+        .prepare("SELECT COUNT(*) as c FROM auth_tokens WHERE revoked = 0 AND datetime(expires_at) > datetime('now')")
+        .get().c;
+      const activeRefresh = db
+        .prepare("SELECT COUNT(*) as c FROM refresh_tokens WHERE revoked = 0 AND datetime(expires_at) > datetime('now')")
+        .get().c;
+      const parentCount = db.prepare('SELECT COUNT(*) as c FROM parents').get().c;
+      const childCount = db.prepare('SELECT COUNT(*) as c FROM children').get().c;
+      res.json({
+        ok: true,
+        service: SERVICE_NAME,
+        now: nowIso(),
+        uptimeSec: Math.round(process.uptime()),
+        db: { ok: dbOk },
+        stats: { activeAccess, activeRefresh, parentCount, childCount },
+      });
+    } catch (error) {
+      log('error', 'health_check_failed', { error: String(error) });
+      res.status(500).json({ ok: false, error: 'Healthcheck failed' });
+    }
   });
 
   app.get('/api/curriculum', (_req, res) => {
@@ -663,6 +718,11 @@ function createApp(db) {
       recommendations,
       sources: curriculum.metadata.sources,
     });
+  });
+
+  app.use((error, req, res, _next) => {
+    log('error', 'unhandled_error', { requestId: req.requestId, path: req.path, error: String(error) });
+    res.status(500).json({ error: 'Internal server error', requestId: req.requestId });
   });
 
   return app;
