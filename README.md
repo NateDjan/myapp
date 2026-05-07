@@ -58,6 +58,8 @@ Options:
 API_BASE=http://localhost:4000 LOAD_CONCURRENCY=8 LOAD_ITERATIONS=15 npm run loadtest:api
 ```
 
+Le script cree une session unique puis charge principalement `/api/health` et `/api/parents/security` pour eviter de fausser les resultats avec les limites anti-bruteforce.
+
 ## Lancer l'app mobile
 
 Dans un autre terminal:
