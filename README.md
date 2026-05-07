@@ -64,6 +64,7 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 - `POST /api/parents/login`
 - `POST /api/parents/refresh`
 - `POST /api/parents/logout`
+- `GET /api/parents/security`
 - `POST /api/parents/children`
 - `GET /api/parents/children`
 - `POST /api/evaluation/:childId`
@@ -81,6 +82,7 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 - Auth simplifiee (token basique, pas de refresh token)
 - Pas de refresh token ni rotation de session multi-appareil
 - Rate limiting en memoire (non distribue) a remplacer par Redis en production
+- Verrouillage progressif du compte apres echecs de connexion repetees (policy locale)
 - Pas de synchronisation cloud multi-device (SQLite locale serveur)
 - Pas d'integration Pronote officielle (workflow manuel uniquement)
 - Pas encore de voice dictation / TTS / ASR

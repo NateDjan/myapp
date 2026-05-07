@@ -56,6 +56,24 @@ function setupDb(db) {
       FOREIGN KEY(parent_id) REFERENCES parents(id)
     );
 
+    CREATE TABLE IF NOT EXISTS login_attempts (
+      email TEXT PRIMARY KEY,
+      failed_count INTEGER NOT NULL DEFAULT 0,
+      lock_until TEXT,
+      last_failed_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS security_audit_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      parent_id INTEGER,
+      email TEXT,
+      event_type TEXT NOT NULL,
+      ip TEXT,
+      payload TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(parent_id) REFERENCES parents(id)
+    );
+
     CREATE TABLE IF NOT EXISTS children (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       parent_id INTEGER NOT NULL,
@@ -156,6 +174,8 @@ function createApp(db) {
   app.use(cors());
   app.use(express.json());
   const authAttempts = new Map();
+  const MAX_FAILED_LOGINS = 5;
+  const BASE_LOCK_MINUTES = 5;
 
   function rateLimitAuth(req, res, next) {
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
@@ -174,6 +194,46 @@ function createApp(db) {
       return res.status(429).json({ error: 'Too many auth attempts. Try again later.' });
     }
     next();
+  }
+
+  function logSecurityEvent({ parentId = null, email = null, eventType, ip = null, payload = {} }) {
+    db.prepare(
+      'INSERT INTO security_audit_events (parent_id, email, event_type, ip, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(parentId, email, eventType, ip, JSON.stringify(payload), nowIso());
+  }
+
+  function getLoginAttempt(email) {
+    return db.prepare('SELECT * FROM login_attempts WHERE email = ?').get(email);
+  }
+
+  function markLoginFailure(email, ip) {
+    const existing = getLoginAttempt(email);
+    const failedCount = (existing?.failed_count || 0) + 1;
+    const lockMultiplier = Math.max(0, failedCount - MAX_FAILED_LOGINS + 1);
+    const lockMinutes = lockMultiplier > 0 ? BASE_LOCK_MINUTES * lockMultiplier : 0;
+    const lockUntil = lockMinutes > 0 ? new Date(Date.now() + lockMinutes * 60 * 1000).toISOString() : null;
+
+    db.prepare(
+      `INSERT INTO login_attempts (email, failed_count, lock_until, last_failed_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(email) DO UPDATE SET
+         failed_count = excluded.failed_count,
+         lock_until = excluded.lock_until,
+         last_failed_at = excluded.last_failed_at`
+    ).run(email, failedCount, lockUntil, nowIso());
+
+    logSecurityEvent({
+      email,
+      eventType: lockUntil ? 'auth_login_locked' : 'auth_login_failed',
+      ip,
+      payload: { failedCount, lockUntil },
+    });
+
+    return { failedCount, lockUntil };
+  }
+
+  function clearLoginFailures(email) {
+    db.prepare('DELETE FROM login_attempts WHERE email = ?').run(email);
   }
 
   function auth(req, res, next) {
@@ -224,8 +284,10 @@ function createApp(db) {
       const result = db
         .prepare('INSERT INTO parents (name, email, password, created_at) VALUES (?, ?, ?, ?)')
         .run(name, email.toLowerCase(), hashed, nowIso());
+      logSecurityEvent({ parentId: result.lastInsertRowid, email: email.toLowerCase(), eventType: 'auth_register_success', ip: req.ip });
       return res.status(201).json({ parentId: result.lastInsertRowid });
     } catch {
+      logSecurityEvent({ email: email.toLowerCase(), eventType: 'auth_register_conflict', ip: req.ip });
       return res.status(409).json({ error: 'Email already registered' });
     }
   });
@@ -234,11 +296,27 @@ function createApp(db) {
     const schema = z.object({ email: z.string().email(), password: z.string().min(8) });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    const email = parsed.data.email.toLowerCase();
+    const ip = req.ip || req.socket.remoteAddress || null;
+
+    const attempt = getLoginAttempt(email);
+    if (attempt?.lock_until && new Date(attempt.lock_until).getTime() > Date.now()) {
+      logSecurityEvent({
+        email,
+        eventType: 'auth_login_blocked_lockout',
+        ip,
+        payload: { lockUntil: attempt.lock_until, failedCount: attempt.failed_count },
+      });
+      return res.status(423).json({ error: 'Account temporarily locked due to repeated failed logins' });
+    }
 
     const parent = db
       .prepare('SELECT id, name, password FROM parents WHERE email = ?')
-      .get(parsed.data.email.toLowerCase());
-    if (!parent) return res.status(401).json({ error: 'Invalid credentials' });
+      .get(email);
+    if (!parent) {
+      markLoginFailure(email, ip);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
     let valid = false;
     if (String(parent.password).startsWith('$2')) {
@@ -252,7 +330,11 @@ function createApp(db) {
       }
     }
 
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!valid) {
+      markLoginFailure(email, ip);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    clearLoginFailures(email);
 
     const tokenId = crypto.randomUUID();
     const accessToken = createToken(parent.id, tokenId);
@@ -266,6 +348,14 @@ function createApp(db) {
     db.prepare(
       'INSERT INTO refresh_tokens (token_id, parent_id, token_hash, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, ?, 0)'
     ).run(tokenId, parent.id, hashOpaqueToken(refreshToken), nowIso(), computeRefreshExpiryIso());
+
+    logSecurityEvent({
+      parentId: parent.id,
+      email,
+      eventType: 'auth_login_success',
+      ip,
+      payload: { tokenId },
+    });
 
     return res.json({ token: accessToken, accessToken, refreshToken, parent: { id: parent.id, name: parent.name } });
   });
@@ -281,7 +371,10 @@ function createApp(db) {
         "SELECT token_id, parent_id FROM refresh_tokens WHERE token_hash = ? AND revoked = 0 AND datetime(expires_at) > datetime('now')"
       )
       .get(refreshHash);
-    if (!current) return res.status(401).json({ error: 'Invalid refresh token' });
+    if (!current) {
+      logSecurityEvent({ eventType: 'auth_refresh_invalid', ip: req.ip });
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
 
     const nextTokenId = crypto.randomUUID();
     const nextAccessToken = createToken(current.parent_id, nextTokenId);
@@ -301,6 +394,12 @@ function createApp(db) {
       ).run(nextTokenId, current.parent_id, hashOpaqueToken(nextRefreshToken), nowIso(), computeRefreshExpiryIso());
     });
     tx();
+    logSecurityEvent({
+      parentId: current.parent_id,
+      eventType: 'auth_refresh_success',
+      ip: req.ip,
+      payload: { previousTokenId: current.token_id, nextTokenId },
+    });
 
     return res.json({ token: nextAccessToken, accessToken: nextAccessToken, refreshToken: nextRefreshToken });
   });
@@ -308,6 +407,7 @@ function createApp(db) {
   app.post('/api/parents/logout', auth, (req, res) => {
     db.prepare('UPDATE auth_tokens SET revoked = 1 WHERE token_id = ?').run(req.tokenId);
     db.prepare('UPDATE refresh_tokens SET revoked = 1 WHERE token_id = ?').run(req.tokenId);
+    logSecurityEvent({ parentId: req.parentId, eventType: 'auth_logout', ip: req.ip, payload: { tokenId: req.tokenId } });
     res.status(204).send();
   });
 
@@ -508,6 +608,29 @@ function createApp(db) {
     });
 
     res.json({ totals, progress });
+  });
+
+  app.get('/api/parents/security', auth, (req, res) => {
+    const recentEvents = db
+      .prepare(
+        'SELECT event_type, ip, created_at FROM security_audit_events WHERE parent_id = ? ORDER BY id DESC LIMIT 20'
+      )
+      .all(req.parentId);
+    const sessionStats = db
+      .prepare(
+        "SELECT COUNT(*) as activeAccess FROM auth_tokens WHERE parent_id = ? AND revoked = 0 AND datetime(expires_at) > datetime('now')"
+      )
+      .get(req.parentId);
+    const activeRefresh = db
+      .prepare(
+        "SELECT COUNT(*) as activeRefresh FROM refresh_tokens WHERE parent_id = ? AND revoked = 0 AND datetime(expires_at) > datetime('now')"
+      )
+      .get(req.parentId);
+    res.json({
+      activeAccessSessions: sessionStats.activeAccess,
+      activeRefreshSessions: activeRefresh.activeRefresh,
+      recentEvents,
+    });
   });
 
   app.get('/api/recommendations/:childId', auth, (req, res) => {

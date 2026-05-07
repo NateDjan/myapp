@@ -117,3 +117,44 @@ test('auth routes are rate limited', async () => {
   assert.equal(limitedStatus, 429);
   cleanupDb(db, dbPath);
 });
+
+test('account lockout triggers after repeated failed logins', async () => {
+  const { app, db, dbPath } = buildTestApp();
+  await request(app)
+    .post('/api/parents/register')
+    .send({ name: 'Parent', email: 'lock@test.local', password: 'password123' });
+
+  let lockStatus = 0;
+  for (let i = 0; i < 6; i += 1) {
+    const attempt = await request(app)
+      .post('/api/parents/login')
+      .send({ email: 'lock@test.local', password: 'wrongpass123' });
+    lockStatus = attempt.status;
+  }
+  assert.equal(lockStatus, 423);
+
+  const validWhileLocked = await request(app)
+    .post('/api/parents/login')
+    .send({ email: 'lock@test.local', password: 'password123' });
+  assert.equal(validWhileLocked.status, 423);
+  cleanupDb(db, dbPath);
+});
+
+test('security endpoint returns session and audit info', async () => {
+  const { app, db, dbPath } = buildTestApp();
+  await request(app)
+    .post('/api/parents/register')
+    .send({ name: 'Parent', email: 'sec@test.local', password: 'password123' });
+  const login = await request(app)
+    .post('/api/parents/login')
+    .send({ email: 'sec@test.local', password: 'password123' });
+
+  const security = await request(app)
+    .get('/api/parents/security')
+    .set('Authorization', `Bearer ${login.body.token}`);
+  assert.equal(security.status, 200);
+  assert.ok(security.body.activeAccessSessions >= 1);
+  assert.ok(Array.isArray(security.body.recentEvents));
+  assert.ok(security.body.recentEvents.length >= 1);
+  cleanupDb(db, dbPath);
+});
