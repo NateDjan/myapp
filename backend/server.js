@@ -151,6 +151,28 @@ function setupDb(db) {
     );
   `);
 
+  // Legacy migration: early versions used auth_tokens(token,parent_id,created_at)
+  // without expiry/revocation fields. Normalize to the current schema.
+  const authTokenCols = db.prepare("PRAGMA table_info('auth_tokens')").all();
+  const hasTokenId = authTokenCols.some((c) => c.name === 'token_id');
+  if (!hasTokenId) {
+    db.exec(`
+      ALTER TABLE auth_tokens RENAME TO auth_tokens_legacy;
+      CREATE TABLE auth_tokens (
+        token_id TEXT PRIMARY KEY,
+        parent_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        revoked INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY(parent_id) REFERENCES parents(id)
+      );
+      INSERT INTO auth_tokens (token_id, parent_id, created_at, expires_at, revoked)
+      SELECT token, parent_id, created_at, datetime(created_at, '+8 hours'), 0
+      FROM auth_tokens_legacy;
+      DROP TABLE auth_tokens_legacy;
+    `);
+  }
+
   const phraseCount = db.prepare('SELECT COUNT(*) as count FROM phrase_bank').get().count;
   if (phraseCount === 0) {
     const seed = db.prepare('INSERT INTO phrase_bank (subject, level, mode, prompt, expected) VALUES (?, ?, ?, ?, ?)');
