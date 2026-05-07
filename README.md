@@ -115,16 +115,52 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 - `GET /api/curriculum`
 - `GET /api/recommendations/:childId`
 
+## Deploy production API (HTTPS pour les parents)
+
+L'environnement d'agent ne peut pas ouvrir un compte cloud a votre place, mais le depot est **pret pour un deploy en une commande**.
+
+### Option A — Fly.io (recommande)
+
+Prérequis : [Fly CLI](https://fly.io/docs/h/getting-started/install/), compte Fly.io.
+
+```bash
+# Une fois par projet : créer l'app si le nom est libre (modifier fly.toml si besoin)
+fly launch --no-deploy --copy-config
+
+fly secrets set JWT_SECRET="$(openssl rand -hex 32)"
+
+fly deploy
+```
+
+URL publique typique : `https://educoach-fr-api.fly.dev` (voir `fly status` ou le dashboard Fly).
+
+Puis mettre cette URL **sans slash final** dans `config/publicApi.json` (`apiUrl`), et redémarrer Expo pour les parents.
+
+**CI / GitHub Actions** : ajouter le secret depot `FLY_API_TOKEN`, le workflow `.github/workflows/deploy-api-fly.yml` deploiera sur chaque push (chemins API).
+
+### Option B — Render (Blueprint)
+
+Dans Render : **New** → **Blueprint** → connecter le depot, pointer vers `render.yaml`.  
+Le plan gratuit peut recycle le conteneur (SQLite volatile entre redeploiements ; OK pour tests courts).
+
+### Image Docker locale
+
+```bash
+docker build -f Dockerfile.api -t educoach-api .
+docker run --rm -e JWT_SECRET=test-secret-for-local-docker -e NODE_ENV=production -p 4000:4000 educoach-api
+```
+
+---
+
 ## Limites encore presentes
 
-- Auth simplifiee (token basique, pas de refresh token)
-- Pas de refresh token ni rotation de session multi-appareil
-- Rate limiting en memoire (non distribue) a remplacer par Redis en production
+- Auth JWT + refresh avec rotation en prototype ; hygiene prod (rotation secrets, revocation globale, SSO parents) a renforcer
+- Rate limiting en memoire (non distribue) a remplacer par Redis en multi-instance
 - Verrouillage progressif du compte apres echecs de connexion repetees (policy locale)
 - Logs structures JSON (request-id + evenements de securite) disponibles cote serveur
-- Pas de synchronisation cloud multi-device (SQLite locale serveur)
+- Donnees sur SQLite serveur (persistance selon hebergeur / redeploiements sur plans gratuits)
 - Pas d'integration Pronote officielle (workflow manuel uniquement)
 - Pas encore de voice dictation / TTS / ASR
-- Pas de tests auto (unitaires/e2e) pour l'instant
+- Tests automatises limites au backend (`npm run test:backend`) ; pas encore de suite E2E mobile
 - Conformite RGPD/CNIL a finaliser avant production
 - Certaines pages officielles (Education.gouv / Eduscol) bloquent le scraping direct; les contenus sont structures depuis references accessibles puis doivent etre verifies par une equipe enseignante

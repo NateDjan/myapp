@@ -17,6 +17,13 @@ const REFRESH_TOKEN_TTL_SEC = 60 * 60 * 24 * 30;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const SERVICE_NAME = 'educoach-api';
 
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev-secret-change-me') {
+    console.error('[fatal] JWT_SECRET doit etre defini en production (secret fort, pas la valeur dev).');
+    process.exit(1);
+  }
+}
+
 function nowIso() {
   return new Date().toISOString();
 }

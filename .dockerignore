@@ -1,0 +1,10 @@
+node_modules
+backend/node_modules
+.git
+.expo
+.expo-shared
+npm-debug.log*
+*.db
+*.db-shm
+*.db-wal
+terminals

@@ -1,0 +1,32 @@
+# Fly.io — HTTPS automatique.
+# Renommer l'app si besoin : modifier la ligne `app`, puis `fly apps create` ou `fly launch`.
+#
+# Secret obligatoire avant premier deploy :
+#   fly secrets set JWT_SECRET="$(openssl rand -hex 32)"
+#
+# Deploy :
+#   fly deploy
+
+app = "educoach-fr-api"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile.api"
+
+[env]
+  PORT = "4000"
+  NODE_ENV = "production"
+  DB_PATH = "/app/data/educoach.db"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

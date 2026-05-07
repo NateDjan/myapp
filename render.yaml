@@ -1,0 +1,21 @@
+# Blueprint Render : brancher le depot dans Render → New Blueprint Instance.
+# Plan gratuit : pas de disque persistant (donnees SQLite reset au redeploiement).
+# Pour persistance : passer au plan payant + activer un disque sur ce service.
+
+services:
+  - type: web
+    name: educoach-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile.api
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: DB_PATH
+        value: /app/data/educoach.db
+      - key: JWT_SECRET
+        generateValue: true
