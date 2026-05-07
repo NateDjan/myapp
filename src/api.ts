@@ -15,21 +15,7 @@ export type Child = {
   history_level: number;
 };
 
-/** Persisted / bundled override (see App.tsx + app.config.js). */
-let apiBaseOverride: string | null = null;
-
-export function setApiBase(url: string | null) {
-  const trimmed = url?.trim().replace(/\/$/, "") ?? "";
-  apiBaseOverride = trimmed.length > 0 ? trimmed : null;
-}
-
-export function getApiBase(): string {
-  return resolveApiBase();
-}
-
 function resolveApiBase(): string {
-  if (apiBaseOverride) return apiBaseOverride;
-
   const bundled = (Constants.expoConfig?.extra?.apiUrl as string | undefined)?.trim();
   if (bundled) return bundled.replace(/\/$/, "");
 
@@ -55,7 +41,7 @@ function resolveApiBase(): string {
     return `http://${host}:4000`;
   }
 
-  return "http://localhost:4000";
+  return "";
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {
@@ -69,20 +55,24 @@ async function parseResponseBody(response: Response): Promise<unknown> {
 }
 
 async function request<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
+  const base = resolveApiBase().trim();
+  if (!base) {
+    throw new Error(
+      "L'application n'a pas d'adresse de serveur valide. Contactez l'equipe (fichier config/publicApi.json)."
+    );
+  }
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string> | undefined),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const base = resolveApiBase();
   let response: Response;
   try {
     response = await fetch(`${base}${path}`, { ...options, headers });
-  } catch (err) {
-    throw new Error(
-      `Reseau impossible vers ${base}. Verifie l'URL serveur (Wi-Fi / tunnel / pare-feu).`
-    );
+  } catch {
+    throw new Error("Pas de connexion au serveur. Verifie ton internet ou reessaie plus tard.");
   }
 
   const data = (await parseResponseBody(response)) as any;

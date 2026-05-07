@@ -7,9 +7,6 @@
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
-    ],
-    "extra": {
-      "apiUrl": ""
-    }
+    ]
   }
 }

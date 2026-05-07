@@ -69,13 +69,28 @@ Le script cree une session unique puis charge principalement `/api/health` et `/
 
 ## Lancer l'app mobile
 
-Dans un autre terminal:
+### Distribution parents (Expo Go hors Wi-Fi local)
+
+L'application **ne demande pas** d'URL sur l'ecran: l'adresse du serveur API est embarquee au moment du build Expo.
+
+1. Editer `config/publicApi.json` et remplacer `apiUrl` par l'URL HTTPS publique de votre API (sans slash final).
+2. Relancer Metro (`npm run start` ou tunnel). Les parents ne voient aucun champ technique.
+
+Alternative sans modifier le fichier:
+
+```bash
+EXPO_PUBLIC_API_URL=https://votre-api.example.com npm run start
+```
+
+### Developpement sur le meme Wi-Fi que le PC
 
 ```bash
 npm run start
 ```
 
-Si vous testez sur un vrai smartphone, definir l'URL API de votre machine:
+Sur le meme reseau que la machine qui tourne `npm run api`, Expo peut resoudre automatiquement `http://<IP>:4000`.
+
+Sinon:
 
 ```bash
 EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start

@@ -11,13 +11,11 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
-import { api, getApiBase, setApiBase, type Child } from "./src/api";
+import { api, type Child } from "./src/api";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
 type Subject = "Francais" | "Maths" | "Histoire";
 const SESSION_STORAGE_KEY = "educoach.session.v1";
-const API_URL_STORAGE_KEY = "educoach.apiBase.v1";
 
 export default function App() {
   const [token, setToken] = useState("");
@@ -57,7 +55,6 @@ export default function App() {
   const [curriculumSources, setCurriculumSources] = useState<string[]>([]);
   const [curriculumNote, setCurriculumNote] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [apiUrlInput, setApiUrlInput] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
 
   const selectedChild = useMemo(
@@ -106,21 +103,11 @@ export default function App() {
 
     const bootstrap = async () => {
       try {
-        const savedApi = await AsyncStorage.getItem(API_URL_STORAGE_KEY);
-        const bundledApi = (Constants.expoConfig?.extra?.apiUrl as string | undefined)?.trim();
-        if (savedApi?.trim()) {
-          setApiBase(savedApi.trim());
-        } else if (bundledApi) {
-          setApiBase(bundledApi);
-        }
-        if (!cancelled) setApiUrlInput(getApiBase());
-
         try {
           await api.health();
-          if (!cancelled) setApiMessage(`API OK (${getApiBase()})`);
+          if (!cancelled) setApiMessage("Serveur disponible");
         } catch {
-          if (!cancelled)
-            setApiMessage(`API inaccessible (${getApiBase()}). Collez l'URL HTTPS ci-dessous puis « Enregistrer ».`);
+          if (!cancelled) setApiMessage("Serveur indisponible pour le moment");
         }
 
         await api
@@ -144,28 +131,6 @@ export default function App() {
       cancelled = true;
     };
   }, []);
-
-  const persistApiUrl = async () => {
-    const raw = apiUrlInput.trim().replace(/\/$/, "");
-    setErrorMessage("");
-    try {
-      if (!raw) {
-        await AsyncStorage.removeItem(API_URL_STORAGE_KEY);
-        setApiBase(null);
-      } else {
-        await AsyncStorage.setItem(API_URL_STORAGE_KEY, raw);
-        setApiBase(raw);
-      }
-      setApiUrlInput(getApiBase());
-      await api.health();
-      setApiMessage(`API OK (${getApiBase()})`);
-      Alert.alert("Connexion serveur", `API joignable : ${getApiBase()}`);
-    } catch (e) {
-      const msg = String(e);
-      setApiMessage(`API KO (${getApiBase()})`);
-      Alert.alert("Serveur introuvable", msg);
-    }
-  };
 
   const runAuth = async () => {
     setErrorMessage("");
@@ -390,24 +355,7 @@ export default function App() {
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <Text style={styles.title}>EduCoach FR</Text>
           <Text style={styles.subtitle}>{apiMessage}</Text>
-          <Text style={styles.hint}>Serveur API : {getApiBase()}</Text>
           {sessionLoading && <Text style={styles.hint}>Restauration de session en cours...</Text>}
-          <Text style={styles.sectionTitle}>URL du serveur (obligatoire hors Wi-Fi local)</Text>
-          <Text style={styles.hint}>
-            Expo Go en tunnel ne peut pas joindre ton PC sur le port 4000. Colle ici l&apos;URL HTTPS publique de
-            l&apos;API (fournie par l&apos;equipe), puis touche « Enregistrer ».
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="https://xxxx.serveousercontent.com"
-            value={apiUrlInput}
-            onChangeText={setApiUrlInput}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <TouchableOpacity style={styles.secondaryBtn} onPress={persistApiUrl}>
-            <Text style={styles.btnText}>Enregistrer l&apos;URL API</Text>
-          </TouchableOpacity>
 
           <Text style={styles.sectionTitle}>Authentification parent/tuteur</Text>
 
