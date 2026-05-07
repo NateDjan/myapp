@@ -13,6 +13,7 @@ const curriculum = JSON.parse(
 );
 
 const ACCESS_TOKEN_TTL_SEC = 60 * 60 * 8;
+const REFRESH_TOKEN_TTL_SEC = 60 * 60 * 24 * 30;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 
 function nowIso() {
@@ -41,6 +42,17 @@ function setupDb(db) {
       created_at TEXT NOT NULL,
       expires_at TEXT NOT NULL,
       revoked INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY(parent_id) REFERENCES parents(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      token_id TEXT PRIMARY KEY,
+      parent_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      revoked INTEGER NOT NULL DEFAULT 0,
+      replaced_by TEXT,
       FOREIGN KEY(parent_id) REFERENCES parents(id)
     );
 
@@ -131,10 +143,38 @@ function computeExpiryIso() {
   return new Date(Date.now() + ACCESS_TOKEN_TTL_SEC * 1000).toISOString();
 }
 
+function computeRefreshExpiryIso() {
+  return new Date(Date.now() + REFRESH_TOKEN_TTL_SEC * 1000).toISOString();
+}
+
+function hashOpaqueToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 function createApp(db) {
   const app = express();
   app.use(cors());
   app.use(express.json());
+  const authAttempts = new Map();
+
+  function rateLimitAuth(req, res, next) {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const key = `${req.path}:${ip}`;
+    const now = Date.now();
+    const windowMs = 60 * 1000;
+    const maxAttempts = 15;
+    const entry = authAttempts.get(key) || { count: 0, windowStart: now };
+    if (now - entry.windowStart > windowMs) {
+      entry.count = 0;
+      entry.windowStart = now;
+    }
+    entry.count += 1;
+    authAttempts.set(key, entry);
+    if (entry.count > maxAttempts) {
+      return res.status(429).json({ error: 'Too many auth attempts. Try again later.' });
+    }
+    next();
+  }
 
   function auth(req, res, next) {
     const raw = req.header('authorization') || '';
@@ -168,7 +208,7 @@ function createApp(db) {
     res.json(curriculum);
   });
 
-  app.post('/api/parents/register', (req, res) => {
+  app.post('/api/parents/register', rateLimitAuth, (req, res) => {
     const schema = z.object({
       name: z.string().min(1),
       email: z.string().email(),
@@ -190,7 +230,7 @@ function createApp(db) {
     }
   });
 
-  app.post('/api/parents/login', (req, res) => {
+  app.post('/api/parents/login', rateLimitAuth, (req, res) => {
     const schema = z.object({ email: z.string().email(), password: z.string().min(8) });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -215,19 +255,59 @@ function createApp(db) {
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
     const tokenId = crypto.randomUUID();
+    const accessToken = createToken(parent.id, tokenId);
+    const refreshToken = crypto.randomUUID();
     db.prepare('INSERT INTO auth_tokens (token_id, parent_id, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, 0)').run(
       tokenId,
       parent.id,
       nowIso(),
       computeExpiryIso()
     );
+    db.prepare(
+      'INSERT INTO refresh_tokens (token_id, parent_id, token_hash, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, ?, 0)'
+    ).run(tokenId, parent.id, hashOpaqueToken(refreshToken), nowIso(), computeRefreshExpiryIso());
 
-    const token = createToken(parent.id, tokenId);
-    return res.json({ token, parent: { id: parent.id, name: parent.name } });
+    return res.json({ token: accessToken, accessToken, refreshToken, parent: { id: parent.id, name: parent.name } });
+  });
+
+  app.post('/api/parents/refresh', rateLimitAuth, (req, res) => {
+    const schema = z.object({ refreshToken: z.string().min(10) });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+    const refreshHash = hashOpaqueToken(parsed.data.refreshToken);
+    const current = db
+      .prepare(
+        "SELECT token_id, parent_id FROM refresh_tokens WHERE token_hash = ? AND revoked = 0 AND datetime(expires_at) > datetime('now')"
+      )
+      .get(refreshHash);
+    if (!current) return res.status(401).json({ error: 'Invalid refresh token' });
+
+    const nextTokenId = crypto.randomUUID();
+    const nextAccessToken = createToken(current.parent_id, nextTokenId);
+    const nextRefreshToken = crypto.randomUUID();
+
+    const tx = db.transaction(() => {
+      db.prepare('UPDATE auth_tokens SET revoked = 1 WHERE token_id = ?').run(current.token_id);
+      db.prepare('UPDATE refresh_tokens SET revoked = 1, replaced_by = ? WHERE token_id = ?').run(nextTokenId, current.token_id);
+      db.prepare('INSERT INTO auth_tokens (token_id, parent_id, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, 0)').run(
+        nextTokenId,
+        current.parent_id,
+        nowIso(),
+        computeExpiryIso()
+      );
+      db.prepare(
+        'INSERT INTO refresh_tokens (token_id, parent_id, token_hash, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, ?, 0)'
+      ).run(nextTokenId, current.parent_id, hashOpaqueToken(nextRefreshToken), nowIso(), computeRefreshExpiryIso());
+    });
+    tx();
+
+    return res.json({ token: nextAccessToken, accessToken: nextAccessToken, refreshToken: nextRefreshToken });
   });
 
   app.post('/api/parents/logout', auth, (req, res) => {
     db.prepare('UPDATE auth_tokens SET revoked = 1 WHERE token_id = ?').run(req.tokenId);
+    db.prepare('UPDATE refresh_tokens SET revoked = 1 WHERE token_id = ?').run(req.tokenId);
     res.status(204).send();
   });
 

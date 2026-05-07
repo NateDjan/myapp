@@ -38,7 +38,15 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   loginParent: (payload: { email: string; password: string }) =>
-    request<{ token: string; parent: { id: number; name: string } }>("/api/parents/login", {
+    request<{ token: string; accessToken: string; refreshToken: string; parent: { id: number; name: string } }>(
+      "/api/parents/login",
+      {
+      method: "POST",
+      body: JSON.stringify(payload),
+      }
+    ),
+  refreshParentToken: (payload: { refreshToken: string }) =>
+    request<{ token: string; accessToken: string; refreshToken: string }>("/api/parents/refresh", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

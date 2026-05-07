@@ -7,6 +7,7 @@ Application smartphone (Expo React Native) + API Node.js/SQLite pour aider les e
 - Mobile: Expo + React Native + TypeScript
 - Backend: Express + better-sqlite3 + Zod
 - Auth: bcrypt + JWT (sessions with expiry/revocation)
+- Session refresh token with rotation and revocation
 - Base locale: SQLite (`educoach.db`)
 
 ## Fonctionnalites actuellement disponibles
@@ -61,6 +62,8 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 
 - `POST /api/parents/register`
 - `POST /api/parents/login`
+- `POST /api/parents/refresh`
+- `POST /api/parents/logout`
 - `POST /api/parents/children`
 - `GET /api/parents/children`
 - `POST /api/evaluation/:childId`
@@ -77,6 +80,7 @@ EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
 
 - Auth simplifiee (token basique, pas de refresh token)
 - Pas de refresh token ni rotation de session multi-appareil
+- Rate limiting en memoire (non distribue) a remplacer par Redis en production
 - Pas de synchronisation cloud multi-device (SQLite locale serveur)
 - Pas d'integration Pronote officielle (workflow manuel uniquement)
 - Pas encore de voice dictation / TTS / ASR
