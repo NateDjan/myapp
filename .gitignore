@@ -3,3 +3,6 @@ node_modules/
 .expo-shared/
 .DS_Store
 npm-debug.log*
+educoach.db
+educoach.db-shm
+educoach.db-wal
