@@ -1,6 +1,10 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 
+export type SubjectLevelState = { tier: number; streak: number };
+export type SubjectTierDisplay = { tier: number; label: string; streak: number };
+export type EvaluationRecord = { done?: boolean; score?: number; at?: string };
+
 export type Child = {
   id: number;
   first_name: string;
@@ -14,6 +18,20 @@ export type Child = {
   math_level: number;
   history_level: number;
   student_login?: string | null;
+  subjectLevels?: Record<string, SubjectLevelState>;
+  subjectTiersDisplay?: Record<string, SubjectTierDisplay>;
+  evaluationBySubject?: Record<string, EvaluationRecord>;
+  optionalSubjectsEnabled?: string[];
+};
+
+export type SubjectsMeta = {
+  grade: string;
+  coreSubjects: string[];
+  optionalPool: string[];
+  optionalEnabled: string[];
+  activeSubjects: string[];
+  evaluationBySubject: Record<string, EvaluationRecord>;
+  subjectLevels: Record<string, SubjectLevelState>;
 };
 
 function resolveApiBase(): string {
@@ -145,6 +163,27 @@ export const api = {
       token
     ),
   getChildren: (token: string) => request<Child[]>("/api/parents/children", {}, token),
+  getSubjectsMeta: (token: string, childId: number) =>
+    request<SubjectsMeta>(`/api/children/${childId}/subjects-meta`, {}, token),
+  patchOptionalSubjects: (token: string, childId: number, subjects: string[]) =>
+    request<{ optionalSubjectsEnabled: string[] }>(`/api/parents/children/${childId}/optional-subjects`, {
+      method: "PATCH",
+      body: JSON.stringify({ subjects }),
+    }, token),
+  getEvaluationItem: (token: string, childId: number, subject: string) =>
+    request<{
+      itemId: number;
+      exerciseType: string;
+      prompt: string;
+      readAloudText: string;
+      subject: string;
+    }>(`/api/evaluation/${childId}/item?subject=${encodeURIComponent(subject)}`, {}, token),
+  submitEvaluation: (token: string, childId: number, payload: { itemId: number; subject: string; answer: string }) =>
+    request<{ score: number; completed: boolean; tierLabel: string }>(
+      `/api/evaluation/${childId}/submit`,
+      { method: "POST", body: JSON.stringify(payload) },
+      token
+    ),
   evaluateChild: (token: string, childId: number) =>
     request<{ score: number; readingLevel: number; spellingLevel: number }>(
       `/api/evaluation/${childId}`,
@@ -157,7 +196,11 @@ export const api = {
       dictation: { prompt: string; expected: string } | null;
       review: { id: number; phrase: string } | null;
     }>(`/api/lesson/${childId}?subject=${encodeURIComponent(subject)}`, {}, token),
-  submitDictation: (token: string, childId: number, payload: { expected: string; answer: string }) =>
+  submitDictation: (
+    token: string,
+    childId: number,
+    payload: { expected: string; answer: string; subject?: string }
+  ) =>
     request<{ score: number; points: number; feedback: string }>(
       `/api/session/${childId}/dictation`,
       { method: "POST", body: JSON.stringify(payload) },

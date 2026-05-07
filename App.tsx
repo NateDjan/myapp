@@ -11,12 +11,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, type Child } from "./src/api";
+import { api, type Child, type SubjectsMeta } from "./src/api";
+import { T, warmStyles } from "./src/theme";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
-type Subject = "Francais" | "Maths" | "Histoire";
 type AppRole = "landing" | "auth" | "studentAuth" | "setup" | "parent" | "student";
+type StudentTab = "home" | "eval" | "learn";
 
 const SESSION_STORAGE_KEY = "educoach.session.v1";
 const STUDENT_STORAGE_KEY = "educoach.student.v1";
@@ -72,13 +74,24 @@ export default function App() {
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
   const [role, setRole] = useState<AppRole>("landing");
-  const [subject, setSubject] = useState<Subject>("Francais");
+  const [subject, setSubject] = useState("Francais");
   const [gradePickerOpen, setGradePickerOpen] = useState(false);
+  const [studentTab, setStudentTab] = useState<StudentTab>("home");
+  const [subjectsMeta, setSubjectsMeta] = useState<SubjectsMeta | null>(null);
+  const [parentOptionalDraft, setParentOptionalDraft] = useState<string[]>([]);
+  const [evalItem, setEvalItem] = useState<{
+    itemId: number;
+    exerciseType: string;
+    prompt: string;
+    readAloudText: string;
+    subject: string;
+  } | null>(null);
+  const [evalAnswer, setEvalAnswer] = useState("");
+  const [evalBusy, setEvalBusy] = useState(false);
 
   const [newChild, setNewChild] = useState<NewChildDraft>(EMPTY_CHILD_DRAFT);
 
   const [apiMessage, setApiMessage] = useState("API non testee");
-  const [evaluationScore, setEvaluationScore] = useState<number | null>(null);
   const [step, setStep] = useState<SessionStep>("lecture");
   const [lessonPrompt, setLessonPrompt] = useState("");
   const [dictationPrompt, setDictationPrompt] = useState("");
@@ -298,6 +311,88 @@ export default function App() {
     if (!selectedChildId && kids.length > 0) setSelectedChildId(kids[0].id);
   };
 
+  const loadSubjectsMeta = async () => {
+    if (!token || !selectedChildId) return;
+    try {
+      const m = await api.getSubjectsMeta(token, selectedChildId);
+      setSubjectsMeta(m);
+      setParentOptionalDraft(m.optionalEnabled || []);
+    } catch {
+      setSubjectsMeta(null);
+    }
+  };
+
+  useEffect(() => {
+    loadSubjectsMeta();
+  }, [selectedChildId, token]);
+
+  const saveParentOptional = async () => {
+    if (!token || !selectedChildId) return;
+    setErrorMessage("");
+    try {
+      await api.patchOptionalSubjects(token, selectedChildId, parentOptionalDraft);
+      await loadSubjectsMeta();
+      await reloadChildren();
+      Alert.alert("OK", "Les matieres optionnelles sont enregistrees.");
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
+  const speak = (text: string) => {
+    if (!text?.trim()) return;
+    Speech.stop();
+    Speech.speak(text.trim(), { language: "fr-FR", rate: 0.92, pitch: 1.0 });
+  };
+
+  const speakDicteePhrase = (prompt: string, expected: string) => {
+    const p = String(prompt || "");
+    if (/^Ecris\s*:/i.test(p)) speak(String(expected || "").trim());
+    else speak(String(expected || prompt || "").trim());
+  };
+
+  const activeSubjectsList = useMemo(() => {
+    if (subjectsMeta?.activeSubjects?.length) return subjectsMeta.activeSubjects;
+    return ["Francais", "Maths", "Histoire"];
+  }, [subjectsMeta]);
+
+  const startEvalSubject = async (sub: string) => {
+    if (!token || !selectedChild) return;
+    setEvalBusy(true);
+    setErrorMessage("");
+    try {
+      const item = await api.getEvaluationItem(token, selectedChild.id, sub);
+      setEvalItem(item);
+      setEvalAnswer("");
+      setTimeout(() => speak(item.readAloudText), 400);
+    } catch (error) {
+      Alert.alert("Impossible", String(error));
+    } finally {
+      setEvalBusy(false);
+    }
+  };
+
+  const submitEvalSession = async () => {
+    if (!token || !selectedChild || !evalItem) return;
+    setEvalBusy(true);
+    try {
+      await api.submitEvaluation(token, selectedChild.id, {
+        itemId: evalItem.itemId,
+        subject: evalItem.subject,
+        answer: evalAnswer,
+      });
+      await reloadChildren();
+      await loadSubjectsMeta();
+      setEvalItem(null);
+      setEvalAnswer("");
+      Alert.alert("Super !", "Ton evaluation pour cette matiere est enregistree.");
+    } catch (error) {
+      Alert.alert("Erreur", String(error));
+    } finally {
+      setEvalBusy(false);
+    }
+  };
+
   const createChild = async () => {
     if (
       !token ||
@@ -335,25 +430,17 @@ export default function App() {
     }
   };
 
-  const runEvaluation = async () => {
-    if (!token || !selectedChild) return;
-    setErrorMessage("");
-    try {
-      const result = await api.evaluateChild(token, selectedChild.id);
-      setEvaluationScore(result.score);
-      await reloadChildren();
-    } catch (error) {
-      setErrorMessage(String(error));
-    }
-  };
-
-  const loadLesson = async () => {
     if (!token || !selectedChild) return;
     try {
       const result = await api.getLesson(token, selectedChild.id, subject);
       setLessonPrompt(result.lesson?.prompt || "Aucun contenu disponible.");
-      setDictationPrompt(result.dictation?.prompt || "");
-      setDictationExpected(result.dictation?.expected || "");
+      if (subject === "Francais") {
+        setDictationPrompt(result.dictation?.prompt || "");
+        setDictationExpected(result.dictation?.expected || "");
+      } else {
+        setDictationPrompt(result.lesson?.prompt || "");
+        setDictationExpected(result.lesson?.expected || "");
+      }
       setReviewItemId(result.review?.id || null);
       setReviewPhrase(result.review?.phrase || "");
     } catch (error) {
@@ -383,6 +470,7 @@ export default function App() {
         const result = await api.submitDictation(token, selectedChild.id, {
           expected: dictationExpected,
           answer: dictationInput,
+          subject,
         });
         setSessionFeedback(result.feedback);
         await reloadChildren();
@@ -477,22 +565,22 @@ export default function App() {
 
   if (role === "landing") {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          <Text style={styles.title}>EduCoach FR</Text>
-          <Text style={styles.landingEmoji}>📚✨</Text>
-          <Text style={styles.subtitle}>{apiMessage}</Text>
-          {sessionLoading && <Text style={styles.hint}>Chargement...</Text>}
-          <Text style={styles.sectionTitle}>Qui utilise l&apos;application ?</Text>
-          <Text style={styles.hint}>
+      <SafeAreaView style={warmStyles.screen}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <Text style={warmStyles.heroEmoji}>📚✨</Text>
+          <Text style={warmStyles.title}>EduCoach FR</Text>
+          <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {sessionLoading && <Text style={warmStyles.hint}>Chargement...</Text>}
+          <Text style={warmStyles.sectionTitle}>Qui utilise l&apos;application ?</Text>
+          <Text style={warmStyles.hint}>
             Les parents creent le profil de l&apos;enfant et choisissent son identifiant et son mot de passe. L&apos;enfant se connecte avec ces informations sans voir l&apos;espace parent.
           </Text>
 
-          <TouchableOpacity style={styles.primaryBtn} onPress={() => setRole("auth")}>
-            <Text style={styles.btnText}>Parents et tuteurs</Text>
+          <TouchableOpacity style={warmStyles.btnPrimary} onPress={() => setRole("auth")}>
+            <Text style={warmStyles.btnPrimaryText}>Parents et tuteurs</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.kidPrimaryBtn} onPress={() => setRole("studentAuth")}>
-            <Text style={styles.kidBtnText}>Je suis eleve</Text>
+          <TouchableOpacity style={warmStyles.btnSun} onPress={() => setRole("studentAuth")}>
+            <Text style={warmStyles.btnSunText}>Je suis eleve</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -501,15 +589,16 @@ export default function App() {
 
   if (role === "studentAuth") {
     return (
-      <SafeAreaView style={[styles.container, styles.studentBg]}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          <Text style={[styles.title, styles.studentHeroTitle]}>Salut champion !</Text>
-          <Text style={styles.subtitle}>{apiMessage}</Text>
+      <SafeAreaView style={warmStyles.screenAlt}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <Text style={[warmStyles.heroEmoji, { fontSize: 48 }]}>👋</Text>
+          <Text style={warmStyles.titleLight}>Salut champion !</Text>
+          <Text style={warmStyles.subtitle}>{apiMessage}</Text>
 
-          <Text style={styles.sectionTitle}>Ta connexion</Text>
-          <Text style={styles.hint}>Demande a tes parents ton identifiant et ton mot de passe.</Text>
+          <Text style={warmStyles.sectionTitle}>Ta connexion</Text>
+          <Text style={warmStyles.hint}>Demande a tes parents ton identifiant et ton mot de passe.</Text>
           <TextInput
-            style={styles.kidInput}
+            style={warmStyles.inputKid}
             placeholder="Identifiant"
             autoCapitalize="none"
             autoCorrect={false}
@@ -517,18 +606,18 @@ export default function App() {
             onChangeText={setKidLoginId}
           />
           <TextInput
-            style={styles.kidInput}
+            style={warmStyles.inputKid}
             placeholder="Mot de passe"
             secureTextEntry
             value={kidPassword}
             onChangeText={setKidPassword}
           />
 
-          <TouchableOpacity style={styles.kidPrimaryBtn} onPress={runKidAuth} disabled={authBusy}>
-            {authBusy ? <ActivityIndicator color="#3d3d3d" /> : <Text style={styles.kidBtnText}>C&apos;est parti !</Text>}
+          <TouchableOpacity style={warmStyles.btnSun} onPress={runKidAuth} disabled={authBusy}>
+            {authBusy ? <ActivityIndicator color="#3d3d3d" /> : <Text style={warmStyles.btnSunText}>C&apos;est parti !</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("landing")}>
+          <TouchableOpacity style={warmStyles.btnSoft} onPress={() => setRole("landing")}>
             <Text style={styles.btnText}>Retour</Text>
           </TouchableOpacity>
           {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
@@ -539,13 +628,14 @@ export default function App() {
 
   if (role === "auth") {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Espace parents</Text>
-          <Text style={styles.subtitle}>{apiMessage}</Text>
-          {sessionLoading && <Text style={styles.hint}>Restauration de session en cours...</Text>}
+      <SafeAreaView style={warmStyles.screen}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <Text style={warmStyles.heroEmoji}>🏠</Text>
+          <Text style={warmStyles.title}>Espace parents</Text>
+          <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {sessionLoading && <Text style={warmStyles.hint}>Restauration de session en cours...</Text>}
 
-          <Text style={styles.sectionTitle}>Connexion parent / tuteur</Text>
+          <Text style={warmStyles.sectionTitle}>Connexion parent / tuteur</Text>
 
           <View style={styles.row}>
             <TouchableOpacity
@@ -591,10 +681,11 @@ export default function App() {
 
   if (role === "setup") {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Configuration</Text>
-          <Text style={styles.subtitle}>Parent: {parentName}</Text>
+      <SafeAreaView style={warmStyles.screen}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <Text style={warmStyles.heroEmoji}>⚙️</Text>
+          <Text style={warmStyles.title}>Configuration</Text>
+          <Text style={warmStyles.subtitle}>Parent : {parentName}</Text>
 
           <Text style={styles.sectionTitle}>Ajouter un profil enfant</Text>
           <Text style={styles.hint}>Choisis la classe sur la liste (du CP a la Terminale). Tu definis l&apos;identifiant et le mot de passe pour cet enfant.</Text>
@@ -670,6 +761,35 @@ export default function App() {
             </TouchableOpacity>
           ))}
 
+          {selectedChild && subjectsMeta?.optionalPool && subjectsMeta.optionalPool.length > 0 ? (
+            <View style={[warmStyles.card, warmStyles.cardLift]}>
+              <Text style={warmStyles.sectionTitle}>Matieres optionnelles (classe {selectedChild.grade})</Text>
+              <Text style={warmStyles.hint}>
+                Coche les matieres supplementaires que tu autorises pour cet enfant (non prevues dans ta classe par defaut).
+              </Text>
+              {subjectsMeta.optionalPool.map((s) => {
+                const on = parentOptionalDraft.includes(s);
+                return (
+                  <TouchableOpacity
+                    key={s}
+                    style={{ paddingVertical: 8 }}
+                    onPress={() =>
+                      setParentOptionalDraft((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
+                    }
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: "800", color: T.ink }}>
+                      {on ? "✓ " : "○ "}
+                      {s}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+              <TouchableOpacity style={warmStyles.btnPrimary} onPress={saveParentOptional}>
+                <Text style={warmStyles.btnPrimaryText}>Enregistrer les matieres optionnelles</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           <View style={styles.row}>
             <TouchableOpacity style={styles.secondaryBtn} onPress={() => { loadDashboard(); setRole("parent"); }}>
               <Text style={styles.btnText}>Vue Parent</Text>
@@ -689,10 +809,11 @@ export default function App() {
 
   if (role === "parent") {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Espace Parent</Text>
-          <Text style={styles.subtitle}>Suivi multi-enfants et devoirs</Text>
+      <SafeAreaView style={warmStyles.screen}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <Text style={warmStyles.heroEmoji}>👨‍👩‍👧</Text>
+          <Text style={warmStyles.title}>Espace Parent</Text>
+          <Text style={warmStyles.subtitle}>Suivi et devoirs</Text>
 
           {dashboard.map((item) => (
             <View key={item.childId} style={styles.card}>
@@ -745,123 +866,245 @@ export default function App() {
     );
   }
 
-  const kidUi = sessionKind === "student";
+  if (role === "student" && selectedChild) {
+    const displayChild = selectedChild;
+    return (
+      <SafeAreaView style={warmStyles.screenAlt}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <Text style={warmStyles.heroEmoji}>🌟📖</Text>
+          <Text style={warmStyles.titleLight}>Salut {displayChild?.first_name || "champion"} !</Text>
+          <Text style={warmStyles.subtitle}>
+            Points {displayChild?.points ?? 0} · Classe {displayChild?.grade}
+          </Text>
 
-  return (
-    <SafeAreaView style={[styles.container, kidUi ? styles.studentBg : undefined]}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-        <Text style={[styles.title, kidUi ? styles.studentHeroTitle : undefined]}>{kidUi ? "Ton espace jeu" : "Espace Eleve"}</Text>
-        {!selectedChild ? (
-          <Text>Selectionner un enfant depuis la configuration.</Text>
-        ) : (
-          <>
-            <Text style={[styles.subtitle, kidUi ? styles.studentSubtitle : undefined]}>
-              {kidUi ? `Coucou ${selectedChild.first_name} ! ` : `${selectedChild.first_name} — `}
-              Points {selectedChild.points}
-            </Text>
+          <View style={warmStyles.tabBar}>
+            <TouchableOpacity
+              style={[warmStyles.tab, studentTab === "home" ? warmStyles.tabOn : undefined]}
+              onPress={() => setStudentTab("home")}
+            >
+              <Text style={[warmStyles.tabText, studentTab === "home" ? warmStyles.tabTextOn : undefined]}>Accueil</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[warmStyles.tab, studentTab === "eval" ? warmStyles.tabOn : undefined]}
+              onPress={() => setStudentTab("eval")}
+            >
+              <Text style={[warmStyles.tabText, studentTab === "eval" ? warmStyles.tabTextOn : undefined]}>Evaluations</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[warmStyles.tab, studentTab === "learn" ? warmStyles.tabOn : undefined]}
+              onPress={() => setStudentTab("learn")}
+            >
+              <Text style={[warmStyles.tabText, studentTab === "learn" ? warmStyles.tabTextOn : undefined]}>Apprendre</Text>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.row}>
-              {(["Francais", "Maths", "Histoire"] as Subject[]).map((s) => (
-                <TouchableOpacity
-                  key={s}
-                  style={[kidUi ? styles.kidSubjectBtn : styles.subjectBtn, subject === s ? styles.subjectBtnActive : undefined]}
-                  onPress={() => setSubject(s)}
-                >
-                  <Text style={styles.btnText}>{s}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          {studentTab === "home" && displayChild && (
+            <>
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Tes niveaux par matiere</Text>
+                <Text style={warmStyles.hint}>
+                  E, M ou A = pas encore au programme officiel, c&apos;est notre echelle pour te guider (E = essentiel, M =
+                  confort, A = avance). Chaque matiere evolue separement !
+                </Text>
+                {activeSubjectsList.map((sub) => {
+                  const disp = displayChild.subjectTiersDisplay?.[sub];
+                  const tier = disp?.label || "E";
+                  return (
+                    <View key={sub} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 6 }}>
+                      <Text style={{ fontWeight: "800", color: T.ink, fontSize: 16 }}>{sub}</Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                        <View style={warmStyles.tierBadge}>
+                          <Text style={warmStyles.tierText}>
+                            {tier} · {displayChild.grade}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
 
-            <View style={[styles.card, kidUi ? styles.kidCard : undefined]}>
-              <Text style={styles.cardTitle}>Evaluation initiale (moins de 10 minutes)</Text>
-              <Text>Resultat: {evaluationScore === null ? "Non lancee" : `${evaluationScore}/100`}</Text>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={runEvaluation}>
-                <Text style={styles.btnText}>Lancer</Text>
-              </TouchableOpacity>
-            </View>
+          {studentTab === "eval" && displayChild && (
+            <>
+              <Text style={warmStyles.sectionTitle}>Une evaluation par matiere</Text>
+              <Text style={warmStyles.hint}>Quand c&apos;est valide, un petit vert apparait. Tu peux repasser une eval pour t&apos;ameliorer.</Text>
+              {activeSubjectsList.map((sub) => {
+                const done = displayChild.evaluationBySubject?.[sub]?.done;
+                return (
+                  <View key={`ev-${sub}`} style={[warmStyles.card, warmStyles.cardLift]}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                      <Text style={{ fontWeight: "900", fontSize: 17, color: T.ink }}>{sub}</Text>
+                      {done ? (
+                        <View style={warmStyles.chipGreen}>
+                          <Text style={{ fontWeight: "800", color: T.mintDark }}>Fait</Text>
+                          <View style={warmStyles.doneDot} />
+                        </View>
+                      ) : (
+                        <Text style={warmStyles.hint}>A faire</Text>
+                      )}
+                    </View>
+                    {evalItem?.subject === sub ? (
+                      <>
+                        <Text style={warmStyles.hint}>{evalItem.prompt}</Text>
+                        <TouchableOpacity style={warmStyles.btnSun} onPress={() => speak(evalItem.readAloudText)}>
+                          <Text style={warmStyles.btnSunText}>Reecouter</Text>
+                        </TouchableOpacity>
+                        <TextInput
+                          style={warmStyles.inputKid}
+                          value={evalAnswer}
+                          onChangeText={setEvalAnswer}
+                          placeholder={evalItem.exerciseType === "dictee" ? "Ecris la phrase" : "Ta reponse"}
+                          multiline={evalItem.exerciseType === "dictee"}
+                        />
+                        <TouchableOpacity style={warmStyles.btnPrimary} onPress={submitEvalSession} disabled={evalBusy}>
+                          {evalBusy ? <ActivityIndicator color="#fff" /> : <Text style={warmStyles.btnPrimaryText}>Valider</Text>}
+                        </TouchableOpacity>
+                        <TouchableOpacity style={warmStyles.btnSoft} onPress={() => { setEvalItem(null); setEvalAnswer(""); }}>
+                          <Text style={styles.btnText}>Annuler</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <TouchableOpacity style={warmStyles.btnPrimary} onPress={() => startEvalSubject(sub)} disabled={evalBusy}>
+                        <Text style={warmStyles.btnPrimaryText}>{done ? "Refaire" : "Commencer"}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
+            </>
+          )}
 
-            <View style={[styles.card, kidUi ? styles.kidCard : undefined]}>
-              <Text style={styles.cardTitle}>Programme court (10 minutes max)</Text>
-              <Text>Etape: {step.toUpperCase()}</Text>
+          {studentTab === "learn" && displayChild && (
+            <>
+              <Text style={warmStyles.sectionTitle}>Choisis une matiere</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
+                <View style={[warmStyles.pillRow, { flexDirection: "row" }]}>
+                  {activeSubjectsList.map((s) => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[warmStyles.pill, subject === s ? warmStyles.pillActive : undefined]}
+                      onPress={() => setSubject(s)}
+                    >
+                      <Text style={[styles.btnText, subject === s ? undefined : { color: T.ink, fontWeight: "800" }]}>{s}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
 
-              {step === "lecture" && <Text style={styles.block}>{lessonPrompt}</Text>}
-              {step === "dictee" && (
-                <>
-                  <Text style={styles.block}>{dictationPrompt || "Quiz oral de la matiere en cours"}</Text>
-                  {subject === "Francais" && (
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Lecture</Text>
+                <View style={warmStyles.blockFun}>
+                  <Text style={{ fontSize: 16, lineHeight: 24, color: T.ink }}>{lessonPrompt}</Text>
+                </View>
+              </View>
+
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Exercice (dictee orale ou question)</Text>
+                <Text style={warmStyles.hint}>Etape : {step === "lecture" ? "Lecture" : step}</Text>
+
+                {step === "lecture" && (
+                  <TouchableOpacity style={warmStyles.btnSun} onPress={() => setStep("dictee")}>
+                    <Text style={warmStyles.btnSunText}>Je passe a l&apos;exercice</Text>
+                  </TouchableOpacity>
+                )}
+
+                {step === "dictee" && (
+                  <>
+                    <View style={warmStyles.blockFun}>
+                      <Text style={{ fontSize: 16, color: T.ink }}>{dictationPrompt}</Text>
+                    </View>
+                    <TouchableOpacity style={warmStyles.btnSun} onPress={() => speakDicteePhrase(dictationPrompt, dictationExpected)}>
+                      <Text style={warmStyles.btnSunText}>Entendre la phrase</Text>
+                    </TouchableOpacity>
                     <TextInput
-                      style={[styles.input, styles.multiline]}
+                      style={[warmStyles.inputKid, { minHeight: 100, textAlignVertical: "top" }]}
                       value={dictationInput}
                       onChangeText={setDictationInput}
-                      multiline
-                      placeholder="Ecris la phrase ici"
+                      multiline={subject === "Francais"}
+                      placeholder={subject === "Francais" ? "Ecris la phrase ici" : "Ta reponse"}
                     />
-                  )}
-                </>
-              )}
+                    <TouchableOpacity style={warmStyles.btnPrimary} onPress={proceedSession}>
+                      <Text style={warmStyles.btnPrimaryText}>Valider</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
 
-              {step === "correction" && <Text style={styles.block}>{sessionFeedback || "Corrige puis reecris."}</Text>}
+                {step === "correction" && (
+                  <View style={warmStyles.blockFun}>
+                    <Text style={{ fontSize: 16, color: T.ink }}>{sessionFeedback}</Text>
+                    <TouchableOpacity style={warmStyles.btnPrimary} onPress={proceedSession}>
+                      <Text style={warmStyles.btnPrimaryText}>Continuer</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
-              {step === "revision" && (
-                <Text style={styles.block}>
-                  Revision espacee: {reviewPhrase || "Aucune phrase en retard, bravo."}
-                </Text>
-              )}
+                {step === "revision" && (
+                  <View style={warmStyles.blockFun}>
+                    <Text style={{ fontSize: 16, color: T.ink }}>Revision : {reviewPhrase}</Text>
+                    <TouchableOpacity style={warmStyles.btnPrimary} onPress={proceedSession}>
+                      <Text style={warmStyles.btnPrimaryText}>J&apos;ai revise</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
-              {step === "reward" && (
-                <View>
-                  <Text style={styles.block}>Recompense: points + carte fun + blague.</Text>
-                  <Text style={styles.hint}>Blague: Pourquoi le stylo chante faux ? Parce qu'il manque de notes !</Text>
-                </View>
-              )}
+                {step === "reward" && (
+                  <View style={warmStyles.blockFun}>
+                    <Text style={{ fontSize: 18, fontWeight: "900", color: T.mintDark }}>Bravo !</Text>
+                    <Text style={warmStyles.hint}>Tu gagnes des points et une mini recompense.</Text>
+                    <Text style={warmStyles.hint}>Blague : Pourquoi le livre est fatigue ? Parce qu&apos;il a trop de feuilles !</Text>
+                    <TouchableOpacity style={warmStyles.btnSun} onPress={proceedSession}>
+                      <Text style={warmStyles.btnSunText}>Mission suivante</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
 
-              <TouchableOpacity style={styles.primaryBtn} onPress={proceedSession}>
-                <Text style={styles.btnText}>Continuer</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Idees pour {displayChild.grade}</Text>
+                {recommendations
+                  .filter((r) => r.subject === subject)
+                  .flatMap((r) => r.microLessons || [])
+                  .slice(0, 3)
+                  .map((lesson: { title: string; durationMin: number }, idx: number) => (
+                    <Text key={`lesson-${idx}`} style={warmStyles.hint}>
+                      - {lesson.title} (~{lesson.durationMin} min)
+                    </Text>
+                  ))}
+              </View>
+            </>
+          )}
 
-            <View style={[styles.card, kidUi ? styles.kidCard : undefined]}>
-              <Text style={styles.cardTitle}>Programme conseille pour {selectedChild.grade}</Text>
-              {recommendations
-                .filter((r) => r.subject === subject)
-                .flatMap((r) => r.microLessons || [])
-                .slice(0, 3)
-                .map((lesson: any, idx: number) => (
-                  <Text key={`lesson-${idx}`}>- {lesson.title} ({lesson.durationMin} min)</Text>
-                ))}
-            </View>
-          </>
-        )}
-
-        {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
-        {(curriculumSources?.length ?? 0) > 0 && (
-          <View style={[styles.card, kidUi ? styles.kidCard : undefined]}>
-            <Text style={styles.cardTitle}>Sources pedagogiques en ligne</Text>
-            {(curriculumSources ?? []).slice(0, 4).map((src, idx) => (
-              <Text style={styles.hint} key={`src-${idx}`}>{src}</Text>
-            ))}
-          </View>
-        )}
-        {sessionKind === "parent" ? (
-          <>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("setup")}>
-              <Text style={styles.btnText}>Changer d&apos;enfant</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("parent")}>
-              <Text style={styles.btnText}>Vue parent</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={logout}>
-              <Text style={styles.btnText}>Deconnexion parent</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <TouchableOpacity style={kidUi ? styles.kidSecondaryBtn : styles.secondaryBtn} onPress={logoutStudent}>
-            <Text style={kidUi ? styles.kidBtnDarkText : styles.btnText}>Quitter mon espace</Text>
+          {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+          <TouchableOpacity
+            style={styles.kidSecondaryBtn}
+            onPress={() => {
+              if (sessionKind === "student") logoutStudent();
+              else setRole("setup");
+            }}
+          >
+            <Text style={styles.kidBtnDarkText}>{sessionKind === "student" ? "Quitter mon espace" : "Retour configuration"}</Text>
           </TouchableOpacity>
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (role === "student" && !selectedChild) {
+    return (
+      <SafeAreaView style={warmStyles.screen}>
+        <ScrollView contentContainerStyle={warmStyles.pad}>
+          <Text style={warmStyles.title}>Selectionne un enfant dans la configuration.</Text>
+          <TouchableOpacity style={warmStyles.btnPrimary} onPress={() => setRole("setup")}>
+            <Text style={warmStyles.btnPrimaryText}>Retour configuration</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return null;
 }
 
 const styles = StyleSheet.create({
