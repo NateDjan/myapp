@@ -1,0 +1,34 @@
+{
+  "name": "fr-edu-smartphone-app",
+  "version": "0.1.0",
+  "description": "Smartphone educational app prototype",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NateDjan/myapp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NateDjan/myapp/issues"
+  },
+  "homepage": "https://github.com/NateDjan/myapp#readme",
+  "private": true,
+  "dependencies": {
+    "expo": "^54.0.2",
+    "react": "^19.1.0",
+    "react-native": "^0.81.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.16",
+    "typescript": "^5.9.3"
+  }
+}
