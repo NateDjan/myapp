@@ -430,6 +430,7 @@ export default function App() {
     }
   };
 
+  const loadLesson = async () => {
     if (!token || !selectedChild) return;
     try {
       const result = await api.getLesson(token, selectedChild.id, subject);
