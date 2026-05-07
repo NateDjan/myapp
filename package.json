@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "api": "node backend/server.js"
+    "api": "node backend/server.js",
+    "test:backend": "node --test backend/server.test.js"
   },
   "repository": {
     "type": "git",
@@ -24,16 +25,19 @@
   "homepage": "https://github.com/NateDjan/myapp#readme",
   "private": true,
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
     "cors": "^2.8.6",
     "expo": "^54.0.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "react": "^19.1.0",
     "react-native": "^0.81.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/react": "^19.1.16",
+    "supertest": "^7.2.2",
     "typescript": "^5.9.3"
   }
 }
