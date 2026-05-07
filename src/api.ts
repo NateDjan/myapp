@@ -1,3 +1,6 @@
+import { Platform } from "react-native";
+import Constants from "expo-constants";
+
 export type Child = {
   id: number;
   first_name: string;
@@ -12,7 +15,27 @@ export type Child = {
   history_level: number;
 };
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:4000";
+function resolveApiBase() {
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:4000`;
+  }
+
+  const hostUri =
+    Constants.expoConfig?.hostUri ||
+    (Constants as any).manifest2?.extra?.expoGo?.debuggerHost ||
+    (Constants as any).manifest?.debuggerHost;
+
+  if (hostUri) {
+    const host = String(hostUri).split(":")[0];
+    return `http://${host}:4000`;
+  }
+
+  return "http://localhost:4000";
+}
+
+const API_BASE = resolveApiBase();
 
 async function request<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
   const headers: Record<string, string> = {
@@ -50,6 +73,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  logoutParent: (token: string) =>
+    request<void>(
+      "/api/parents/logout",
+      {
+        method: "POST",
+      },
+      token
+    ),
   createChild: (
     token: string,
     payload: { firstName: string; grade: string; age: number; strengths: string; weaknesses: string }

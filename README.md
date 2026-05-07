@@ -2,6 +2,13 @@
 
 Application smartphone (Expo React Native) + API Node.js/SQLite pour aider les eleves a progresser en lecture, orthographe et devoirs.
 
+## Webapp + App mobile: meme produit, meme fonctionnalites
+
+- Une seule base UI (`App.tsx`) sert le web et le mobile.
+- Les donnees pedagogiques/progression sont synchronisees via le meme backend API.
+- La session parent est restauree automatiquement (memoire locale) sur web et mobile.
+- En se connectant avec le meme compte, vous retrouvez vos avances des deux cotes.
+
 ## Stack
 
 - Mobile: Expo + React Native + TypeScript

@@ -8,14 +8,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api, type Child } from "./src/api";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
 type Subject = "Francais" | "Maths" | "Histoire";
+const SESSION_STORAGE_KEY = "educoach.session.v1";
 
 export default function App() {
   const [token, setToken] = useState("");
+  const [refreshToken, setRefreshToken] = useState("");
   const [parentName, setParentName] = useState("");
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [authMode, setAuthMode] = useState<"login" | "register">("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,6 +60,44 @@ export default function App() {
   );
 
   useEffect(() => {
+    const hydrateSession = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(SESSION_STORAGE_KEY);
+        if (!saved) return;
+        const parsed = JSON.parse(saved) as { token: string; refreshToken?: string; parentName?: string };
+        let activeToken = parsed.token;
+        let activeRefresh = parsed.refreshToken || "";
+        let kids: Child[] | null = null;
+        try {
+          kids = await api.getChildren(activeToken);
+        } catch {
+          if (activeRefresh) {
+            const refreshed = await api.refreshParentToken({ refreshToken: activeRefresh });
+            activeToken = refreshed.token;
+            activeRefresh = refreshed.refreshToken;
+            kids = await api.getChildren(activeToken);
+          }
+        }
+
+        if (kids) {
+          setToken(activeToken);
+          setRefreshToken(activeRefresh);
+          setParentName(parsed.parentName || "");
+          setChildren(kids);
+          if (kids.length > 0) setSelectedChildId(kids[0].id);
+          setRole("setup");
+          await AsyncStorage.setItem(
+            SESSION_STORAGE_KEY,
+            JSON.stringify({ token: activeToken, refreshToken: activeRefresh, parentName: parsed.parentName || "" })
+          );
+        }
+      } catch {
+        await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
+      } finally {
+        setSessionLoading(false);
+      }
+    };
+
     api.health()
       .then(() => setApiMessage("API connectee"))
       .catch(() => setApiMessage("API indisponible (demarrer npm run api)"));
@@ -66,6 +108,7 @@ export default function App() {
         setCurriculumNote(data.metadata.notes);
       })
       .catch(() => undefined);
+    hydrateSession();
   }, []);
 
   const runAuth = async () => {
@@ -76,14 +119,33 @@ export default function App() {
       }
       const logged = await api.loginParent({ email, password });
       setToken(logged.token);
+      setRefreshToken(logged.refreshToken);
       setParentName(logged.parent.name);
       setRole("setup");
       const kids = await api.getChildren(logged.token);
       setChildren(kids);
       if (kids.length > 0) setSelectedChildId(kids[0].id);
+      await AsyncStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({ token: logged.token, refreshToken: logged.refreshToken, parentName: logged.parent.name })
+      );
     } catch (error) {
       setErrorMessage(String(error));
     }
+  };
+
+  const logout = async () => {
+    try {
+      if (token) await api.logoutParent(token);
+    } catch {
+      // ignore logout API errors and clear local session anyway
+    }
+    await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
+    setToken("");
+    setRefreshToken("");
+    setChildren([]);
+    setSelectedChildId(null);
+    setRole("auth");
   };
 
   const reloadChildren = async () => {
@@ -257,6 +319,7 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>EduCoach FR</Text>
           <Text style={styles.subtitle}>{apiMessage}</Text>
+          {sessionLoading && <Text style={styles.hint}>Restauration de session en cours...</Text>}
           <Text style={styles.sectionTitle}>Authentification parent/tuteur</Text>
 
           <View style={styles.row}>
@@ -322,6 +385,9 @@ export default function App() {
               <Text style={styles.btnText}>Vue Eleve</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={logout}>
+            <Text style={styles.btnText}>Deconnexion</Text>
+          </TouchableOpacity>
           {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         </ScrollView>
       </SafeAreaView>
@@ -377,6 +443,9 @@ export default function App() {
 
           <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("setup")}>
             <Text style={styles.btnText}>Retour</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={logout}>
+            <Text style={styles.btnText}>Deconnexion</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -473,6 +542,9 @@ export default function App() {
         )}
         <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("setup")}>
           <Text style={styles.btnText}>Retour</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.secondaryBtn} onPress={logout}>
+          <Text style={styles.btnText}>Deconnexion</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
