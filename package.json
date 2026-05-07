@@ -8,7 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "api": "node backend/server.js"
   },
   "repository": {
     "type": "git",
@@ -23,9 +24,13 @@
   "homepage": "https://github.com/NateDjan/myapp#readme",
   "private": true,
   "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "cors": "^2.8.6",
     "expo": "^54.0.2",
+    "express": "^5.2.1",
     "react": "^19.1.0",
-    "react-native": "^0.81.4"
+    "react-native": "^0.81.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/react": "^19.1.16",

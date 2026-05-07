@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -8,74 +8,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-type ChildProfile = {
-  id: string;
-  firstName: string;
-  grade: string;
-  age: string;
-  strengths: string;
-  weaknesses: string;
-  points: number;
-  readingLevel: number;
-  spellingLevel: number;
-  historyLevel: number;
-  mathLevel: number;
-  mistakesToReview: string[];
-};
+import { api, type Child } from "./src/api";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
 type Subject = "Francais" | "Maths" | "Histoire";
 
-const readingTexts = [
-  "Lina adore lire des histoires courtes chaque soir.",
-  "Le petit explorateur observe les etoiles dans le ciel sombre.",
-  "Pendant les vacances, la classe visite un musee sur la Revolution francaise.",
-];
-
-const dictationItems = [
-  {
-    prompt: "Ecris: Les enfants jouent dans la cour de l'ecole.",
-    expected: "Les enfants jouent dans la cour de l'ecole.",
-  },
-  {
-    prompt: "Ecris: Nous avons termine nos devoirs de mathematiques.",
-    expected: "Nous avons termine nos devoirs de mathematiques.",
-  },
-  {
-    prompt: "Ecris: Mon frere raconte une histoire interessante.",
-    expected: "Mon frere raconte une histoire interessante.",
-  },
-];
-
-function scoreAnswer(answer: string, expected: string) {
-  if (answer.trim() === expected.trim()) return 100;
-  const normalizedA = answer.trim().toLowerCase();
-  const normalizedE = expected.trim().toLowerCase();
-  let same = 0;
-  for (let i = 0; i < Math.min(normalizedA.length, normalizedE.length); i += 1) {
-    if (normalizedA[i] === normalizedE[i]) same += 1;
-  }
-  return Math.max(0, Math.round((same / normalizedE.length) * 100));
-}
-
 export default function App() {
+  const [token, setToken] = useState("");
   const [parentName, setParentName] = useState("");
-  const [children, setChildren] = useState<ChildProfile[]>([]);
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
-  const [role, setRole] = useState<"setup" | "parent" | "student">("setup");
-  const [newChild, setNewChild] = useState<
-    Omit<
-      ChildProfile,
-      | "id"
-      | "points"
-      | "readingLevel"
-      | "spellingLevel"
-      | "historyLevel"
-      | "mathLevel"
-      | "mistakesToReview"
-    >
-  >({
+  const [authMode, setAuthMode] = useState<"login" | "register">("register");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [children, setChildren] = useState<Child[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
+  const [role, setRole] = useState<"auth" | "setup" | "parent" | "student">("auth");
+  const [subject, setSubject] = useState<Subject>("Francais");
+
+  const [newChild, setNewChild] = useState({
     firstName: "",
     grade: "",
     age: "",
@@ -83,66 +32,107 @@ export default function App() {
     weaknesses: "",
   });
 
-  const [subject, setSubject] = useState<Subject>("Francais");
-  const [isEvaluationDone, setIsEvaluationDone] = useState(false);
-  const [evaluationScore, setEvaluationScore] = useState(0);
+  const [apiMessage, setApiMessage] = useState("API non testee");
+  const [evaluationScore, setEvaluationScore] = useState<number | null>(null);
   const [step, setStep] = useState<SessionStep>("lecture");
+  const [lessonPrompt, setLessonPrompt] = useState("");
+  const [dictationPrompt, setDictationPrompt] = useState("");
+  const [dictationExpected, setDictationExpected] = useState("");
   const [dictationInput, setDictationInput] = useState("");
+  const [reviewItemId, setReviewItemId] = useState<number | null>(null);
+  const [reviewPhrase, setReviewPhrase] = useState("");
   const [sessionFeedback, setSessionFeedback] = useState("");
+  const [dashboard, setDashboard] = useState<any[]>([]);
+  const [homeworkTitle, setHomeworkTitle] = useState("");
+  const [homeworkList, setHomeworkList] = useState<any[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const selectedChild = useMemo(
     () => children.find((c) => c.id === selectedChildId) ?? null,
     [children, selectedChildId]
   );
 
-  const createChild = () => {
-    if (!newChild.firstName || !newChild.grade) return;
-    const child: ChildProfile = {
-      id: String(Date.now()),
-      ...newChild,
-      points: 10,
-      readingLevel: 1,
-      spellingLevel: 1,
-      historyLevel: 1,
-      mathLevel: 1,
-      mistakesToReview: [],
-    };
-    setChildren((prev) => [...prev, child]);
-    setSelectedChildId(child.id);
-    setNewChild({
-      firstName: "",
-      grade: "",
-      age: "",
-      strengths: "",
-      weaknesses: "",
-    });
+  useEffect(() => {
+    api.health()
+      .then(() => setApiMessage("API connectee"))
+      .catch(() => setApiMessage("API indisponible (demarrer npm run api)"));
+  }, []);
+
+  const runAuth = async () => {
+    setErrorMessage("");
+    try {
+      if (authMode === "register") {
+        await api.registerParent({ name: parentName || "Parent", email, password });
+      }
+      const logged = await api.loginParent({ email, password });
+      setToken(logged.token);
+      setParentName(logged.parent.name);
+      setRole("setup");
+      const kids = await api.getChildren(logged.token);
+      setChildren(kids);
+      if (kids.length > 0) setSelectedChildId(kids[0].id);
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
   };
 
-  const updateChild = (updater: (child: ChildProfile) => ChildProfile) => {
-    if (!selectedChild) return;
-    setChildren((prev) =>
-      prev.map((c) => (c.id === selectedChild.id ? updater(c) : c))
-    );
+  const reloadChildren = async () => {
+    if (!token) return;
+    const kids = await api.getChildren(token);
+    setChildren(kids);
+    if (!selectedChildId && kids.length > 0) setSelectedChildId(kids[0].id);
   };
 
-  const runEvaluation = () => {
-    if (!selectedChild) return;
-    const base = Number(selectedChild.age) > 10 ? 65 : 52;
-    const booster = selectedChild.strengths.toLowerCase().includes("lecture")
-      ? 12
-      : 0;
-    const score = Math.min(95, base + booster);
-    setEvaluationScore(score);
-    setIsEvaluationDone(true);
-    updateChild((c) => ({
-      ...c,
-      readingLevel: score > 80 ? 3 : score > 60 ? 2 : 1,
-      spellingLevel: score > 75 ? 3 : score > 55 ? 2 : 1,
-    }));
+  const createChild = async () => {
+    if (!token || !newChild.firstName || !newChild.grade || !newChild.age) return;
+    setErrorMessage("");
+    try {
+      await api.createChild(token, {
+        firstName: newChild.firstName,
+        grade: newChild.grade,
+        age: Number(newChild.age),
+        strengths: newChild.strengths,
+        weaknesses: newChild.weaknesses,
+      });
+      setNewChild({ firstName: "", grade: "", age: "", strengths: "", weaknesses: "" });
+      await reloadChildren();
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
   };
 
-  const proceedSession = () => {
-    if (!selectedChild) return;
+  const runEvaluation = async () => {
+    if (!token || !selectedChild) return;
+    setErrorMessage("");
+    try {
+      const result = await api.evaluateChild(token, selectedChild.id);
+      setEvaluationScore(result.score);
+      await reloadChildren();
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
+  const loadLesson = async () => {
+    if (!token || !selectedChild) return;
+    try {
+      const result = await api.getLesson(token, selectedChild.id, subject);
+      setLessonPrompt(result.lesson?.prompt || "Aucun contenu disponible.");
+      setDictationPrompt(result.dictation?.prompt || "");
+      setDictationExpected(result.dictation?.expected || "");
+      setReviewItemId(result.review?.id || null);
+      setReviewPhrase(result.review?.phrase || "");
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
+  useEffect(() => {
+    loadLesson();
+  }, [subject, selectedChildId]);
+
+  const proceedSession = async () => {
+    if (!selectedChild || !token) return;
 
     if (step === "lecture") {
       setStep("dictee");
@@ -150,25 +140,22 @@ export default function App() {
     }
 
     if (step === "dictee") {
-      const current =
-        dictationItems[(selectedChild.spellingLevel - 1) % dictationItems.length];
-      const score = scoreAnswer(dictationInput, current.expected);
-      const hasMistake = score < 100;
-
-      updateChild((c) => ({
-        ...c,
-        points: c.points + (score > 80 ? 20 : 10),
-        mistakesToReview: hasMistake
-          ? [...c.mistakesToReview, current.expected]
-          : c.mistakesToReview,
-      }));
-
-      setSessionFeedback(
-        score === 100
-          ? "Excellent, aucune faute."
-          : `Score ${score}/100. Corrige puis reecris la phrase.`
-      );
-      setStep("correction");
+      if (!dictationExpected) {
+        setSessionFeedback("Cette matiere ne contient pas de dictee pour le moment.");
+        setStep("reward");
+        return;
+      }
+      try {
+        const result = await api.submitDictation(token, selectedChild.id, {
+          expected: dictationExpected,
+          answer: dictationInput,
+        });
+        setSessionFeedback(result.feedback);
+        await reloadChildren();
+        setStep("correction");
+      } catch (error) {
+        setErrorMessage(String(error));
+      }
       return;
     }
 
@@ -178,7 +165,13 @@ export default function App() {
     }
 
     if (step === "revision") {
-      updateChild((c) => ({ ...c, points: c.points + 15 }));
+      if (reviewItemId) {
+        try {
+          await api.completeReview(token, reviewItemId, true);
+        } catch (error) {
+          setErrorMessage(String(error));
+        }
+      }
       setStep("reward");
       return;
     }
@@ -187,92 +180,124 @@ export default function App() {
       setStep("lecture");
       setDictationInput("");
       setSessionFeedback("");
-      updateChild((c) => ({ ...c, points: c.points + 5 }));
+      await reloadChildren();
+      await loadLesson();
     }
   };
+
+  const loadDashboard = async () => {
+    if (!token) return;
+    try {
+      const data = await api.getDashboard(token);
+      setDashboard(data.progress);
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
+  const addHomework = async () => {
+    if (!token || !selectedChild || !homeworkTitle.trim()) return;
+    try {
+      await api.createHomework(token, selectedChild.id, {
+        subject,
+        title: homeworkTitle,
+        details: "Ajoute manuellement depuis espace parent.",
+        dueDate: "",
+      });
+      setHomeworkTitle("");
+      const rows = await api.getHomework(token, selectedChild.id);
+      setHomeworkList(rows);
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
+  const refreshHomework = async () => {
+    if (!token || !selectedChild) return;
+    try {
+      const rows = await api.getHomework(token, selectedChild.id);
+      setHomeworkList(rows);
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
+  useEffect(() => {
+    refreshHomework();
+  }, [selectedChildId, token]);
+
+  if (role === "auth") {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.title}>EduCoach FR</Text>
+          <Text style={styles.subtitle}>{apiMessage}</Text>
+          <Text style={styles.sectionTitle}>Authentification parent/tuteur</Text>
+
+          <View style={styles.row}>
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setAuthMode("register")}>
+              <Text style={styles.btnText}>Inscription</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setAuthMode("login")}>
+              <Text style={styles.btnText}>Connexion</Text>
+            </TouchableOpacity>
+          </View>
+
+          {authMode === "register" && (
+            <TextInput
+              style={styles.input}
+              placeholder="Nom parent"
+              value={parentName}
+              onChangeText={setParentName}
+            />
+          )}
+          <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
+          <TextInput style={styles.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry />
+
+          <TouchableOpacity style={styles.primaryBtn} onPress={runAuth}>
+            <Text style={styles.btnText}>{authMode === "register" ? "Creer puis se connecter" : "Se connecter"}</Text>
+          </TouchableOpacity>
+          {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   if (role === "setup") {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>EduCoach FR</Text>
-          <Text style={styles.subtitle}>
-            App smartphone pour progresser en 10 minutes
-          </Text>
-
-          <Text style={styles.sectionTitle}>Compte parent/tuteur</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nom du parent"
-            value={parentName}
-            onChangeText={setParentName}
-          />
+          <Text style={styles.title}>Configuration</Text>
+          <Text style={styles.subtitle}>Parent: {parentName}</Text>
 
           <Text style={styles.sectionTitle}>Ajouter un profil enfant</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Prenom"
-            value={newChild.firstName}
-            onChangeText={(v) => setNewChild((p) => ({ ...p, firstName: v }))}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Classe (ex: CE2)"
-            value={newChild.grade}
-            onChangeText={(v) => setNewChild((p) => ({ ...p, grade: v }))}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Age"
-            value={newChild.age}
-            onChangeText={(v) => setNewChild((p) => ({ ...p, age: v }))}
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Points forts"
-            value={newChild.strengths}
-            onChangeText={(v) => setNewChild((p) => ({ ...p, strengths: v }))}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Points faibles"
-            value={newChild.weaknesses}
-            onChangeText={(v) => setNewChild((p) => ({ ...p, weaknesses: v }))}
-          />
+          <TextInput style={styles.input} placeholder="Prenom" value={newChild.firstName} onChangeText={(v) => setNewChild((p) => ({ ...p, firstName: v }))} />
+          <TextInput style={styles.input} placeholder="Classe" value={newChild.grade} onChangeText={(v) => setNewChild((p) => ({ ...p, grade: v }))} />
+          <TextInput style={styles.input} placeholder="Age" value={newChild.age} onChangeText={(v) => setNewChild((p) => ({ ...p, age: v }))} keyboardType="numeric" />
+          <TextInput style={styles.input} placeholder="Points forts" value={newChild.strengths} onChangeText={(v) => setNewChild((p) => ({ ...p, strengths: v }))} />
+          <TextInput style={styles.input} placeholder="Points faibles" value={newChild.weaknesses} onChangeText={(v) => setNewChild((p) => ({ ...p, weaknesses: v }))} />
 
           <TouchableOpacity style={styles.primaryBtn} onPress={createChild}>
             <Text style={styles.btnText}>Ajouter l'enfant</Text>
           </TouchableOpacity>
 
-          <Text style={styles.sectionTitle}>Profils enregistres</Text>
+          <Text style={styles.sectionTitle}>Enfants</Text>
           {children.map((child) => (
-            <TouchableOpacity
-              key={child.id}
-              style={styles.card}
-              onPress={() => setSelectedChildId(child.id)}
-            >
-              <Text style={styles.cardTitle}>
-                {child.firstName} - {child.grade}
-              </Text>
+            <TouchableOpacity key={child.id} style={styles.card} onPress={() => setSelectedChildId(child.id)}>
+              <Text style={styles.cardTitle}>{child.first_name} - {child.grade}</Text>
               <Text>Points: {child.points}</Text>
             </TouchableOpacity>
           ))}
 
           <View style={styles.row}>
-            <TouchableOpacity
-              style={styles.secondaryBtn}
-              onPress={() => setRole("parent")}
-            >
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => { loadDashboard(); setRole("parent"); }}>
               <Text style={styles.btnText}>Vue Parent</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.secondaryBtn}
-              onPress={() => setRole("student")}
-            >
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("student")}>
               <Text style={styles.btnText}>Vue Eleve</Text>
             </TouchableOpacity>
           </View>
+          {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         </ScrollView>
       </SafeAreaView>
     );
@@ -283,30 +308,33 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>Espace Parent</Text>
-          <Text style={styles.subtitle}>
-            Tuteur: {parentName || "Non renseigne"}
-          </Text>
+          <Text style={styles.subtitle}>Suivi multi-enfants et devoirs</Text>
 
-          {children.map((child) => (
-            <View key={child.id} style={styles.card}>
-              <Text style={styles.cardTitle}>
-                {child.firstName} ({child.grade})
-              </Text>
-              <Text>Age: {child.age}</Text>
-              <Text>Niveau lecture: {child.readingLevel}/3</Text>
-              <Text>Niveau orthographe: {child.spellingLevel}/3</Text>
-              <Text>Points accumules: {child.points}</Text>
-              <Text>Erreurs a revoir: {child.mistakesToReview.length}</Text>
-              <Text style={styles.hint}>
-                Connexion Pronote: mode demo (a integrer avec API officielle)
-              </Text>
+          {dashboard.map((item) => (
+            <View key={item.childId} style={styles.card}>
+              <Text style={styles.cardTitle}>{item.childName}</Text>
+              <Text>Niveau lecture: {item.readingLevel}/3</Text>
+              <Text>Niveau orthographe: {item.spellingLevel}/3</Text>
+              <Text>Points: {item.points}</Text>
+              <Text>Revisions en attente: {item.pendingReviews}</Text>
             </View>
           ))}
 
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => setRole("setup")}
-          >
+          <Text style={styles.sectionTitle}>Ajout devoir (import manuel / Pronote)</Text>
+          <TextInput style={styles.input} value={homeworkTitle} onChangeText={setHomeworkTitle} placeholder="Ex: Exercice de conjugaison p.42" />
+          <TouchableOpacity style={styles.primaryBtn} onPress={addHomework}>
+            <Text style={styles.btnText}>Ajouter devoir a l'enfant selectionne</Text>
+          </TouchableOpacity>
+          <Text style={styles.hint}>Pronote: endpoint prevu, integration officielle a finaliser.</Text>
+
+          {homeworkList.map((hw) => (
+            <View style={styles.card} key={hw.id}>
+              <Text style={styles.cardTitle}>{hw.subject} - {hw.title}</Text>
+              <Text>Source: {hw.source}</Text>
+            </View>
+          ))}
+
+          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("setup")}>
             <Text style={styles.btnText}>Retour</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -314,62 +342,41 @@ export default function App() {
     );
   }
 
-  const readingText = selectedChild
-    ? readingTexts[(selectedChild.readingLevel - 1) % readingTexts.length]
-    : readingTexts[0];
-  const dictation = selectedChild
-    ? dictationItems[(selectedChild.spellingLevel - 1) % dictationItems.length]
-    : dictationItems[0];
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Espace Eleve</Text>
         {!selectedChild ? (
-          <Text>Ajoute ou selectionne un profil depuis l'ecran principal.</Text>
+          <Text>Selectionner un enfant depuis la configuration.</Text>
         ) : (
           <>
-            <Text style={styles.subtitle}>
-              {selectedChild.firstName} - Points {selectedChild.points}
-            </Text>
+            <Text style={styles.subtitle}>{selectedChild.first_name} - Points {selectedChild.points}</Text>
 
             <View style={styles.row}>
               {(["Francais", "Maths", "Histoire"] as Subject[]).map((s) => (
-                <TouchableOpacity
-                  key={s}
-                  style={[
-                    styles.subjectBtn,
-                    subject === s ? styles.subjectBtnActive : undefined,
-                  ]}
-                  onPress={() => setSubject(s)}
-                >
+                <TouchableOpacity key={s} style={[styles.subjectBtn, subject === s ? styles.subjectBtnActive : undefined]} onPress={() => setSubject(s)}>
                   <Text style={styles.btnText}>{s}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>
-                Evaluation initiale (moins de 10 minutes)
-              </Text>
-              <Text>
-                Resultat: {isEvaluationDone ? `${evaluationScore}/100` : "Non demarree"}
-              </Text>
+              <Text style={styles.cardTitle}>Evaluation initiale (moins de 10 minutes)</Text>
+              <Text>Resultat: {evaluationScore === null ? "Non lancee" : `${evaluationScore}/100`}</Text>
               <TouchableOpacity style={styles.secondaryBtn} onPress={runEvaluation}>
-                <Text style={styles.btnText}>Lancer l'evaluation</Text>
+                <Text style={styles.btnText}>Lancer</Text>
               </TouchableOpacity>
             </View>
 
-            {subject === "Francais" ? (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Programme court (10 minutes max)</Text>
-                <Text>Etape actuelle: {step.toUpperCase()}</Text>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Programme court (10 minutes max)</Text>
+              <Text>Etape: {step.toUpperCase()}</Text>
 
-                {step === "lecture" && <Text style={styles.block}>{readingText}</Text>}
-
-                {step === "dictee" && (
-                  <>
-                    <Text style={styles.block}>{dictation.prompt}</Text>
+              {step === "lecture" && <Text style={styles.block}>{lessonPrompt}</Text>}
+              {step === "dictee" && (
+                <>
+                  <Text style={styles.block}>{dictationPrompt || "Quiz oral de la matiere en cours"}</Text>
+                  {subject === "Francais" && (
                     <TextInput
                       style={[styles.input, styles.multiline]}
                       value={dictationInput}
@@ -377,63 +384,33 @@ export default function App() {
                       multiline
                       placeholder="Ecris la phrase ici"
                     />
-                  </>
-                )}
+                  )}
+                </>
+              )}
 
-                {step === "correction" && (
-                  <>
-                    <Text style={styles.block}>
-                      {sessionFeedback || "Corrige la phrase puis reecris-la."}
-                    </Text>
-                    <Text style={styles.hint}>
-                      Correction attendue: {dictation.expected}
-                    </Text>
-                  </>
-                )}
+              {step === "correction" && <Text style={styles.block}>{sessionFeedback || "Corrige puis reecris."}</Text>}
 
-                {step === "revision" && (
-                  <>
-                    <Text style={styles.block}>
-                      Revision espacee: reecris une phrase deja corrigee.
-                    </Text>
-                    <Text style={styles.hint}>
-                      Phrase revue: {selectedChild.mistakesToReview[selectedChild.mistakesToReview.length - 1] || dictation.expected}
-                    </Text>
-                  </>
-                )}
-
-                {step === "reward" && (
-                  <>
-                    <Text style={styles.block}>
-                      Bravo! Tu as termine le programme court.
-                    </Text>
-                    <Text style={styles.hint}>
-                      Recompense: +20 points, image fun et blague du jour.
-                    </Text>
-                    <Text style={styles.hint}>
-                      Blague: Pourquoi le cahier est content? Parce qu'il est bien note!
-                    </Text>
-                  </>
-                )}
-
-                <TouchableOpacity style={styles.primaryBtn} onPress={proceedSession}>
-                  <Text style={styles.btnText}>Continuer</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Mode {subject}</Text>
+              {step === "revision" && (
                 <Text style={styles.block}>
-                  Module adaptatif de {subject} en cours (structure prete).
+                  Revision espacee: {reviewPhrase || "Aucune phrase en retard, bravo."}
                 </Text>
-                <Text style={styles.hint}>
-                  Prochaine etape: banque d'exercices alignes programme francais.
-                </Text>
-              </View>
-            )}
+              )}
+
+              {step === "reward" && (
+                <View>
+                  <Text style={styles.block}>Recompense: points + carte fun + blague.</Text>
+                  <Text style={styles.hint}>Blague: Pourquoi le stylo chante faux ? Parce qu'il manque de notes !</Text>
+                </View>
+              )}
+
+              <TouchableOpacity style={styles.primaryBtn} onPress={proceedSession}>
+                <Text style={styles.btnText}>Continuer</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
 
+        {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("setup")}>
           <Text style={styles.btnText}>Retour</Text>
         </TouchableOpacity>
@@ -448,47 +425,17 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "800", color: "#1d2b64" },
   subtitle: { fontSize: 14, color: "#4c5c96" },
   sectionTitle: { fontSize: 16, fontWeight: "700", marginTop: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#d4daf0",
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 10,
-  },
+  input: { borderWidth: 1, borderColor: "#d4daf0", backgroundColor: "white", borderRadius: 10, padding: 10 },
   multiline: { minHeight: 90, textAlignVertical: "top" },
   row: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#dbe0f5",
-    gap: 6,
-  },
+  card: { backgroundColor: "white", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#dbe0f5", gap: 6 },
   cardTitle: { fontSize: 16, fontWeight: "700" },
   block: { backgroundColor: "#f0f4ff", padding: 10, borderRadius: 8 },
   hint: { color: "#59638f", fontSize: 12 },
-  primaryBtn: {
-    backgroundColor: "#4152c9",
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    alignItems: "center",
-  },
-  secondaryBtn: {
-    backgroundColor: "#6878e6",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    alignItems: "center",
-    marginTop: 6,
-  },
-  subjectBtn: {
-    backgroundColor: "#95a1e6",
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
+  errorText: { color: "#b01919", fontSize: 12 },
+  primaryBtn: { backgroundColor: "#4152c9", borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, alignItems: "center" },
+  secondaryBtn: { backgroundColor: "#6878e6", borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, alignItems: "center", marginTop: 6 },
+  subjectBtn: { backgroundColor: "#95a1e6", borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12 },
   subjectBtnActive: { backgroundColor: "#4152c9" },
   btnText: { color: "white", fontWeight: "700" },
 });

@@ -1,34 +1,73 @@
-# EduCoach FR (Prototype)
+# EduCoach FR (Prototype avance)
 
-Application smartphone (Expo React Native) pour aider les eleves a progresser en lecture, orthographe et autres matieres via des sessions courtes.
+Application smartphone (Expo React Native) + API Node.js/SQLite pour aider les eleves a progresser en lecture, orthographe et devoirs.
 
-## Fonctionnalites incluses
+## Stack
 
-- Creation de compte parent/tuteur
-- Plusieurs profils enfants sous le meme tuteur
-- Evaluation initiale rapide (<10 minutes)
-- Session francaise en 5 etapes:
-  1. Lecture progressive
+- Mobile: Expo + React Native + TypeScript
+- Backend: Express + better-sqlite3 + Zod
+- Base locale: SQLite (`educoach.db`)
+
+## Fonctionnalites actuellement disponibles
+
+- Inscription/connexion parent (token API)
+- Multi-profils enfants par tuteur
+- Evaluation initiale rapide (<10 min)
+- Parcours eleve 10 minutes:
+  1. Lecture
   2. Dictee
-  3. Correction guidee
+  3. Correction
   4. Revision espacee
   5. Recompense
-- Espace parent avec suivi des niveaux, points, erreurs a revoir
-- Structure prete pour modules Maths et Histoire
-- Mention d'integration Pronote en mode demo
+- Progression persistante (niveaux + points)
+- File de revision espacee persistante (replanification automatique)
+- Espace parent avec dashboard de progression
+- Ajout manuel de devoirs (base pour import Pronote)
+- Structure de contenus pour Francais, Maths, Histoire
 
-## Demarrage
+## Lancer le backend
 
 ```bash
 npm install
+npm run api
+```
+
+API sur `http://localhost:4000`.
+
+## Lancer l'app mobile
+
+Dans un autre terminal:
+
+```bash
 npm run start
 ```
 
-Puis ouvrir avec Expo Go (Android/iOS) ou emulation locale.
+Si vous testez sur un vrai smartphone, definir l'URL API de votre machine:
 
-## Limitations actuelles
+```bash
+EXPO_PUBLIC_API_URL=http://<IP_LOCALE>:4000 npm run start
+```
 
-- Donnees locales uniquement (pas de backend)
-- Pronote non connecte (placeholder)
-- Contenu pedagogique simplifie (dataset demo)
-- Pas encore de gestion RGPD/CNIL complete
+## Endpoints principaux
+
+- `POST /api/parents/register`
+- `POST /api/parents/login`
+- `POST /api/parents/children`
+- `GET /api/parents/children`
+- `POST /api/evaluation/:childId`
+- `GET /api/lesson/:childId?subject=Francais`
+- `POST /api/session/:childId/dictation`
+- `POST /api/review/:reviewId/complete`
+- `POST /api/homework/:childId`
+- `GET /api/homework/:childId`
+- `GET /api/parents/dashboard`
+
+## Limites encore presentes
+
+- Auth simplifiee (token basique, pas de refresh token)
+- Pas de chiffrement avance des mots de passe (hash SHA-256 simple)
+- Pas de synchronisation cloud multi-device (SQLite locale serveur)
+- Pas d'integration Pronote officielle (workflow manuel uniquement)
+- Pas encore de voice dictation / TTS / ASR
+- Pas de tests auto (unitaires/e2e) pour l'instant
+- Conformite RGPD/CNIL a finaliser avant production
