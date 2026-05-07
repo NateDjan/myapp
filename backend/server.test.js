@@ -60,7 +60,15 @@ test('recommendations returns grade-scoped content', async () => {
   const child = await request(app)
     .post('/api/parents/children')
     .set('Authorization', `Bearer ${token}`)
-    .send({ firstName: 'Lina', grade: 'CM2', age: 10, strengths: 'lecture', weaknesses: 'accord' });
+    .send({
+      firstName: 'Lina',
+      grade: 'CM2',
+      age: 10,
+      strengths: 'lecture',
+      weaknesses: 'accord',
+      studentLogin: 'lina_cm2',
+      studentPassword: 'kidsecret1',
+    });
   assert.equal(child.status, 201);
 
   const reco = await request(app)
@@ -137,6 +145,47 @@ test('account lockout triggers after repeated failed logins', async () => {
     .post('/api/parents/login')
     .send({ email: 'lock@test.local', password: 'password123' });
   assert.equal(validWhileLocked.status, 423);
+  cleanupDb(db, dbPath);
+});
+
+test('student login reaches lesson but cannot open parent dashboard', async () => {
+  const { app, db, dbPath } = buildTestApp();
+
+  await request(app)
+    .post('/api/parents/register')
+    .send({ name: 'Parent', email: 'stu@test.local', password: 'password123' });
+  const login = await request(app)
+    .post('/api/parents/login')
+    .send({ email: 'stu@test.local', password: 'password123' });
+  const token = login.body.token;
+
+  const created = await request(app)
+    .post('/api/parents/children')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      firstName: 'Tom',
+      grade: 'CE1',
+      age: 8,
+      strengths: '',
+      weaknesses: '',
+      studentLogin: 'tom_ce1',
+      studentPassword: 'hellokid',
+    });
+  assert.equal(created.status, 201);
+
+  const st = await request(app).post('/api/students/login').send({ login: 'tom_ce1', password: 'hellokid' });
+  assert.equal(st.status, 200);
+  assert.ok(st.body.token);
+  assert.equal(st.body.child.student_login, 'tom_ce1');
+
+  const lesson = await request(app)
+    .get(`/api/lesson/${created.body.childId}?subject=Francais`)
+    .set('Authorization', `Bearer ${st.body.token}`);
+  assert.equal(lesson.status, 200);
+
+  const dash = await request(app).get('/api/parents/dashboard').set('Authorization', `Bearer ${st.body.token}`);
+  assert.equal(dash.status, 403);
+
   cleanupDb(db, dbPath);
 });
 

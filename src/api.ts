@@ -13,6 +13,7 @@ export type Child = {
   spelling_level: number;
   math_level: number;
   history_level: number;
+  student_login?: string | null;
 };
 
 function resolveApiBase(): string {
@@ -120,9 +121,23 @@ export const api = {
       },
       token
     ),
+  loginStudent: (payload: { login: string; password: string }) =>
+    request<{ token: string; child: Child }>('/api/students/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getStudentProfile: (token: string) => request<Child>('/api/students/me', {}, token),
   createChild: (
     token: string,
-    payload: { firstName: string; grade: string; age: number; strengths: string; weaknesses: string }
+    payload: {
+      firstName: string;
+      grade: string;
+      age: number;
+      strengths: string;
+      weaknesses: string;
+      studentLogin: string;
+      studentPassword: string;
+    }
   ) =>
     request<{ childId: number }>(
       "/api/parents/children",

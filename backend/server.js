@@ -14,6 +14,7 @@ const curriculum = JSON.parse(
 
 const ACCESS_TOKEN_TTL_SEC = 60 * 60 * 8;
 const REFRESH_TOKEN_TTL_SEC = 60 * 60 * 24 * 30;
+const STUDENT_ACCESS_TOKEN_TTL_SEC = 60 * 60 * 24 * 7;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const SERVICE_NAME = 'educoach-api';
 
@@ -48,6 +49,30 @@ function addDays(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString();
+}
+
+function migrateChildrenCredentials(db) {
+  try {
+    const cols = db.prepare('PRAGMA table_info(children)').all();
+    const names = new Set(cols.map((c) => c.name));
+    if (!names.has('student_login')) {
+      db.exec('ALTER TABLE children ADD COLUMN student_login TEXT');
+    }
+    if (!names.has('student_password')) {
+      db.exec('ALTER TABLE children ADD COLUMN student_password TEXT');
+    }
+    db.exec(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_children_student_login_unique ON children(student_login) WHERE student_login IS NOT NULL AND trim(student_login) != ''`
+    );
+  } catch (e) {
+    log('error', 'migration_children_credentials_failed', { error: String(e) });
+  }
+}
+
+function sanitizeChildRow(row) {
+  if (!row) return row;
+  const { student_password: _pw, ...rest } = row;
+  return rest;
 }
 
 function setupDb(db) {
@@ -111,6 +136,8 @@ function setupDb(db) {
       spelling_level INTEGER NOT NULL DEFAULT 1,
       math_level INTEGER NOT NULL DEFAULT 1,
       history_level INTEGER NOT NULL DEFAULT 1,
+      student_login TEXT,
+      student_password TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY(parent_id) REFERENCES parents(id)
     );
@@ -158,6 +185,8 @@ function setupDb(db) {
     );
   `);
 
+  migrateChildrenCredentials(db);
+
   // Legacy migration: early versions used auth_tokens(token,parent_id,created_at)
   // without expiry/revocation fields. Normalize to the current schema.
   const authTokenCols = db.prepare("PRAGMA table_info('auth_tokens')").all();
@@ -201,6 +230,12 @@ function setupDb(db) {
 
 function createToken(parentId, tokenId) {
   return jwt.sign({ sub: parentId, tid: tokenId }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL_SEC });
+}
+
+function createStudentToken(childId, parentId) {
+  return jwt.sign({ role: 'student', cid: childId, pid: parentId }, JWT_SECRET, {
+    expiresIn: STUDENT_ACCESS_TOKEN_TTL_SEC,
+  });
 }
 
 function computeExpiryIso() {
@@ -311,6 +346,17 @@ function createApp(db) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
+    if (decoded.role === 'student') {
+      const cid = Number(decoded.cid);
+      const pid = Number(decoded.pid);
+      if (!cid || !pid) return res.status(401).json({ error: 'Invalid student token' });
+      req.parentId = pid;
+      req.childId = cid;
+      req.isStudent = true;
+      req.tokenId = null;
+      return next();
+    }
+
     const row = db
       .prepare(
         "SELECT parent_id FROM auth_tokens WHERE token_id = ? AND revoked = 0 AND datetime(expires_at) > datetime('now')"
@@ -320,7 +366,23 @@ function createApp(db) {
 
     req.parentId = row.parent_id;
     req.tokenId = decoded.tid;
+    req.isStudent = false;
     next();
+  }
+
+  function requireParent(req, res, next) {
+    if (req.isStudent) return res.status(403).json({ error: 'Acces reserve aux parents' });
+    next();
+  }
+
+  function getAuthorizedChild(req, childId) {
+    const id = Number(childId);
+    if (!Number.isFinite(id)) return null;
+    if (req.isStudent) {
+      if (id !== req.childId) return null;
+      return db.prepare('SELECT * FROM children WHERE id = ?').get(id);
+    }
+    return db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(id, req.parentId);
   }
 
   app.get('/api/health', (_req, res) => {
@@ -444,6 +506,37 @@ function createApp(db) {
     return res.json({ token: accessToken, accessToken, refreshToken, parent: { id: parent.id, name: parent.name } });
   });
 
+  app.post('/api/students/login', rateLimitAuth, (req, res) => {
+    const schema = z.object({
+      login: z.string().min(2).max(40),
+      password: z.string().min(6),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+    const loginNorm = parsed.data.login.trim().toLowerCase();
+    const child = db.prepare('SELECT * FROM children WHERE student_login = ?').get(loginNorm);
+    if (!child || !child.student_password) {
+      logSecurityEvent({ eventType: 'student_login_failed', ip: req.ip, payload: { login: loginNorm } });
+      return res.status(401).json({ error: 'Identifiant ou mot de passe incorrect' });
+    }
+
+    if (!bcrypt.compareSync(parsed.data.password, child.student_password)) {
+      logSecurityEvent({ eventType: 'student_login_failed', ip: req.ip, payload: { login: loginNorm } });
+      return res.status(401).json({ error: 'Identifiant ou mot de passe incorrect' });
+    }
+
+    const token = createStudentToken(child.id, child.parent_id);
+    logSecurityEvent({
+      parentId: child.parent_id,
+      eventType: 'student_login_success',
+      ip: req.ip,
+      payload: { childId: child.id },
+    });
+
+    return res.json({ token, child: sanitizeChildRow(child) });
+  });
+
   app.post('/api/parents/refresh', rateLimitAuth, (req, res) => {
     const schema = z.object({ refreshToken: z.string().min(10) });
     const parsed = schema.safeParse(req.body);
@@ -488,49 +581,75 @@ function createApp(db) {
     return res.json({ token: nextAccessToken, accessToken: nextAccessToken, refreshToken: nextRefreshToken });
   });
 
-  app.post('/api/parents/logout', auth, (req, res) => {
+  app.get('/api/students/me', auth, (req, res) => {
+    if (!req.isStudent) return res.status(403).json({ error: 'Reserve aux eleves' });
+    const child = db.prepare('SELECT * FROM children WHERE id = ?').get(req.childId);
+    if (!child) return res.status(404).json({ error: 'Profil introuvable' });
+    return res.json(sanitizeChildRow(child));
+  });
+
+  app.post('/api/parents/logout', auth, requireParent, (req, res) => {
     db.prepare('UPDATE auth_tokens SET revoked = 1 WHERE token_id = ?').run(req.tokenId);
     db.prepare('UPDATE refresh_tokens SET revoked = 1 WHERE token_id = ?').run(req.tokenId);
     logSecurityEvent({ parentId: req.parentId, eventType: 'auth_logout', ip: req.ip, payload: { tokenId: req.tokenId } });
     res.status(204).send();
   });
 
-  app.post('/api/parents/children', auth, (req, res) => {
+  app.post('/api/parents/children', auth, requireParent, (req, res) => {
     const schema = z.object({
       firstName: z.string().min(1),
       grade: z.string().min(1),
       age: z.number().int().min(3).max(25),
       strengths: z.string().optional().default(''),
       weaknesses: z.string().optional().default(''),
+      studentLogin: z
+        .string()
+        .min(2)
+        .max(40)
+        .regex(/^[a-zA-Z0-9_-]+$/, 'Lettres, chiffres, tirets ou underscores uniquement')
+        .transform((s) => s.trim().toLowerCase()),
+      studentPassword: z.string().min(6).max(72),
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-    const result = db
-      .prepare(
-        'INSERT INTO children (parent_id, first_name, grade, age, strengths, weaknesses, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-      )
-      .run(
-        req.parentId,
-        parsed.data.firstName,
-        parsed.data.grade,
-        parsed.data.age,
-        parsed.data.strengths,
-        parsed.data.weaknesses,
-        nowIso()
-      );
+    const dup = db.prepare('SELECT id FROM children WHERE student_login = ?').get(parsed.data.studentLogin);
+    if (dup) return res.status(409).json({ error: 'Cet identifiant eleve est deja utilise' });
 
-    res.status(201).json({ childId: result.lastInsertRowid });
+    const hashedKidPw = bcrypt.hashSync(parsed.data.studentPassword, 10);
+
+    try {
+      const result = db
+        .prepare(
+          'INSERT INTO children (parent_id, first_name, grade, age, strengths, weaknesses, student_login, student_password, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(
+          req.parentId,
+          parsed.data.firstName,
+          parsed.data.grade,
+          parsed.data.age,
+          parsed.data.strengths,
+          parsed.data.weaknesses,
+          parsed.data.studentLogin,
+          hashedKidPw,
+          nowIso()
+        );
+
+      return res.status(201).json({ childId: result.lastInsertRowid });
+    } catch (e) {
+      if (String(e).includes('UNIQUE')) return res.status(409).json({ error: 'Cet identifiant eleve est deja utilise' });
+      throw e;
+    }
   });
 
-  app.get('/api/parents/children', auth, (req, res) => {
+  app.get('/api/parents/children', auth, requireParent, (req, res) => {
     const rows = db.prepare('SELECT * FROM children WHERE parent_id = ? ORDER BY id DESC').all(req.parentId);
-    res.json(rows);
+    res.json(rows.map(sanitizeChildRow));
   });
 
   app.post('/api/evaluation/:childId', auth, (req, res) => {
     const childId = Number(req.params.childId);
-    const child = db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(childId, req.parentId);
+    const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
     const ageWeight = child.age > 10 ? 65 : 52;
@@ -556,7 +675,7 @@ function createApp(db) {
     const childId = Number(req.params.childId);
     const subject = String(req.query.subject || 'Francais');
 
-    const child = db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(childId, req.parentId);
+    const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
     const level = subject === 'Francais' ? child.reading_level : subject === 'Maths' ? child.math_level : child.history_level;
@@ -583,7 +702,7 @@ function createApp(db) {
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
     const childId = Number(req.params.childId);
-    const child = db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(childId, req.parentId);
+    const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
     const a = parsed.data.answer.trim().toLowerCase();
@@ -626,6 +745,7 @@ function createApp(db) {
       .prepare('SELECT r.*, c.parent_id FROM review_queue r JOIN children c ON c.id = r.child_id WHERE r.id = ?')
       .get(reviewId);
     if (!review || review.parent_id !== req.parentId) return res.status(404).json({ error: 'Review item not found' });
+    if (req.isStudent && review.child_id !== req.childId) return res.status(404).json({ error: 'Review item not found' });
 
     if (!parsed.data.success) {
       db.prepare('UPDATE review_queue SET next_review_at = ?, interval_days = 1 WHERE id = ?').run(addDays(1), reviewId);
@@ -637,7 +757,7 @@ function createApp(db) {
     res.json({ status: 'completed', nextInterval });
   });
 
-  app.post('/api/homework/:childId', auth, (req, res) => {
+  app.post('/api/homework/:childId', auth, requireParent, (req, res) => {
     const schema = z.object({
       subject: z.string().min(1),
       title: z.string().min(1),
@@ -649,7 +769,7 @@ function createApp(db) {
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
     const childId = Number(req.params.childId);
-    const child = db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(childId, req.parentId);
+    const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
     const result = db
@@ -660,13 +780,13 @@ function createApp(db) {
 
   app.get('/api/homework/:childId', auth, (req, res) => {
     const childId = Number(req.params.childId);
-    const child = db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(childId, req.parentId);
+    const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
     const rows = db.prepare('SELECT * FROM homework WHERE child_id = ? ORDER BY id DESC').all(childId);
     res.json(rows);
   });
 
-  app.get('/api/parents/dashboard', auth, (req, res) => {
+  app.get('/api/parents/dashboard', auth, requireParent, (req, res) => {
     const children = db.prepare('SELECT * FROM children WHERE parent_id = ?').all(req.parentId);
     const totals = children.reduce(
       (acc, c) => {
@@ -694,7 +814,7 @@ function createApp(db) {
     res.json({ totals, progress });
   });
 
-  app.get('/api/parents/security', auth, (req, res) => {
+  app.get('/api/parents/security', auth, requireParent, (req, res) => {
     const recentEvents = db
       .prepare(
         'SELECT event_type, ip, created_at FROM security_audit_events WHERE parent_id = ? ORDER BY id DESC LIMIT 20'
@@ -719,12 +839,19 @@ function createApp(db) {
 
   app.get('/api/recommendations/:childId', auth, (req, res) => {
     const childId = Number(req.params.childId);
-    const child = db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(childId, req.parentId);
+    const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
+    const metaSources = Array.isArray(curriculum.metadata?.sources) ? curriculum.metadata.sources : [];
     const gradeData = curriculum.grades.find((g) => g.grade === child.grade);
     if (!gradeData) {
-      return res.json({ grade: child.grade, recommendations: [], note: 'Aucun contenu grade exact. Utiliser parcours niveau voisin.' });
+      return res.json({
+        grade: child.grade,
+        cycle: '',
+        recommendations: [],
+        sources: metaSources,
+        note: 'Aucun contenu grade exact. Utiliser parcours niveau voisin.',
+      });
     }
 
     const weaknessText = (child.weaknesses || '').toLowerCase();
@@ -745,7 +872,7 @@ function createApp(db) {
       grade: child.grade,
       cycle: gradeData.cycle,
       recommendations,
-      sources: curriculum.metadata.sources,
+      sources: metaSources,
     });
   });
 
