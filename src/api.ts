@@ -259,6 +259,9 @@ export const api = {
       score?: number;
       nextIndex?: number;
       total?: number;
+      correction?: string;
+      expectedAnswer?: string;
+      sessionTip?: string;
       finalScore?: number;
       passed?: boolean;
       completed?: boolean;
