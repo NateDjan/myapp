@@ -82,7 +82,9 @@ export default function App() {
   const [subjectsMeta, setSubjectsMeta] = useState<SubjectsMeta | null>(null);
   const [parentOptionalDraft, setParentOptionalDraft] = useState<string[]>([]);
   const [evalItem, setEvalItem] = useState<{
-    itemId: number;
+    sessionId: number;
+    index: number;
+    total: number;
     exerciseType: string;
     prompt: string;
     readAloudText: string;
@@ -399,10 +401,19 @@ export default function App() {
     setEvalBusy(true);
     setErrorMessage("");
     try {
-      const item = await api.getEvaluationItem(token, selectedChild.id, sub);
-      setEvalItem(item);
+      const started = await api.startEvaluation(token, selectedChild.id, sub);
+      const q = await api.getEvaluationQuestion(token, started.sessionId);
+      setEvalItem({
+        sessionId: started.sessionId,
+        index: q.index,
+        total: q.total,
+        exerciseType: q.exerciseType,
+        prompt: q.prompt,
+        readAloudText: q.readAloudText,
+        subject: q.subject,
+      });
       setEvalAnswer("");
-      setTimeout(() => speak(item.readAloudText), 400);
+      setTimeout(() => speak(q.readAloudText), 400);
     } catch (error) {
       Alert.alert("Impossible", String(error));
     } finally {
@@ -414,19 +425,31 @@ export default function App() {
     if (!token || !selectedChild || !evalItem) return;
     setEvalBusy(true);
     try {
-      const result = await api.submitEvaluation(token, selectedChild.id, {
-        itemId: evalItem.itemId,
-        subject: evalItem.subject,
-        answer: evalAnswer,
-      });
-      await reloadChildren();
-      await loadSubjectsMeta();
-      await loadGamification();
-      setEvalItem(null);
-      setEvalAnswer("");
-      const reward = result.unlockedMinutes ? ` +${result.unlockedMinutes} min de temps d'ecran.` : "";
-      const xp = result.xpGain ? ` +${result.xpGain} XP.` : "";
-      Alert.alert("Super !", `Ton evaluation est enregistree.${reward}${xp}`);
+      const result = await api.answerEvaluationQuestion(token, evalItem.sessionId, evalAnswer);
+      if (!result.finished) {
+        const q = await api.getEvaluationQuestion(token, evalItem.sessionId);
+        setEvalItem({
+          sessionId: evalItem.sessionId,
+          index: q.index,
+          total: q.total,
+          exerciseType: q.exerciseType,
+          prompt: q.prompt,
+          readAloudText: q.readAloudText,
+          subject: q.subject,
+        });
+        setEvalAnswer("");
+        setTimeout(() => speak(q.readAloudText), 300);
+      } else {
+        await reloadChildren();
+        await loadSubjectsMeta();
+        await loadGamification();
+        setEvalItem(null);
+        setEvalAnswer("");
+        const reward = result.unlockedMinutes ? ` +${result.unlockedMinutes} min de temps d'ecran.` : "";
+        const xp = result.xpGain ? ` +${result.xpGain} XP.` : "";
+        const verdict = result.passed ? "Evaluation reussie !" : "Evaluation terminee (niveau a renforcer).";
+        Alert.alert("Resultat", `${verdict} Score final: ${result.finalScore || 0}/100.${reward}${xp}`);
+      }
     } catch (error) {
       Alert.alert("Erreur", String(error));
     } finally {
@@ -477,7 +500,7 @@ export default function App() {
       const result = await api.getLesson(token, selectedChild.id, subject);
       setLessonPrompt(result.lesson?.prompt || "Aucun contenu disponible.");
       if (subject === "Francais") {
-        setDictationPrompt(result.dictation?.prompt || "");
+        setDictationPrompt("Ecoute la phrase lue a voix haute puis ecris-la sans aide visuelle.");
         setDictationExpected(result.dictation?.expected || "");
       } else {
         setDictationPrompt(result.lesson?.prompt || "");
@@ -1172,6 +1195,9 @@ export default function App() {
                     </View>
                     {evalItem?.subject === sub ? (
                       <>
+                        <Text style={warmStyles.hint}>
+                          Question {evalItem.index}/{evalItem.total}
+                        </Text>
                         <Text style={warmStyles.hint}>{evalItem.prompt}</Text>
                         <TouchableOpacity style={warmStyles.btnSun} onPress={() => speak(evalItem.readAloudText)}>
                           <Text style={warmStyles.btnSunText}>Reecouter</Text>

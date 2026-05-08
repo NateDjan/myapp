@@ -199,6 +199,117 @@ function scoreWrittenAnswer(expected, answer) {
   return Math.max(0, Math.round((same / e.length) * 100));
 }
 
+function gradeBand(grade) {
+  if (['CP', 'CE1', 'CE2'].includes(grade)) return 'cycle2';
+  if (['CM1', 'CM2', '6e'].includes(grade)) return 'cycle3';
+  if (['5e', '4e', '3e'].includes(grade)) return 'cycle4';
+  return 'lycee';
+}
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateMathQuestion(grade, tier) {
+  const band = gradeBand(grade);
+  if (band === 'cycle2') {
+    const max = tier === 1 ? 20 : tier === 2 ? 100 : 200;
+    const a = randomInt(1, max);
+    const b = randomInt(1, max);
+    const op = tier === 1 ? '+' : ['+', '-', '+'][randomInt(0, 2)];
+    const expected = op === '+' ? String(a + b) : String(a - b);
+    return { prompt: `Calcule: ${a} ${op} ${b}`, expected, type: 'math' };
+  }
+  if (band === 'cycle3') {
+    const op = ['+', '-', 'x'][randomInt(0, 2)];
+    if (op === 'x') {
+      const a = randomInt(2, tier === 1 ? 9 : 12);
+      const b = randomInt(2, tier === 1 ? 9 : 12);
+      return { prompt: `Calcule: ${a} x ${b}`, expected: String(a * b), type: 'math' };
+    }
+    const a = randomInt(20, tier === 1 ? 120 : 300);
+    const b = randomInt(10, tier === 1 ? 90 : 200);
+    return { prompt: `Calcule: ${a} ${op} ${b}`, expected: String(op === '+' ? a + b : a - b), type: 'math' };
+  }
+  if (band === 'cycle4') {
+    const a = randomInt(2, 20);
+    const b = randomInt(2, 20);
+    const c = randomInt(1, 15);
+    return {
+      prompt: `Calcule: (${a} x ${b}) - ${c}`,
+      expected: String(a * b - c),
+      type: 'math',
+    };
+  }
+  const a = randomInt(1, 12);
+  const b = randomInt(1, 12);
+  const c = randomInt(1, 8);
+  return {
+    prompt: `Calcule: (${a}² + ${b}²) - ${c}`,
+    expected: String(a * a + b * b - c),
+    type: 'math',
+  };
+}
+
+function generateFrenchDictationQuestion(tier) {
+  const pools = {
+    1: [
+      "Les oiseaux chantent dans l'arbre.",
+      'Le chat dort sur le tapis.',
+      "Nous allons a l'ecole ce matin.",
+    ],
+    2: [
+      'Les eleves relisent attentivement la lecon de grammaire.',
+      'Mon frere a termine ses devoirs avant le diner.',
+      'La maitresse explique calmement la consigne.',
+    ],
+    3: [
+      "Pendant les vacances, nous avons visite un musee d'histoire.",
+      'Les scientifiques observent les etoiles avec precision.',
+      'La bibliotheque municipale organise un concours de lecture.',
+    ],
+  };
+  const phrase = pools[Math.min(3, Math.max(1, tier))][randomInt(0, 2)];
+  return {
+    prompt: 'Ecris la phrase dictee (elle est lue a voix haute).',
+    expected: phrase,
+    readAloudText: phrase,
+    type: 'french-dictation',
+  };
+}
+
+function generateHistoryQuestion(grade, tier) {
+  const band = gradeBand(grade);
+  const bank =
+    band === 'cycle2'
+      ? [
+          { prompt: "Combien de jours y a-t-il dans une semaine ?", expected: '7' },
+          { prompt: "Quel est le mois qui suit janvier ?", expected: 'fevrier' },
+        ]
+      : band === 'cycle3'
+        ? [
+            { prompt: "En quelle annee commence la Revolution francaise ?", expected: '1789' },
+            { prompt: "Qui etait le premier empereur des Francais ?", expected: 'napoleon' },
+          ]
+        : band === 'cycle4'
+          ? [
+              { prompt: "En quelle annee debute la Premiere Guerre mondiale ?", expected: '1914' },
+              { prompt: "En quelle annee se termine la Seconde Guerre mondiale ?", expected: '1945' },
+            ]
+          : [
+              { prompt: "Donne l'annee de chute du mur de Berlin.", expected: '1989' },
+              { prompt: "Donne l'annee du traite de Maastricht.", expected: '1992' },
+            ];
+  const q = bank[randomInt(0, bank.length - 1)];
+  return { prompt: q.prompt, expected: q.expected, type: 'history' };
+}
+
+function generateSubjectQuestion(child, subject, tier) {
+  if (subject === 'Francais') return generateFrenchDictationQuestion(tier);
+  if (subject === 'Maths') return generateMathQuestion(child.grade, tier);
+  return generateHistoryQuestion(child.grade, tier);
+}
+
 const AVATARS = ['fox', 'owl', 'lion', 'dolphin', 'cat', 'rocket'];
 
 function computeStreakDays(db, childId) {
@@ -397,6 +508,22 @@ function setupDb(db) {
       is_read INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY(parent_id) REFERENCES parents(id),
       FOREIGN KEY(child_id) REFERENCES children(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS evaluation_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      child_id INTEGER NOT NULL,
+      parent_id INTEGER NOT NULL,
+      subject TEXT NOT NULL,
+      questions_json TEXT NOT NULL,
+      current_index INTEGER NOT NULL DEFAULT 0,
+      correct_count INTEGER NOT NULL DEFAULT 0,
+      total_count INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'running',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(child_id) REFERENCES children(id),
+      FOREIGN KEY(parent_id) REFERENCES parents(id)
     );
 
     CREATE TABLE IF NOT EXISTS phrase_bank (
@@ -958,29 +1085,26 @@ function createApp(db) {
     const childId = Number(req.params.childId);
     const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
-
-    const ageWeight = child.age > 10 ? 65 : 52;
-    const strengthBonus = (child.strengths || '').toLowerCase().includes('lecture') ? 12 : 0;
-    const score = Math.min(95, ageWeight + strengthBonus);
-    const readingLevel = score > 80 ? 3 : score > 60 ? 2 : 1;
-    const spellingLevel = score > 75 ? 3 : score > 55 ? 2 : 1;
-
-    db.prepare('UPDATE children SET reading_level = ?, spelling_level = ? WHERE id = ?').run(readingLevel, spellingLevel, childId);
-    db.prepare('INSERT INTO activity_log (child_id, activity_type, score, points_delta, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
-      childId,
-      'evaluation',
-      score,
-      0,
-      JSON.stringify({ readingLevel, spellingLevel }),
-      nowIso()
-    );
-
-    res.json({ score, readingLevel, spellingLevel });
+    const available = subjectsAvailableForChild(child);
+    const started = [];
+    for (const subject of available) {
+      const merged = mergeChildSubjectState(child);
+      const tier = getSubjectTier(merged.levels, subject);
+      const count = subject === 'Francais' ? 6 : 8;
+      const questions = Array.from({ length: count }).map(() => generateSubjectQuestion(child, subject, tier));
+      const row = db
+        .prepare(
+          'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
+        )
+        .run(child.id, child.parent_id, subject, JSON.stringify(questions), questions.length, 'running', nowIso(), nowIso());
+      started.push({ subject, sessionId: row.lastInsertRowid, total: questions.length });
+    }
+    res.json({ started });
   });
 
-  app.get('/api/evaluation/:childId/item', auth, (req, res) => {
+  app.post('/api/evaluation/:childId/start', auth, (req, res) => {
     const childId = Number(req.params.childId);
-    const subject = String(req.query.subject || '');
+    const subject = String(req.body?.subject || '');
     const child = getAuthorizedChild(req, childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
     const available = subjectsAvailableForChild(child);
@@ -989,76 +1113,97 @@ function createApp(db) {
     }
     const { levels } = mergeChildSubjectState(child);
     const tier = getSubjectTier(levels, subject);
+    const total = subject === 'Francais' ? 6 : 8;
+    const questions = Array.from({ length: total }).map(() => generateSubjectQuestion(child, subject, tier));
+    const created = db
+      .prepare(
+        'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
+      )
+      .run(child.id, child.parent_id, subject, JSON.stringify(questions), total, 'running', nowIso(), nowIso());
+    res.json({ sessionId: created.lastInsertRowid, total, subject });
+  });
 
-    if (subject === 'Francais') {
-      const row =
-        db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? AND level = ? LIMIT 1').get('Francais', 'dictee', tier) ||
-        db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? LIMIT 1').get('Francais', 'dictee');
-      if (!row) return res.status(404).json({ error: 'Pas de contenu' });
-      return res.json({
-        itemId: row.id,
-        exerciseType: 'dictee',
-        prompt: row.prompt,
-        readAloudText: speechTextFromDictee(row.prompt, row.expected),
-        subject,
-      });
+  app.get('/api/evaluation/session/:sessionId/question', auth, (req, res) => {
+    const sessionId = Number(req.params.sessionId);
+    const sess = db.prepare('SELECT * FROM evaluation_sessions WHERE id = ?').get(sessionId);
+    if (!sess) return res.status(404).json({ error: 'Session introuvable' });
+    if (req.isStudent) {
+      if (sess.child_id !== req.childId) return res.status(404).json({ error: 'Session introuvable' });
+    } else if (sess.parent_id !== req.parentId) {
+      return res.status(404).json({ error: 'Session introuvable' });
     }
-
-    const row =
-      db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? AND level = ? LIMIT 1').get(subject, 'quiz', tier) ||
-      db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? LIMIT 1').get(subject, 'quiz');
-    if (!row) return res.status(404).json({ error: 'Pas de contenu' });
-    return res.json({
-      itemId: row.id,
-      exerciseType: 'quiz',
-      prompt: row.prompt,
-      readAloudText: row.prompt,
-      subject,
+    if (sess.status !== 'running') {
+      return res.json({ finished: true, subject: sess.subject, total: sess.total_count, correct: sess.correct_count });
+    }
+    const questions = safeJson(sess.questions_json, []);
+    const idx = Number(sess.current_index || 0);
+    const q = questions[idx];
+    if (!q) return res.status(400).json({ error: 'Question introuvable' });
+    const prompt = q.type === 'french-dictation' ? 'Ecris la phrase dictee (audio uniquement).' : q.prompt;
+    const readAloudText = q.readAloudText || q.prompt || '';
+    res.json({
+      sessionId,
+      index: idx + 1,
+      total: sess.total_count,
+      subject: sess.subject,
+      exerciseType: q.type,
+      prompt,
+      readAloudText,
     });
   });
 
-  app.post('/api/evaluation/:childId/submit', auth, (req, res) => {
+  app.post('/api/evaluation/session/:sessionId/answer', auth, (req, res) => {
     const schema = z.object({
-      itemId: z.coerce.number().int(),
-      subject: z.string().min(1),
-      answer: z.string(),
+      answer: z.string().min(1),
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    const sessionId = Number(req.params.sessionId);
+    const sess = db.prepare('SELECT * FROM evaluation_sessions WHERE id = ?').get(sessionId);
+    if (!sess) return res.status(404).json({ error: 'Session introuvable' });
+    if (req.isStudent) {
+      if (sess.child_id !== req.childId) return res.status(404).json({ error: 'Session introuvable' });
+    } else if (sess.parent_id !== req.parentId) {
+      return res.status(404).json({ error: 'Session introuvable' });
+    }
+    if (sess.status !== 'running') return res.status(400).json({ error: 'Session deja terminee' });
+    const questions = safeJson(sess.questions_json, []);
+    const idx = Number(sess.current_index || 0);
+    const q = questions[idx];
+    if (!q) return res.status(400).json({ error: 'Question introuvable' });
 
-    const childId = Number(req.params.childId);
-    const child = getAuthorizedChild(req, childId);
-    if (!child) return res.status(404).json({ error: 'Child not found' });
-    const available = subjectsAvailableForChild(child);
-    const subj = parsed.data.subject;
-    if (!available.includes(subj)) return res.status(400).json({ error: 'Matiere non disponible' });
+    const answer = String(parsed.data.answer || '').trim();
+    let score = scoreWrittenAnswer(q.expected, answer);
+    if (q.type === 'math' || q.type === 'history') {
+      score = String(q.expected).trim().toLowerCase() === answer.toLowerCase() ? 100 : 0;
+    }
+    const isCorrect = score >= 80;
+    const nextIdx = idx + 1;
+    const nextCorrect = Number(sess.correct_count || 0) + (isCorrect ? 1 : 0);
+    const finished = nextIdx >= Number(sess.total_count || 0);
 
-    const row = db.prepare('SELECT * FROM phrase_bank WHERE id = ?').get(parsed.data.itemId);
-    if (!row || row.subject !== subj) return res.status(400).json({ error: 'Exercice invalide' });
+    db.prepare('UPDATE evaluation_sessions SET current_index = ?, correct_count = ?, status = ?, updated_at = ? WHERE id = ?').run(
+      nextIdx,
+      nextCorrect,
+      finished ? 'done' : 'running',
+      nowIso(),
+      sessionId
+    );
 
-    let score = 0;
-    if (subj === 'Maths' || subj === 'Histoire') {
-      const e = String(row.expected).trim().toLowerCase();
-      const a = String(parsed.data.answer).trim().toLowerCase();
-      score = e === a ? 100 : scoreWrittenAnswer(row.expected, parsed.data.answer);
-    } else {
-      score = scoreWrittenAnswer(row.expected, parsed.data.answer);
+    if (!finished) {
+      return res.json({ finished: false, isCorrect, score, nextIndex: nextIdx + 1, total: sess.total_count });
     }
 
+    const finalScore = Math.round((nextCorrect / Number(sess.total_count || 1)) * 100);
+    const child = db.prepare('SELECT * FROM children WHERE id = ?').get(sess.child_id);
     const merged = mergeChildSubjectState(child);
     const evals = { ...merged.evals };
-    const prev = evals[subj];
-    const tierGuess = score >= 80 ? 3 : score >= 55 ? 2 : 1;
-    evals[subj] = { done: true, score, at: nowIso() };
-    db.prepare('UPDATE children SET evaluation_by_subject_json = ? WHERE id = ?').run(JSON.stringify(evals), childId);
-
+    evals[sess.subject] = { done: true, score: finalScore, at: nowIso() };
+    db.prepare('UPDATE children SET evaluation_by_subject_json = ? WHERE id = ?').run(JSON.stringify(evals), sess.child_id);
     const levels = { ...merged.levels };
-    if (!levels[subj]) levels[subj] = { tier: 1, streak: 0 };
-    if (!prev?.done) {
-      levels[subj].tier = tierGuess;
-      levels[subj].streak = 0;
-    }
-
+    if (!levels[sess.subject]) levels[sess.subject] = { tier: 1, streak: 0 };
+    levels[sess.subject].tier = finalScore >= 85 ? 3 : finalScore >= 60 ? 2 : 1;
+    levels[sess.subject].streak = 0;
     db.prepare(
       'UPDATE children SET subject_levels_json = ?, reading_level = ?, spelling_level = ?, math_level = ?, history_level = ? WHERE id = ?'
     ).run(
@@ -1067,25 +1212,24 @@ function createApp(db) {
       getSubjectTier(levels, 'Francais'),
       getSubjectTier(levels, 'Maths'),
       getSubjectTier(levels, 'Histoire'),
-      childId
+      sess.child_id
     );
-
     db.prepare('INSERT INTO activity_log (child_id, activity_type, score, points_delta, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
-      childId,
-      `evaluation_${subj}`,
-      score,
+      sess.child_id,
+      `evaluation_${sess.subject}`,
+      finalScore,
       0,
-      JSON.stringify({ itemId: parsed.data.itemId }),
+      JSON.stringify({ sessionId }),
       nowIso()
     );
-
-    const unlockedMinutes = maybeAwardScreenTime(child, score, subj);
-    const gamification = grantGamificationProgress(db, childId, { subject: subj, score });
-
-    res.json({
-      score,
-      completed: true,
-      tierLabel: tierGuess >= 3 ? 'A' : tierGuess >= 2 ? 'M' : 'E',
+    const unlockedMinutes = maybeAwardScreenTime(child, finalScore, sess.subject);
+    const gamification = grantGamificationProgress(db, sess.child_id, { subject: sess.subject, score: finalScore });
+    return res.json({
+      finished: true,
+      finalScore,
+      passed: finalScore >= 60,
+      completed: finalScore >= 60,
+      tierLabel: finalScore >= 85 ? 'A' : finalScore >= 60 ? 'M' : 'E',
       unlockedMinutes,
       xpGain: gamification.xpGain,
       streakDays: gamification.streakDays,
@@ -1195,13 +1339,15 @@ function createApp(db) {
     const level = getSubjectTier(levels, subject);
 
     const lesson =
-      db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? AND level = ? LIMIT 1').get(subject, subject === 'Francais' ? 'lecture' : 'quiz', level) ||
-      db.prepare('SELECT * FROM phrase_bank WHERE subject = ? LIMIT 1').get(subject);
+      subject === 'Francais'
+        ? db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? AND level = ? LIMIT 1').get('Francais', 'lecture', level) ||
+          db.prepare('SELECT * FROM phrase_bank WHERE subject = ? LIMIT 1').get('Francais')
+        : generateSubjectQuestion(child, subject, level);
     const spellingT = getSubjectTier(levels, 'Francais');
     const dictation =
       subject === 'Francais'
         ? db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? AND level = ? LIMIT 1').get('Francais', 'dictee', spellingT)
-        : null;
+        : { prompt: lesson.prompt, expected: lesson.expected };
 
     const review = db
       .prepare(
