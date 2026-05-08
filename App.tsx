@@ -13,7 +13,15 @@ import {
 } from "react-native";
 import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, type Child, type GamificationState, type ParentNotification, type ParentSettings, type SubjectsMeta } from "./src/api";
+import {
+  api,
+  getResolvedApiBase,
+  type Child,
+  type GamificationState,
+  type ParentNotification,
+  type ParentSettings,
+  type SubjectsMeta,
+} from "./src/api";
 import { T, warmStyles } from "./src/theme";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
@@ -95,7 +103,7 @@ export default function App() {
 
   const [newChild, setNewChild] = useState<NewChildDraft>(EMPTY_CHILD_DRAFT);
 
-  const [apiMessage, setApiMessage] = useState("API non testee");
+  const [apiMessage, setApiMessage] = useState("Verification du serveur...");
   const [step, setStep] = useState<SessionStep>("lecture");
   const [lessonPrompt, setLessonPrompt] = useState("");
   const [dictationPrompt, setDictationPrompt] = useState("");
@@ -197,35 +205,58 @@ export default function App() {
       }
     };
 
+    const safetyTimer = setTimeout(() => {
+      if (!cancelled) setSessionLoading(false);
+    }, 22000);
+
     const bootstrap = async () => {
-      try {
-        try {
-          await api.health();
-          if (!cancelled) setApiMessage("Serveur disponible");
-        } catch {
-          if (!cancelled) setApiMessage("Serveur indisponible pour le moment");
+      const base = getResolvedApiBase();
+      if (!base) {
+        clearTimeout(safetyTimer);
+        if (!cancelled) {
+          setApiMessage(
+            "URL du serveur manquante : ajoute apiUrl dans config/publicApi.json puis relance Expo avec npx expo start -c."
+          );
+          setSessionLoading(false);
         }
+        return;
+      }
 
-        await api
-          .getCurriculum()
-          .then((data) => {
-            if (!cancelled) {
-              setCurriculumSources(Array.isArray(data.metadata?.sources) ? data.metadata.sources : []);
-              setCurriculumNote(typeof data.metadata?.notes === "string" ? data.metadata.notes : "");
-            }
-          })
-          .catch(() => undefined);
+      try {
+        const [healthResult, curriculumResult] = await Promise.allSettled([api.health(), api.getCurriculum()]);
 
+        if (!cancelled) {
+          if (healthResult.status === "fulfilled") {
+            setApiMessage("Serveur disponible");
+          } else {
+            setApiMessage("Serveur indisponible ou trop lent — tu peux quand meme essayer de te connecter.");
+          }
+
+          if (curriculumResult.status === "fulfilled") {
+            const data = curriculumResult.value;
+            setCurriculumSources(Array.isArray(data.metadata?.sources) ? data.metadata.sources : []);
+            setCurriculumNote(typeof data.metadata?.notes === "string" ? data.metadata.notes : "");
+          }
+        }
+      } catch {
+        if (!cancelled) setApiMessage("Serveur indisponible pour le moment");
+      }
+
+      clearTimeout(safetyTimer);
+      if (!cancelled) setSessionLoading(false);
+
+      try {
         const hasStudent = await tryHydrateStudent();
         if (!hasStudent) await hydrateParentSession();
-      } finally {
-        if (!cancelled) setSessionLoading(false);
+      } catch {
+        // session invalide ou reseau : ignore
       }
     };
 
-    bootstrap();
+    void bootstrap();
     return () => {
       cancelled = true;
+      clearTimeout(safetyTimer);
     };
   }, []);
 
@@ -521,7 +552,7 @@ export default function App() {
 
   useEffect(() => {
     loadLesson();
-  }, [subject, selectedChildId]);
+  }, [subject, selectedChildId, token]);
 
   const proceedSession = async () => {
     if (!selectedChild || !token) return;
@@ -723,6 +754,16 @@ export default function App() {
           <Text style={warmStyles.heroEmoji}>📚✨</Text>
           <Text style={warmStyles.title}>EduCoach FR</Text>
           <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {!!getResolvedApiBase() && (
+            <Text style={[warmStyles.hint, { marginTop: 6 }]} selectable>
+              Serveur : {getResolvedApiBase()}
+            </Text>
+          )}
+          {!getResolvedApiBase() && (
+            <Text style={[warmStyles.hint, { marginTop: 6 }]}>
+              Aucune URL API dans le bundle — configure config/publicApi.json puis relance avec npx expo start -c.
+            </Text>
+          )}
           {sessionLoading && <Text style={warmStyles.hint}>Chargement...</Text>}
           <Text style={warmStyles.sectionTitle}>Qui utilise l&apos;application ?</Text>
           <Text style={warmStyles.hint}>
@@ -747,6 +788,11 @@ export default function App() {
           <Text style={[warmStyles.heroEmoji, { fontSize: 48 }]}>👋</Text>
           <Text style={warmStyles.titleLight}>Salut champion !</Text>
           <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {!!getResolvedApiBase() && (
+            <Text style={[warmStyles.hint, { marginTop: 6 }]} selectable>
+              Serveur : {getResolvedApiBase()}
+            </Text>
+          )}
 
           <Text style={warmStyles.sectionTitle}>Ta connexion</Text>
           <Text style={warmStyles.hint}>Demande a tes parents ton identifiant et ton mot de passe.</Text>
@@ -786,6 +832,11 @@ export default function App() {
           <Text style={warmStyles.heroEmoji}>🏠</Text>
           <Text style={warmStyles.title}>Espace parents</Text>
           <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {!!getResolvedApiBase() && (
+            <Text style={[warmStyles.hint, { marginTop: 6 }]} selectable>
+              Serveur : {getResolvedApiBase()}
+            </Text>
+          )}
           {sessionLoading && <Text style={warmStyles.hint}>Restauration de session en cours...</Text>}
 
           <Text style={warmStyles.sectionTitle}>Connexion parent / tuteur</Text>
