@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaProvider, SafeAreaView as SafeInsetView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppScreenHero } from "./src/components/AppScreenHero";
@@ -27,6 +26,8 @@ import {
   type ParentSettings,
   type SubjectsMeta,
 } from "./src/api";
+import { subjectsForGrade } from "./src/subjectsFromCurriculum";
+import { speakFrench, speakFrenchChunked, warmFrenchVoice } from "./src/speech/frenchTts";
 import { T, warmStyles } from "./src/theme";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
@@ -146,6 +147,10 @@ function AppContent() {
     () => children.find((c) => c.id === selectedChildId) ?? null,
     [children, selectedChildId]
   );
+
+  useEffect(() => {
+    void warmFrenchVoice();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -427,22 +432,26 @@ function AppContent() {
     }
   };
 
-  const speak = (text: string) => {
-    if (!text?.trim()) return;
-    Speech.stop();
-    Speech.speak(text.trim(), { language: "fr-FR", rate: 0.92, pitch: 1.0 });
+  const speakEvalAloud = (text: string) => {
+    const t = String(text || "").trim();
+    if (!t) return;
+    if (t.length > 110) speakFrenchChunked(t);
+    else speakFrench(t);
   };
 
   const speakDicteePhrase = (prompt: string, expected: string) => {
     const p = String(prompt || "");
-    if (/^Ecris\s*:/i.test(p)) speak(String(expected || "").trim());
-    else speak(String(expected || prompt || "").trim());
+    const raw = /^Ecris\s*:/i.test(p) ? String(expected || "").trim() : String(expected || prompt || "").trim();
+    if (raw.length > 90) speakFrenchChunked(raw);
+    else speakFrench(raw);
   };
 
   const activeSubjectsList = useMemo(() => {
     if (subjectsMeta?.activeSubjects?.length) return subjectsMeta.activeSubjects;
-    return ["Francais", "Maths", "Histoire"];
-  }, [subjectsMeta]);
+    const g = selectedChild?.grade;
+    if (g) return subjectsForGrade(g);
+    return ["Francais", "Maths"];
+  }, [subjectsMeta, selectedChild?.grade]);
 
   const startEvalSubject = async (sub: string) => {
     if (!token || !selectedChild) return;
@@ -464,7 +473,7 @@ function AppContent() {
       const autoSpeak =
         !!q.readAloudText &&
         (q.exerciseType !== "french-reading" || q.readAloudText.length <= 280);
-      if (autoSpeak) setTimeout(() => speak(q.readAloudText), 400);
+      if (autoSpeak) setTimeout(() => speakEvalAloud(q.readAloudText), 400);
     } catch (error) {
       Alert.alert("Impossible", String(error));
     } finally {
@@ -492,7 +501,7 @@ function AppContent() {
         const autoSpeak =
           !!q.readAloudText &&
           (q.exerciseType !== "french-reading" || q.readAloudText.length <= 280);
-        if (autoSpeak) setTimeout(() => speak(q.readAloudText), 300);
+        if (autoSpeak) setTimeout(() => speakEvalAloud(q.readAloudText), 300);
       } else {
         await reloadChildren();
         await loadSubjectsMeta();
@@ -1371,7 +1380,7 @@ function AppContent() {
                           Question {evalItem.index}/{evalItem.total}
                         </Text>
                         <Text style={warmStyles.hint}>{evalItem.prompt}</Text>
-                        <TouchableOpacity style={warmStyles.btnSun} onPress={() => speak(evalItem.readAloudText)}>
+                        <TouchableOpacity style={warmStyles.btnSun} onPress={() => speakEvalAloud(evalItem.readAloudText)}>
                           <Text style={warmStyles.btnSunText}>Reecouter</Text>
                         </TouchableOpacity>
                         <TextInput
