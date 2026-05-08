@@ -7,7 +7,7 @@
 # Deploy :
 #   fly deploy
 
-app = "educoach-fr-api"
+app = "nataneldjan"
 primary_region = "cdg"
 
 [build]
