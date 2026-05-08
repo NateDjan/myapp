@@ -68,6 +68,14 @@ const EMPTY_CHILD_DRAFT: NewChildDraft = {
   studentPassword: "",
 };
 
+/** Conseils coach — ton bienveillant type assistants éducatifs modernes */
+const COACH_TIPS = [
+  "Les meilleures apps educatives ont un secret : des petites sessions souvent, plutot qu'une seule grosse seance. Tu es sur la bonne voie.",
+  "Chaque erreur est une marche vers la reussite — comme sur Khan Academy, on repete jusqu'a ce que ce soit facile.",
+  "Ton coach virtuel te dit : respire, lis bien la question, puis avance question par question.",
+  "La progression, ce n'est pas la vitesse : c'est la regularite. Un peu chaque jour transforme tout.",
+];
+
 export default function App() {
   const [token, setToken] = useState("");
   const [refreshToken, setRefreshToken] = useState("");
@@ -751,30 +759,46 @@ export default function App() {
     return (
       <SafeAreaView style={warmStyles.screen}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <View style={warmStyles.landingTopAccent} />
+          <View style={warmStyles.brandMark}>
+            <Text style={warmStyles.brandMarkText}>Apprendre en confiance</Text>
+          </View>
           <Text style={warmStyles.heroEmoji}>📚✨</Text>
-          <Text style={warmStyles.title}>EduCoach FR</Text>
-          <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          <Text style={warmStyles.title}>EduCoach</Text>
+          <Text style={[warmStyles.subtitle, { marginBottom: 8 }]}>
+            Un parcours clair, comme sur les meilleures apps educatives : progression par petits pas, feedback tout de suite, et recompenses
+            pour rester motive.
+          </Text>
+          <Text style={[warmStyles.caption, { textAlign: "center", marginBottom: 14 }]}>{apiMessage}</Text>
           {!!getResolvedApiBase() && (
-            <Text style={[warmStyles.hint, { marginTop: 6 }]} selectable>
+            <Text style={[warmStyles.caption, { textAlign: "center", marginBottom: 6 }]} selectable>
               Serveur : {getResolvedApiBase()}
             </Text>
           )}
           {!getResolvedApiBase() && (
-            <Text style={[warmStyles.hint, { marginTop: 6 }]}>
+            <Text style={[warmStyles.caption, { textAlign: "center", marginBottom: 8 }]}>
               Aucune URL API dans le bundle — configure config/publicApi.json puis relance avec npx expo start -c.
             </Text>
           )}
-          {sessionLoading && <Text style={warmStyles.hint}>Chargement...</Text>}
-          <Text style={warmStyles.sectionTitle}>Qui utilise l&apos;application ?</Text>
-          <Text style={warmStyles.hint}>
-            Les parents creent le profil de l&apos;enfant et choisissent son identifiant et son mot de passe. L&apos;enfant se connecte avec ces informations sans voir l&apos;espace parent.
-          </Text>
+          {sessionLoading && (
+            <Text style={[warmStyles.hint, { textAlign: "center", marginBottom: 8 }]}>Chargement...</Text>
+          )}
 
-          <TouchableOpacity style={warmStyles.btnPrimary} onPress={() => setRole("auth")}>
-            <Text style={warmStyles.btnPrimaryText}>Parents et tuteurs</Text>
+          <View style={[warmStyles.cardLift, warmStyles.card, { marginTop: 4 }]}>
+            <Text style={warmStyles.sectionTitle}>Pour qui ?</Text>
+            <Text style={[warmStyles.hint, { marginTop: 4 }]}>
+              · Parents et tuteurs : creent le profil, la classe, et les codes de connexion de l&apos;enfant.
+            </Text>
+            <Text style={warmStyles.hint}>
+              · Eleves : un espace simple pour apprendre, sans voir le tableau de bord adulte.
+            </Text>
+          </View>
+
+          <TouchableOpacity style={[warmStyles.btnPrimary, { marginTop: 6 }]} onPress={() => setRole("auth")}>
+            <Text style={warmStyles.btnPrimaryText}>Espace parents et tuteurs</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={warmStyles.btnSun} onPress={() => setRole("studentAuth")}>
-            <Text style={warmStyles.btnSunText}>Je suis eleve</Text>
+          <TouchableOpacity style={warmStyles.btnOutline} onPress={() => setRole("studentAuth")}>
+            <Text style={warmStyles.btnOutlineText}>Je suis eleve — me connecter</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -785,39 +809,41 @@ export default function App() {
     return (
       <SafeAreaView style={warmStyles.screenAlt}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
-          <Text style={[warmStyles.heroEmoji, { fontSize: 48 }]}>👋</Text>
+          <Text style={[warmStyles.heroEmoji, { fontSize: 52 }]}>👋</Text>
           <Text style={warmStyles.titleLight}>Salut champion !</Text>
-          <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          <Text style={[warmStyles.subtitle, { marginBottom: 16 }]}>{apiMessage}</Text>
           {!!getResolvedApiBase() && (
-            <Text style={[warmStyles.hint, { marginTop: 6 }]} selectable>
+            <Text style={[warmStyles.caption, { textAlign: "center", marginBottom: 12 }]} selectable>
               Serveur : {getResolvedApiBase()}
             </Text>
           )}
 
-          <Text style={warmStyles.sectionTitle}>Ta connexion</Text>
-          <Text style={warmStyles.hint}>Demande a tes parents ton identifiant et ton mot de passe.</Text>
-          <TextInput
-            style={warmStyles.inputKid}
-            placeholder="Identifiant"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={kidLoginId}
-            onChangeText={setKidLoginId}
-          />
-          <TextInput
-            style={warmStyles.inputKid}
-            placeholder="Mot de passe"
-            secureTextEntry
-            value={kidPassword}
-            onChangeText={setKidPassword}
-          />
+          <View style={warmStyles.authCard}>
+            <Text style={warmStyles.sectionTitle}>Connexion eleve</Text>
+            <Text style={warmStyles.hint}>Demande a tes parents ton identifiant et ton mot de passe.</Text>
+            <TextInput
+              style={warmStyles.inputKid}
+              placeholder="Identifiant"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={kidLoginId}
+              onChangeText={setKidLoginId}
+            />
+            <TextInput
+              style={warmStyles.inputKid}
+              placeholder="Mot de passe"
+              secureTextEntry
+              value={kidPassword}
+              onChangeText={setKidPassword}
+            />
 
-          <TouchableOpacity style={warmStyles.btnSun} onPress={runKidAuth} disabled={authBusy}>
-            {authBusy ? <ActivityIndicator color="#3d3d3d" /> : <Text style={warmStyles.btnSunText}>C&apos;est parti !</Text>}
-          </TouchableOpacity>
+            <TouchableOpacity style={warmStyles.btnSun} onPress={runKidAuth} disabled={authBusy}>
+              {authBusy ? <ActivityIndicator color="#2D2208" /> : <Text style={warmStyles.btnSunText}>C&apos;est parti !</Text>}
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity style={warmStyles.btnSoft} onPress={() => setRole("landing")}>
-            <Text style={styles.btnText}>Retour</Text>
+          <TouchableOpacity style={warmStyles.btnGhost} onPress={() => setRole("landing")}>
+            <Text style={{ color: T.accent, fontWeight: "700", fontSize: 15 }}>← Retour</Text>
           </TouchableOpacity>
           {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         </ScrollView>
@@ -829,61 +855,74 @@ export default function App() {
     return (
       <SafeAreaView style={warmStyles.screen}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <View style={warmStyles.brandMark}>
+            <Text style={warmStyles.brandMarkText}>Parents</Text>
+          </View>
           <Text style={warmStyles.heroEmoji}>🏠</Text>
-          <Text style={warmStyles.title}>Espace parents</Text>
-          <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          <Text style={warmStyles.title}>Espace familles</Text>
+          <Text style={[warmStyles.subtitle, { marginBottom: 8 }]}>{apiMessage}</Text>
           {!!getResolvedApiBase() && (
-            <Text style={[warmStyles.hint, { marginTop: 6 }]} selectable>
+            <Text style={[warmStyles.caption, { textAlign: "center", marginBottom: 8 }]} selectable>
               Serveur : {getResolvedApiBase()}
             </Text>
           )}
-          {sessionLoading && <Text style={warmStyles.hint}>Restauration de session en cours...</Text>}
+          {sessionLoading && (
+            <Text style={[warmStyles.hint, { textAlign: "center", marginBottom: 10 }]}>Restauration de session...</Text>
+          )}
 
-          <Text style={warmStyles.sectionTitle}>Connexion parent / tuteur</Text>
+          <View style={warmStyles.authCard}>
+            <View style={warmStyles.segmentAuth}>
+              <TouchableOpacity
+                style={[warmStyles.segmentAuthItem, authMode === "register" ? warmStyles.segmentAuthItemOn : undefined]}
+                onPress={() => setAuthMode("register")}
+              >
+                <Text style={[warmStyles.segmentAuthLabel, authMode === "register" ? warmStyles.segmentAuthLabelOn : undefined]}>
+                  Inscription
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[warmStyles.segmentAuthItem, authMode === "login" ? warmStyles.segmentAuthItemOn : undefined]}
+                onPress={() => setAuthMode("login")}
+              >
+                <Text style={[warmStyles.segmentAuthLabel, authMode === "login" ? warmStyles.segmentAuthLabelOn : undefined]}>
+                  Connexion
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.row}>
-            <TouchableOpacity
-              style={[styles.secondaryBtn, authMode === "register" ? styles.subjectBtnActive : undefined]}
-              onPress={() => setAuthMode("register")}
-            >
-              <Text style={styles.btnText}>Inscription</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.secondaryBtn, authMode === "login" ? styles.subjectBtnActive : undefined]}
-              onPress={() => setAuthMode("login")}
-            >
-              <Text style={styles.btnText}>Connexion</Text>
+            {authMode === "register" && (
+              <>
+                <TextInput
+                  style={warmStyles.input}
+                  placeholder="Prenom parent"
+                  value={parentFirstName}
+                  onChangeText={setParentFirstName}
+                />
+                <TextInput style={warmStyles.input} placeholder="Nom parent" value={parentLastName} onChangeText={setParentLastName} />
+              </>
+            )}
+            <TextInput style={warmStyles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
+            <TextInput
+              style={warmStyles.input}
+              placeholder="Mot de passe (min. 8 caracteres)"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+
+            <TouchableOpacity style={warmStyles.btnPrimary} onPress={runAuth} disabled={authBusy}>
+              {authBusy ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={warmStyles.btnPrimaryText}>
+                  {authMode === "register" ? "Creer mon compte et entrer" : "Me connecter"}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
 
-          {authMode === "register" && (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Prenom parent"
-                value={parentFirstName}
-                onChangeText={setParentFirstName}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Nom parent"
-                value={parentLastName}
-                onChangeText={setParentLastName}
-              />
-            </>
-          )}
-          <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
-          <TextInput style={styles.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry />
-
-          <TouchableOpacity style={styles.primaryBtn} onPress={runAuth} disabled={authBusy}>
-            {authBusy ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.btnText}>{authMode === "register" ? "Creer puis se connecter" : "Se connecter"}</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setRole("landing")}>
-            <Text style={styles.btnText}>Retour</Text>
+          <TouchableOpacity style={warmStyles.btnGhost} onPress={() => setRole("landing")}>
+            <Text style={{ color: T.accent, fontWeight: "700", fontSize: 15 }}>← Retour accueil</Text>
           </TouchableOpacity>
           {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         </ScrollView>
@@ -895,9 +934,12 @@ export default function App() {
     return (
       <SafeAreaView style={warmStyles.screen}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <View style={warmStyles.brandMark}>
+            <Text style={warmStyles.brandMarkText}>Famille</Text>
+          </View>
           <Text style={warmStyles.heroEmoji}>⚙️</Text>
           <Text style={warmStyles.title}>Configuration</Text>
-          <Text style={warmStyles.subtitle}>Parent : {parentName}</Text>
+          <Text style={[warmStyles.subtitle, { marginBottom: 12 }]}>Compte parent : {parentName}</Text>
 
           <Text style={styles.sectionTitle}>Ajouter un profil enfant</Text>
           <Text style={styles.hint}>Choisis la classe sur la liste (du CP a la Terminale). Pour l&apos;enfant, seul le prenom est demande au profil.</Text>
@@ -1021,12 +1063,17 @@ export default function App() {
     return (
       <SafeAreaView style={warmStyles.screen}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+          <View style={warmStyles.brandMark}>
+            <Text style={warmStyles.brandMarkText}>Suivi</Text>
+          </View>
           <Text style={warmStyles.heroEmoji}>👨‍👩‍👧</Text>
-          <Text style={warmStyles.title}>Espace Parent</Text>
-          <Text style={warmStyles.subtitle}>Suivi et devoirs</Text>
+          <Text style={warmStyles.title}>Espace parent</Text>
+          <Text style={[warmStyles.subtitle, { marginBottom: 12 }]}>
+            Tableau de bord : progression, devoirs et recommandations du programme.
+          </Text>
 
           {dashboard.map((item) => (
-            <View key={item.childId} style={styles.card}>
+            <View key={item.childId} style={[styles.card, warmStyles.cardLift]}>
               <Text style={styles.cardTitle}>{item.childName}</Text>
               <Text>Niveau lecture: {item.readingLevel}/3</Text>
               <Text>Niveau orthographe: {item.spellingLevel}/3</Text>
@@ -1123,33 +1170,64 @@ export default function App() {
     );
     const strongest = ranked[0]?.[0] || "Francais";
     const weakest = ranked[ranked.length - 1]?.[0] || "Francais";
+    const xpTotal = gamification?.xpTotal ?? displayChild.xp_total ?? 0;
+    let xpPct = xpTotal % 100;
+    if (xpTotal > 0 && xpPct === 0) xpPct = 100;
+    if (xpTotal === 0) xpPct = 6;
+    const coachTip =
+      COACH_TIPS[
+        ((displayChild.first_name?.length ?? 0) + (displayChild.id ?? 0) + new Date().getDate()) % COACH_TIPS.length
+      ];
     return (
       <SafeAreaView style={warmStyles.screenAlt}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
-          <Text style={warmStyles.heroEmoji}>🌟📖</Text>
-          <Text style={warmStyles.titleLight}>Salut {displayChild?.first_name || "champion"} !</Text>
-          <Text style={warmStyles.subtitle}>
-            Points {displayChild?.points ?? 0} · Classe {displayChild?.grade}
-          </Text>
+          <View style={warmStyles.coachBubble}>
+            <Text style={warmStyles.coachEmoji}>🦉</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={warmStyles.coachText}>{coachTip}</Text>
+              <Text style={warmStyles.coachHint}>Astuce : avance etape par etape, comme une video Khan Academy.</Text>
+            </View>
+          </View>
+
+          <Text style={[warmStyles.titleLight, { marginBottom: 6 }]}>Salut {displayChild?.first_name || "champion"} !</Text>
+          <View style={warmStyles.statRow}>
+            <View style={warmStyles.statPill}>
+              <Text style={warmStyles.statPillText}>⭐ {displayChild?.points ?? 0} pts</Text>
+            </View>
+            <View style={warmStyles.statPill}>
+              <Text style={warmStyles.statPillText}>🎓 {displayChild?.grade}</Text>
+            </View>
+            <View style={warmStyles.statPill}>
+              <Text style={warmStyles.statPillText}>🔥 {gamification?.streakDays ?? displayChild.streak_days ?? 0} j.</Text>
+            </View>
+          </View>
+
+          <View style={warmStyles.xpWrap}>
+            <Text style={warmStyles.xpLabel}>Experience · prochain palier dans la serie</Text>
+            <View style={warmStyles.xpBarBg}>
+              <View style={[warmStyles.xpBarFill, { width: `${xpPct}%` as `${number}%` }]} />
+            </View>
+            <Text style={[warmStyles.caption, { marginTop: 4 }]}>{xpTotal} XP cumules</Text>
+          </View>
 
           <View style={warmStyles.tabBar}>
             <TouchableOpacity
               style={[warmStyles.tab, studentTab === "home" ? warmStyles.tabOn : undefined]}
               onPress={() => setStudentTab("home")}
             >
-              <Text style={[warmStyles.tabText, studentTab === "home" ? warmStyles.tabTextOn : undefined]}>Accueil</Text>
+              <Text style={[warmStyles.tabText, studentTab === "home" ? warmStyles.tabTextOn : undefined]}>🏠 Accueil</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[warmStyles.tab, studentTab === "eval" ? warmStyles.tabOn : undefined]}
               onPress={() => setStudentTab("eval")}
             >
-              <Text style={[warmStyles.tabText, studentTab === "eval" ? warmStyles.tabTextOn : undefined]}>Evaluations</Text>
+              <Text style={[warmStyles.tabText, studentTab === "eval" ? warmStyles.tabTextOn : undefined]}>📋 Evals</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[warmStyles.tab, studentTab === "learn" ? warmStyles.tabOn : undefined]}
               onPress={() => setStudentTab("learn")}
             >
-              <Text style={[warmStyles.tabText, studentTab === "learn" ? warmStyles.tabTextOn : undefined]}>Apprendre</Text>
+              <Text style={[warmStyles.tabText, studentTab === "learn" ? warmStyles.tabTextOn : undefined]}>📚 Apprendre</Text>
             </TouchableOpacity>
           </View>
 
@@ -1158,21 +1236,30 @@ export default function App() {
               <View style={[warmStyles.card, warmStyles.cardLift]}>
                 <Text style={warmStyles.sectionTitle}>Tes niveaux par matiere</Text>
                 <Text style={warmStyles.hint}>
-                  E, M ou A = pas encore au programme officiel, c&apos;est notre echelle pour te guider (E = essentiel, M =
-                  confort, A = avance). Chaque matiere evolue separement !
+                  E = essentiel · M = confort · A = avance. Chaque matiere progressse independamment — comme des badges sur une
+                  grande carte de jeux educatifs.
                 </Text>
-                {activeSubjectsList.map((sub) => {
+                {activeSubjectsList.map((sub, idx) => {
                   const disp = displayChild.subjectTiersDisplay?.[sub];
                   const tier = disp?.label || "E";
+                  const last = idx === activeSubjectsList.length - 1;
                   return (
-                    <View key={sub} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 6 }}>
-                      <Text style={{ fontWeight: "800", color: T.ink, fontSize: 16 }}>{sub}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        <View style={warmStyles.tierBadge}>
-                          <Text style={warmStyles.tierText}>
-                            {tier} · {displayChild.grade}
-                          </Text>
-                        </View>
+                    <View
+                      key={sub}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        paddingVertical: 12,
+                        borderBottomWidth: last ? 0 : 1,
+                        borderBottomColor: T.border,
+                      }}
+                    >
+                      <Text style={{ fontWeight: "700", color: T.ink, fontSize: 15, flex: 1, paddingRight: 8 }}>{sub}</Text>
+                      <View style={warmStyles.tierBadge}>
+                        <Text style={warmStyles.tierText}>
+                          {tier} · {displayChild.grade}
+                        </Text>
                       </View>
                     </View>
                   );
@@ -1182,11 +1269,8 @@ export default function App() {
               </View>
 
               <View style={[warmStyles.card, warmStyles.cardLift]}>
-                <Text style={warmStyles.sectionTitle}>Avatar et progression</Text>
-                <Text style={warmStyles.hint}>
-                  Avatar actuel: {gamification?.avatarId || displayChild.avatar_id || "fox"} · XP: {gamification?.xpTotal || displayChild.xp_total || 0} · Serie:{" "}
-                  {gamification?.streakDays || displayChild.streak_days || 0} jour(s)
-                </Text>
+                <Text style={warmStyles.sectionTitle}>Ton avatar</Text>
+                <Text style={warmStyles.hint}>Choisis une mascotte — elle suit tes progres avec toi.</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={[warmStyles.pillRow, { flexDirection: "row" }]}>
                     {(gamification?.avatars || ["fox", "owl", "lion", "dolphin", "cat", "rocket"]).map((a) => (
@@ -1198,7 +1282,13 @@ export default function App() {
                         ]}
                         onPress={() => chooseAvatar(a)}
                       >
-                        <Text style={[styles.btnText, (gamification?.avatarId || displayChild.avatar_id || "fox") === a ? undefined : { color: T.ink }]}>
+                        <Text
+                          style={{
+                            fontWeight: "800",
+                            color:
+                              (gamification?.avatarId || displayChild.avatar_id || "fox") === a ? T.primaryDark : T.ink,
+                          }}
+                        >
                           {a}
                         </Text>
                       </TouchableOpacity>
@@ -1233,8 +1323,13 @@ export default function App() {
 
           {studentTab === "eval" && displayChild && (
             <>
-              <Text style={warmStyles.sectionTitle}>Une evaluation par matiere</Text>
-              <Text style={warmStyles.hint}>Quand c&apos;est valide, un petit vert apparait. Tu peux repasser une eval pour t&apos;ameliorer.</Text>
+              <View style={[warmStyles.cardLift, warmStyles.card]}>
+                <Text style={warmStyles.sectionTitle}>Evaluations</Text>
+                <Text style={warmStyles.hint}>
+                  Une serie de questions par matiere. Quand c&apos;est valide, tu vois un badge vert — tu peux refaire pour monter
+                  en niveau.
+                </Text>
+              </View>
               {activeSubjectsList.map((sub) => {
                 const done = displayChild.evaluationBySubject?.[sub]?.done;
                 return (
@@ -1278,7 +1373,7 @@ export default function App() {
                           {evalBusy ? <ActivityIndicator color="#fff" /> : <Text style={warmStyles.btnPrimaryText}>Valider</Text>}
                         </TouchableOpacity>
                         <TouchableOpacity style={warmStyles.btnSoft} onPress={() => { setEvalItem(null); setEvalAnswer(""); }}>
-                          <Text style={styles.btnText}>Annuler</Text>
+                          <Text style={{ color: T.accent, fontWeight: "700" }}>Annuler</Text>
                         </TouchableOpacity>
                       </>
                     ) : (
@@ -1303,7 +1398,14 @@ export default function App() {
                       style={[warmStyles.pill, subject === s ? warmStyles.pillActive : undefined]}
                       onPress={() => setSubject(s)}
                     >
-                      <Text style={[styles.btnText, subject === s ? undefined : { color: T.ink, fontWeight: "800" }]}>{s}</Text>
+                      <Text
+                        style={{
+                          fontWeight: "800",
+                          color: subject === s ? T.primaryDark : T.ink,
+                        }}
+                      >
+                        {s}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -1317,8 +1419,30 @@ export default function App() {
               </View>
 
               <View style={[warmStyles.card, warmStyles.cardLift]}>
-                <Text style={warmStyles.sectionTitle}>Exercice (dictee orale ou question)</Text>
-                <Text style={warmStyles.hint}>Etape : {step === "lecture" ? "Lecture" : step}</Text>
+                <Text style={warmStyles.sectionTitle}>Ton exercice</Text>
+                <Text style={warmStyles.hint}>
+                  Etape{" "}
+                  {step === "lecture"
+                    ? "1 — Lecture"
+                    : step === "dictee"
+                      ? "2 — Question ou dictee"
+                      : step === "correction"
+                        ? "3 — Correction"
+                        : step === "revision"
+                          ? "4 — Revision"
+                          : "5 — Bravo"}
+                </Text>
+                <View style={warmStyles.stepDots}>
+                  {(["lecture", "dictee", "correction", "revision", "reward"] as SessionStep[]).map((st, i) => {
+                    const order: SessionStep[] = ["lecture", "dictee", "correction", "revision", "reward"];
+                    const cur = order.indexOf(step);
+                    const active = i <= cur;
+                    const current = i === cur;
+                    return (
+                      <View key={st} style={[warmStyles.stepDot, active ? warmStyles.stepDotOn : undefined, current ? { opacity: 1 } : undefined]} />
+                    );
+                  })}
+                </View>
 
                 {step === "lecture" && (
                   <TouchableOpacity style={warmStyles.btnSun} onPress={() => setStep("dictee")}>
@@ -1367,7 +1491,7 @@ export default function App() {
 
                 {step === "reward" && (
                   <View style={warmStyles.blockFun}>
-                    <Text style={{ fontSize: 18, fontWeight: "900", color: T.mintDark }}>Bravo !</Text>
+                    <Text style={{ fontSize: 20, fontWeight: "900", color: T.primaryDark }}>Bravo !</Text>
                     <Text style={warmStyles.hint}>Tu gagnes des points et une mini recompense.</Text>
                     <Text style={warmStyles.hint}>Blague : Pourquoi le livre est fatigue ? Parce qu&apos;il a trop de feuilles !</Text>
                     <TouchableOpacity style={warmStyles.btnSun} onPress={proceedSession}>
@@ -1407,13 +1531,15 @@ export default function App() {
 
           {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
           <TouchableOpacity
-            style={styles.kidSecondaryBtn}
+            style={warmStyles.kidSecondaryBtn}
             onPress={() => {
               if (sessionKind === "student") logoutStudent();
               else setRole("setup");
             }}
           >
-            <Text style={styles.kidBtnDarkText}>{sessionKind === "student" ? "Quitter mon espace" : "Retour configuration"}</Text>
+            <Text style={{ color: "#5c3d18", fontWeight: "800", fontSize: 15 }}>
+              {sessionKind === "student" ? "Quitter mon espace" : "Retour configuration"}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -1437,38 +1563,59 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f4f6fb" },
-  studentBg: { backgroundColor: "#e9f7fe" },
+  container: { flex: 1, backgroundColor: T.bg },
+  studentBg: { backgroundColor: T.bgDeep },
   content: { padding: 16, gap: 12 },
-  title: { fontSize: 26, fontWeight: "800", color: "#1d2b64" },
-  studentHeroTitle: { fontSize: 28, color: "#0f3460" },
+  title: { fontSize: 26, fontWeight: "800", color: T.ink },
+  studentHeroTitle: { fontSize: 28, color: T.ink },
   landingEmoji: { fontSize: 36, textAlign: "center" },
-  subtitle: { fontSize: 14, color: "#4c5c96" },
-  studentSubtitle: { fontSize: 16, color: "#1e4976", fontWeight: "600" },
-  sectionTitle: { fontSize: 16, fontWeight: "700", marginTop: 8 },
-  input: { borderWidth: 1, borderColor: "#d4daf0", backgroundColor: "white", borderRadius: 10, padding: 10 },
-  kidInput: { borderWidth: 2, borderColor: "#ffcf71", backgroundColor: "white", borderRadius: 14, padding: 14, fontSize: 17 },
+  subtitle: { fontSize: 14, color: T.inkMuted },
+  studentSubtitle: { fontSize: 16, color: T.ink, fontWeight: "600" },
+  sectionTitle: { fontSize: 17, fontWeight: "700", marginTop: 8, color: T.ink },
+  input: {
+    borderWidth: 1.5,
+    borderColor: T.border,
+    backgroundColor: T.surface,
+    borderRadius: 14,
+    padding: 12,
+    fontSize: 16,
+    color: T.ink,
+  },
+  kidInput: { borderWidth: 2, borderColor: T.amberBorder, backgroundColor: T.surface, borderRadius: 14, padding: 14, fontSize: 17 },
   inputLikePicker: {
-    borderWidth: 1,
-    borderColor: "#d4daf0",
-    backgroundColor: "white",
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    borderWidth: 1.5,
+    borderColor: T.border,
+    backgroundColor: T.surface,
+    borderRadius: 14,
+    paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 4,
   },
-  inputLikePickerLabel: { fontSize: 11, color: "#59638f", textTransform: "uppercase", letterSpacing: 0.5 },
-  inputLikePickerValue: { fontSize: 17, fontWeight: "700", color: "#1d2b64" },
+  inputLikePickerLabel: { fontSize: 11, color: T.inkSubtle, textTransform: "uppercase", letterSpacing: 0.6 },
+  inputLikePickerValue: { fontSize: 17, fontWeight: "700", color: T.ink },
   multiline: { minHeight: 90, textAlignVertical: "top" },
   row: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  card: { backgroundColor: "white", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#dbe0f5", gap: 6 },
-  cardSelected: { borderColor: "#4152c9", borderWidth: 2 },
-  kidCard: { borderRadius: 16, borderColor: "#b8e0ff", borderWidth: 2 },
-  cardTitle: { fontSize: 16, fontWeight: "700" },
-  block: { backgroundColor: "#f0f4ff", padding: 10, borderRadius: 8 },
-  hint: { color: "#59638f", fontSize: 12 },
-  errorText: { color: "#b01919", fontSize: 12 },
-  primaryBtn: { backgroundColor: "#4152c9", borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, alignItems: "center" },
+  card: {
+    backgroundColor: T.surface,
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: T.border,
+    gap: 8,
+  },
+  cardSelected: { borderColor: T.primary, borderWidth: 2 },
+  kidCard: { borderRadius: 16, borderColor: T.borderStrong, borderWidth: 2 },
+  cardTitle: { fontSize: 16, fontWeight: "700", color: T.ink },
+  block: { backgroundColor: T.surfaceMuted, padding: 12, borderRadius: 14 },
+  hint: { color: T.inkMuted, fontSize: 13 },
+  errorText: { color: T.danger, fontSize: 13 },
+  primaryBtn: {
+    backgroundColor: T.primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    alignItems: "center",
+  },
   kidPrimaryBtn: {
     backgroundColor: "#ffc93c",
     borderRadius: 14,
@@ -1479,7 +1626,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#f6b629",
   },
-  secondaryBtn: { backgroundColor: "#6878e6", borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, alignItems: "center", marginTop: 6 },
+  secondaryBtn: {
+    backgroundColor: T.accent,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    marginTop: 6,
+  },
   kidSecondaryBtn: {
     backgroundColor: "#fdeedc",
     borderRadius: 14,
@@ -1495,23 +1649,26 @@ const styles = StyleSheet.create({
   subjectBtn: { backgroundColor: "#95a1e6", borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12 },
   kidSubjectBtn: { backgroundColor: "#79cbdc", borderRadius: 12, paddingVertical: 11, paddingHorizontal: 14 },
   subjectBtnActive: { backgroundColor: "#4152c9" },
-  btnText: { color: "white", fontWeight: "700" },
+  btnText: { color: "#fff", fontWeight: "700" },
+  btnTextSecondary: { color: T.accent, fontWeight: "700" },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(15, 30, 60, 0.45)",
+    backgroundColor: T.overlay,
     justifyContent: "center",
     padding: 20,
   },
   modalSheet: {
-    backgroundColor: "white",
-    borderRadius: 14,
-    padding: 16,
+    backgroundColor: T.surface,
+    borderRadius: 20,
+    padding: 18,
     maxHeight: "70%",
     gap: 10,
+    borderWidth: 1,
+    borderColor: T.border,
   },
-  modalTitle: { fontSize: 17, fontWeight: "800", color: "#1d2b64", marginBottom: 4 },
+  modalTitle: { fontSize: 18, fontWeight: "800", color: T.ink, marginBottom: 4 },
   gradeList: { maxHeight: 320 },
-  gradeRow: { paddingVertical: 14, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: "#e8eaf7" },
-  gradeRowActive: { backgroundColor: "#eef3ff" },
-  gradeRowText: { fontSize: 17, color: "#1d2b64", fontWeight: "600" },
+  gradeRow: { paddingVertical: 14, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: T.border },
+  gradeRowActive: { backgroundColor: T.primarySoft },
+  gradeRowText: { fontSize: 17, color: T.ink, fontWeight: "600" },
 });
