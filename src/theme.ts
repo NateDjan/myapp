@@ -1,168 +1,403 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
-/** Palette douce alignée sur l’écran d’accueil (jaune pastel, bleu ciel, touches chaudes). */
+/**
+ * Design system EduCoach — inspiré des meilleures apps éducatives :
+ * palette calme et sérieuse (lisibilité), touches ludiques (coins arrondis,
+ * accents verts « progression »), hiérarchie nette (titres forts, corps aéré).
+ */
+
+export const spacing = { xs: 6, sm: 10, md: 14, lg: 18, xl: 24, xxl: 32 };
+export const radius = { sm: 12, md: 16, lg: 20, xl: 28, full: 9999 };
+
 export const T = {
-  bg: "#fff8ef",
-  bgAlt: "#e9f7fe",
-  card: "#ffffff",
-  cardBorder: "#ffe4b5",
-  cardShadow: "rgba(45, 80, 120, 0.08)",
-  ink: "#2a2540",
-  inkMuted: "#5c5678",
-  accent: "#4152c9",
-  accentSoft: "#6878e6",
-  sun: "#ffc93c",
-  sunBorder: "#f6b629",
-  mint: "#7dcc9b",
-  mintDark: "#2d6b4e",
-  sky: "#79cbdc",
-  coral: "#ff8f7a",
-  good: "#22a66c",
+  /** Fond principal très léger, neutre (lisibilité maximale) */
+  bg: "#F6F8FB",
+  bgDeep: "#EDF1F7",
+  /** Cartes blanches flottantes */
+  surface: "#FFFFFF",
+  surfaceMuted: "#F0F4FA",
+  /** Texte principal — bleu ardoise profond */
+  ink: "#1B2838",
+  inkMuted: "#5A6578",
+  inkSubtle: "#8B96A8",
+  /** Accent primaire — vert progression (type apps apprentissage premium) */
+  primary: "#12B886",
+  primaryDark: "#0D926F",
+  primarySoft: "#E6FAF4",
+  /** Alias — texte sur badges verts */
+  mintDark: "#0D926F",
+  /** Accent secondaire — bleu confiance / liens */
+  accent: "#3D5AFE",
+  accentSoft: "#E8ECFF",
+  /** Accent chaud — récompenses, CTA secondaires */
+  amber: "#FFB020",
+  amberSoft: "#FFF4DC",
+  amberBorder: "#E5A010",
+  /** États */
+  success: "#12B886",
+  warning: "#F59F00",
+  danger: "#E03131",
+  dangerSoft: "#FFE8E8",
+  border: "#E2E8F0",
+  borderStrong: "#CBD5E1",
+  overlay: "rgba(27, 40, 56, 0.45)",
+  shadow: "rgba(15, 34, 58, 0.08)",
 };
+
+const shadowCard =
+  Platform.OS === "web"
+    ? { boxShadow: `0 8px 28px ${T.shadow}` as unknown as undefined }
+    : {
+        shadowColor: "#0F223A",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.07,
+        shadowRadius: 20,
+        elevation: 4,
+      };
+
+const shadowSoft =
+  Platform.OS === "web"
+    ? { boxShadow: `0 2px 12px ${T.shadow}` as unknown as undefined }
+    : {
+        shadowColor: "#0F223A",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 2,
+      };
 
 export const warmStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: T.bg },
-  screenAlt: { flex: 1, backgroundColor: T.bgAlt },
-  pad: { padding: 18, gap: 14 },
-  heroEmoji: { fontSize: 42, textAlign: "center", marginBottom: 4 },
-  title: { fontSize: 26, fontWeight: "900", color: T.ink, letterSpacing: -0.5 },
-  titleLight: { fontSize: 24, fontWeight: "800", color: "#0f3460" },
-  subtitle: { fontSize: 15, color: T.inkMuted, lineHeight: 22 },
-  sectionTitle: { fontSize: 17, fontWeight: "800", color: T.ink, marginTop: 6 },
-  hint: { fontSize: 13, color: T.inkMuted, lineHeight: 20 },
+  screenAlt: { flex: 1, backgroundColor: T.bgDeep },
+  /** Padding écran + espacement vertical entre sections */
+  pad: { padding: spacing.lg, gap: spacing.md },
+  padWide: { paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, gap: spacing.md },
+
+  /** Hero landing — zone premium */
+  landingTopAccent: {
+    height: 6,
+    backgroundColor: T.primary,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    marginHorizontal: -spacing.lg,
+    marginTop: -spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  heroEmoji: { fontSize: 44, textAlign: "center", marginBottom: spacing.sm },
+  brandMark: {
+    alignSelf: "center",
+    backgroundColor: T.primarySoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    marginBottom: spacing.sm,
+  },
+  brandMarkText: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    color: T.primaryDark,
+    textTransform: "uppercase",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: T.ink,
+    letterSpacing: -0.8,
+    textAlign: "center",
+    marginBottom: spacing.xs,
+  },
+  titleLight: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: T.ink,
+    letterSpacing: -0.5,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: T.inkMuted,
+    lineHeight: 24,
+    textAlign: "center",
+    paddingHorizontal: spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: T.ink,
+    marginTop: spacing.sm,
+    letterSpacing: -0.3,
+  },
+  hint: {
+    fontSize: 14,
+    color: T.inkMuted,
+    lineHeight: 21,
+  },
+  caption: {
+    fontSize: 12,
+    color: T.inkSubtle,
+    lineHeight: 17,
+  },
+
   card: {
-    backgroundColor: T.card,
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: T.cardBorder,
-    gap: 8,
+    backgroundColor: T.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: T.border,
+    gap: spacing.sm,
+    ...shadowSoft,
   },
   cardLift: {
-    shadowColor: "#2d4078",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    ...shadowCard,
+    borderColor: "transparent",
   },
+  cardInset: {
+    backgroundColor: T.surfaceMuted,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: T.border,
+  },
+
+  /** Formulaires */
   input: {
-    borderWidth: 2,
-    borderColor: "#e8ddcc",
-    backgroundColor: "#fffdfb",
-    borderRadius: 14,
-    padding: 14,
+    borderWidth: 1.5,
+    borderColor: T.border,
+    backgroundColor: T.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     fontSize: 16,
     color: T.ink,
   },
   inputKid: {
     borderWidth: 2,
-    borderColor: T.sunBorder,
-    backgroundColor: "#fffefb",
-    borderRadius: 16,
-    padding: 14,
+    borderColor: T.amberBorder,
+    backgroundColor: "#FFFDF8",
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     fontSize: 17,
     color: T.ink,
   },
-  btnSun: {
-    backgroundColor: T.sun,
-    borderRadius: 16,
-    paddingVertical: 15,
-    paddingHorizontal: 18,
+
+  /** Boutons */
+  btnPrimary: {
+    backgroundColor: T.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    alignItems: "center",
+    ...shadowSoft,
+  },
+  btnPrimaryText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.2 },
+  btnOutline: {
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: T.sunBorder,
+    borderColor: T.primary,
+    backgroundColor: T.surface,
   },
-  btnSunText: { color: "#3d3d3d", fontWeight: "900", fontSize: 17 },
-  btnPrimary: {
-    backgroundColor: T.accent,
-    borderRadius: 14,
-    paddingVertical: 14,
+  btnOutlineText: { color: T.primaryDark, fontWeight: "700", fontSize: 16 },
+  btnSun: {
+    backgroundColor: T.amber,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     alignItems: "center",
+    borderWidth: 0,
+    ...shadowSoft,
   },
-  btnPrimaryText: { color: "#fff", fontWeight: "800", fontSize: 16 },
+  btnSunText: { color: "#2D2208", fontWeight: "800", fontSize: 16 },
   btnSoft: {
     backgroundColor: T.accentSoft,
-    borderRadius: 14,
-    paddingVertical: 12,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm + 2,
     alignItems: "center",
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   btnSky: {
-    backgroundColor: T.sky,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    backgroundColor: "#B8E8FF",
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
     alignItems: "center",
   },
-  pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  pill: {
-    backgroundColor: "rgba(121, 203, 220, 0.35)",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: "#a8dfe8",
+  btnGhost: {
+    paddingVertical: spacing.sm,
+    alignItems: "center",
   },
-  pillActive: {
-    backgroundColor: T.accent,
-    borderColor: T.accent,
+
+  /** Navigation élève — style segmented iOS / Khan */
+  tabBar: {
+    flexDirection: "row",
+    backgroundColor: T.surfaceMuted,
+    borderRadius: radius.full,
+    padding: 4,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: T.border,
   },
-  tabBar: { flexDirection: "row", gap: 8, marginBottom: 8 },
   tab: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.7)",
+    minHeight: 54,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.full,
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#e0e8f5",
+    justifyContent: "center",
   },
   tabOn: {
-    backgroundColor: T.sun,
-    borderColor: T.sunBorder,
+    backgroundColor: T.surface,
+    ...shadowSoft,
   },
-  tabText: { fontWeight: "800", fontSize: 14, color: T.inkMuted },
+  tabLabel: { fontWeight: "700", fontSize: 13, color: T.inkMuted },
+  tabLabelOn: { color: T.ink },
+  /** Alias compat App.tsx */
+  tabText: { fontWeight: "700", fontSize: 13, color: T.inkMuted },
   tabTextOn: { color: T.ink },
-  doneDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: T.good,
-    marginLeft: 6,
+
+  pillRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  pill: {
+    backgroundColor: T.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    borderWidth: 1.5,
+    borderColor: T.border,
   },
+  pillActive: {
+    backgroundColor: T.primarySoft,
+    borderColor: T.primary,
+  },
+
   tierBadge: {
-    backgroundColor: "#eef7ff",
-    paddingHorizontal: 10,
+    backgroundColor: T.accentSoft,
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: "#c9ddf5",
+    borderColor: T.border,
   },
-  tierText: { fontWeight: "900", fontSize: 13, color: T.accent },
+  tierText: { fontWeight: "800", fontSize: 13, color: T.accent },
+
   chipGreen: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(34, 166, 108, 0.12)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    backgroundColor: T.primarySoft,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
     alignSelf: "flex-start",
-  },
-  kidSecondaryBtn: {
-    backgroundColor: "#fdeedc",
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    alignItems: "center",
-    marginTop: 10,
-    borderWidth: 2,
-    borderColor: "#f4cfa8",
-  },
-  blockFun: {
-    backgroundColor: "#f0f7ff",
-    padding: 14,
-    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#d4e5ff",
+    borderColor: "#C3F0E0",
+  },
+  doneDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: T.primary,
+    marginLeft: spacing.xs,
+  },
+
+  kidSecondaryBtn: {
+    backgroundColor: T.amberSoft,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    alignItems: "center",
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: T.amberBorder,
+  },
+
+  blockFun: {
+    backgroundColor: T.surfaceMuted,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: T.border,
+  },
+
+  /** Coach / mascotte — zone encouragement type assistant */
+  coachBubble: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    backgroundColor: T.primarySoft,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "#C3F0E0",
+    marginBottom: spacing.md,
+  },
+  coachEmoji: { fontSize: 36 },
+  coachText: { flex: 1, fontSize: 15, lineHeight: 22, color: T.ink, fontWeight: "600" },
+  coachHint: { fontSize: 13, color: T.primaryDark, marginTop: spacing.xs, fontWeight: "600" },
+
+  /** Barre XP */
+  xpWrap: { marginTop: spacing.sm },
+  xpBarBg: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: T.border,
+    overflow: "hidden",
+  },
+  xpBarFill: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: T.primary,
+  },
+  xpLabel: { fontSize: 12, color: T.inkSubtle, marginBottom: 4, fontWeight: "600" },
+
+  /** Stats header élève */
+  statRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.sm },
+  statPill: {
+    backgroundColor: T.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: T.border,
+  },
+  statPillText: { fontSize: 13, fontWeight: "700", color: T.ink },
+
+  /** Étapes leçon */
+  stepDots: { flexDirection: "row", gap: spacing.xs, marginVertical: spacing.sm },
+  stepDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: T.border },
+  stepDotOn: { backgroundColor: T.primary, width: 22 },
+
+  /** Segment inscription / connexion */
+  segmentAuth: {
+    flexDirection: "row",
+    backgroundColor: T.surfaceMuted,
+    borderRadius: radius.full,
+    padding: 4,
+    gap: 4,
+    marginBottom: spacing.sm,
+  },
+  segmentAuthItem: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    alignItems: "center",
+    borderRadius: radius.full,
+  },
+  segmentAuthItemOn: {
+    backgroundColor: T.surface,
+    ...shadowSoft,
+  },
+  segmentAuthLabel: { fontWeight: "700", fontSize: 14, color: T.inkMuted },
+  segmentAuthLabelOn: { color: T.ink },
+
+  /** Auth card */
+  authCard: {
+    backgroundColor: T.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: T.border,
+    ...shadowCard,
+    gap: spacing.md,
   },
 });
