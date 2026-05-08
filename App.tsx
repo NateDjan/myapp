@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, type Child, type ParentNotification, type ParentSettings, type SubjectsMeta } from "./src/api";
+import { api, type Child, type GamificationState, type ParentNotification, type ParentSettings, type SubjectsMeta } from "./src/api";
 import { T, warmStyles } from "./src/theme";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
@@ -108,6 +108,7 @@ export default function App() {
   const [parentSettings, setParentSettings] = useState<ParentSettings>({ rewardMinutesPerSuccess: 5, notifyOnUnlock: true });
   const [parentNotifications, setParentNotifications] = useState<ParentNotification[]>([]);
   const [onlinePrograms, setOnlinePrograms] = useState<Array<{ subject: string; title: string; url: string }>>([]);
+  const [gamification, setGamification] = useState<GamificationState | null>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [curriculumSources, setCurriculumSources] = useState<string[]>([]);
   const [curriculumNote, setCurriculumNote] = useState("");
@@ -413,16 +414,19 @@ export default function App() {
     if (!token || !selectedChild || !evalItem) return;
     setEvalBusy(true);
     try {
-      await api.submitEvaluation(token, selectedChild.id, {
+      const result = await api.submitEvaluation(token, selectedChild.id, {
         itemId: evalItem.itemId,
         subject: evalItem.subject,
         answer: evalAnswer,
       });
       await reloadChildren();
       await loadSubjectsMeta();
+      await loadGamification();
       setEvalItem(null);
       setEvalAnswer("");
-      Alert.alert("Super !", "Ton evaluation pour cette matiere est enregistree.");
+      const reward = result.unlockedMinutes ? ` +${result.unlockedMinutes} min de temps d'ecran.` : "";
+      const xp = result.xpGain ? ` +${result.xpGain} XP.` : "";
+      Alert.alert("Super !", `Ton evaluation est enregistree.${reward}${xp}`);
     } catch (error) {
       Alert.alert("Erreur", String(error));
     } finally {
@@ -516,6 +520,7 @@ export default function App() {
             : "";
         setSessionFeedback(`${result.feedback}${bonus}`);
         await reloadChildren();
+        await loadGamification();
         setStep("correction");
       } catch (error) {
         setErrorMessage(String(error));
@@ -611,6 +616,27 @@ export default function App() {
     }
   };
 
+  const loadGamification = async () => {
+    if (!token || !selectedChild) return;
+    try {
+      const g = await api.getGamification(token, selectedChild.id);
+      setGamification(g);
+    } catch {
+      setGamification(null);
+    }
+  };
+
+  const chooseAvatar = async (avatarId: string) => {
+    if (!token || !selectedChild) return;
+    try {
+      await api.patchAvatar(token, selectedChild.id, avatarId);
+      await reloadChildren();
+      await loadGamification();
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
   const addHomework = async () => {
     if (!token || !selectedChild || !homeworkTitle.trim()) return;
     try {
@@ -649,6 +675,10 @@ export default function App() {
   useEffect(() => {
     loadOnlinePrograms();
   }, [selectedChildId, token, subject]);
+
+  useEffect(() => {
+    loadGamification();
+  }, [selectedChildId, token, role]);
 
   useEffect(() => {
     if (role === "parent") {
@@ -1069,6 +1099,54 @@ export default function App() {
                 })}
                 <Text style={warmStyles.hint}>Tu es le plus a l'aise en {strongest}.</Text>
                 <Text style={warmStyles.hint}>On va surtout t'aider en {weakest}.</Text>
+              </View>
+
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Avatar et progression</Text>
+                <Text style={warmStyles.hint}>
+                  Avatar actuel: {gamification?.avatarId || displayChild.avatar_id || "fox"} · XP: {gamification?.xpTotal || displayChild.xp_total || 0} · Serie:{" "}
+                  {gamification?.streakDays || displayChild.streak_days || 0} jour(s)
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={[warmStyles.pillRow, { flexDirection: "row" }]}>
+                    {(gamification?.avatars || ["fox", "owl", "lion", "dolphin", "cat", "rocket"]).map((a) => (
+                      <TouchableOpacity
+                        key={`av-${a}`}
+                        style={[
+                          warmStyles.pill,
+                          (gamification?.avatarId || displayChild.avatar_id || "fox") === a ? warmStyles.pillActive : undefined,
+                        ]}
+                        onPress={() => chooseAvatar(a)}
+                      >
+                        <Text style={[styles.btnText, (gamification?.avatarId || displayChild.avatar_id || "fox") === a ? undefined : { color: T.ink }]}>
+                          {a}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Badges</Text>
+                {(gamification?.badges || displayChild.badges || []).length === 0 ? (
+                  <Text style={warmStyles.hint}>Continue, ton premier badge arrive vite !</Text>
+                ) : (
+                  (gamification?.badges || displayChild.badges || []).map((b, i) => (
+                    <Text key={`badge-${i}`} style={warmStyles.hint}>
+                      - 🏅 {b}
+                    </Text>
+                  ))
+                )}
+              </View>
+
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Quetes du jour</Text>
+                {(gamification?.quests || []).map((q) => (
+                  <Text key={q.id} style={warmStyles.hint}>
+                    {q.completed ? "✅" : "⬜"} {q.title}
+                  </Text>
+                ))}
               </View>
             </>
           )}

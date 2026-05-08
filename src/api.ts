@@ -23,6 +23,10 @@ export type Child = {
   evaluationBySubject?: Record<string, EvaluationRecord>;
   optionalSubjectsEnabled?: string[];
   screen_time_earned_min?: number;
+  avatar_id?: string;
+  xp_total?: number;
+  streak_days?: number;
+  badges?: string[];
 };
 
 export type SubjectsMeta = {
@@ -48,6 +52,17 @@ export type ParentNotification = {
   payload: Record<string, unknown>;
   created_at: string;
   is_read: boolean;
+};
+
+export type GamificationState = {
+  avatars: string[];
+  avatarId: string;
+  xpTotal: number;
+  streakDays: number;
+  badges: string[];
+  strongestSubject: string;
+  weakestSubject: string;
+  quests: Array<{ id: string; title: string; completed: boolean }>;
 };
 
 function resolveApiBase(): string {
@@ -186,6 +201,12 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ subjects }),
     }, token),
+  getGamification: (token: string, childId: number) => request<GamificationState>(`/api/gamification/${childId}`, {}, token),
+  patchAvatar: (token: string, childId: number, avatarId: string) =>
+    request<{ ok: boolean; avatarId: string }>(`/api/children/${childId}/avatar`, {
+      method: "PATCH",
+      body: JSON.stringify({ avatarId }),
+    }, token),
   getEvaluationItem: (token: string, childId: number, subject: string) =>
     request<{
       itemId: number;
@@ -195,7 +216,7 @@ export const api = {
       subject: string;
     }>(`/api/evaluation/${childId}/item?subject=${encodeURIComponent(subject)}`, {}, token),
   submitEvaluation: (token: string, childId: number, payload: { itemId: number; subject: string; answer: string }) =>
-    request<{ score: number; completed: boolean; tierLabel: string; unlockedMinutes?: number }>(
+    request<{ score: number; completed: boolean; tierLabel: string; unlockedMinutes?: number; xpGain?: number; streakDays?: number; badges?: string[] }>(
       `/api/evaluation/${childId}/submit`,
       { method: "POST", body: JSON.stringify(payload) },
       token
@@ -217,7 +238,7 @@ export const api = {
     childId: number,
     payload: { expected: string; answer: string; subject?: string }
   ) =>
-    request<{ score: number; points: number; feedback: string; unlockedMinutes?: number }>(
+    request<{ score: number; points: number; feedback: string; unlockedMinutes?: number; xpGain?: number; streakDays?: number; badges?: string[] }>(
       `/api/session/${childId}/dictation`,
       { method: "POST", body: JSON.stringify(payload) },
       token
