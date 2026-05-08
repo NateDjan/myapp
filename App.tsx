@@ -11,8 +11,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaProvider, SafeAreaView as SafeInsetView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { StudentBottomNav } from "./src/components/StudentBottomNav";
+import { Icon } from "./src/ui/Icon";
 import {
   api,
   getResolvedApiBase,
@@ -22,7 +26,7 @@ import {
   type ParentSettings,
   type SubjectsMeta,
 } from "./src/api";
-import { T, warmStyles } from "./src/theme";
+import { spacing, T, warmStyles } from "./src/theme";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
 type AppRole = "landing" | "auth" | "studentAuth" | "setup" | "parent" | "student";
@@ -76,7 +80,7 @@ const COACH_TIPS = [
   "La progression, ce n'est pas la vitesse : c'est la regularite. Un peu chaque jour transforme tout.",
 ];
 
-export default function App() {
+function AppContent() {
   const [token, setToken] = useState("");
   const [refreshToken, setRefreshToken] = useState("");
   const [parentName, setParentName] = useState("");
@@ -132,6 +136,7 @@ export default function App() {
   const [curriculumNote, setCurriculumNote] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const selectedChild = useMemo(
     () => children.find((c) => c.id === selectedChildId) ?? null,
@@ -759,16 +764,35 @@ export default function App() {
     return (
       <SafeAreaView style={warmStyles.screen}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
-          <View style={warmStyles.landingTopAccent} />
-          <View style={warmStyles.brandMark}>
-            <Text style={warmStyles.brandMarkText}>Apprendre en confiance</Text>
-          </View>
-          <Text style={warmStyles.heroEmoji}>📚✨</Text>
-          <Text style={warmStyles.title}>EduCoach</Text>
-          <Text style={[warmStyles.subtitle, { marginBottom: 8 }]}>
-            Un parcours clair, comme sur les meilleures apps educatives : progression par petits pas, feedback tout de suite, et recompenses
-            pour rester motive.
-          </Text>
+          <LinearGradient
+            colors={["#E6FAF4", "#F6F8FB", "#F6F8FB"]}
+            locations={[0, 0.42, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              marginHorizontal: -spacing.lg,
+              paddingHorizontal: spacing.lg,
+              paddingTop: 8,
+              paddingBottom: 20,
+              marginBottom: 8,
+              borderRadius: 20,
+            }}
+          >
+            <View style={{ height: 4, backgroundColor: T.primary, borderRadius: 2, marginBottom: 12 }} />
+            <View style={warmStyles.brandMark}>
+              <Text style={warmStyles.brandMarkText}>Apprendre en confiance</Text>
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 18, marginBottom: 12 }}>
+              <Icon name="school-outline" size={42} color={T.primary} />
+              <Icon name="chart-timeline-variant" size={38} color={T.accent} />
+              <Icon name="trophy-outline" size={40} color={T.amber} />
+            </View>
+            <Text style={warmStyles.title}>EduCoach</Text>
+            <Text style={[warmStyles.subtitle, { marginBottom: 8 }]}>
+              Un parcours clair, comme sur les meilleures apps educatives : progression par petits pas, feedback tout de suite, et recompenses
+              pour rester motive.
+            </Text>
+          </LinearGradient>
           <Text style={[warmStyles.caption, { textAlign: "center", marginBottom: 14 }]}>{apiMessage}</Text>
           {!!getResolvedApiBase() && (
             <Text style={[warmStyles.caption, { textAlign: "center", marginBottom: 6 }]} selectable>
@@ -809,7 +833,9 @@ export default function App() {
     return (
       <SafeAreaView style={warmStyles.screenAlt}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
-          <Text style={[warmStyles.heroEmoji, { fontSize: 52 }]}>👋</Text>
+          <View style={{ alignItems: "center", marginBottom: 8 }}>
+            <Icon name="human-greeting-variant" size={56} color={T.primary} />
+          </View>
           <Text style={warmStyles.titleLight}>Salut champion !</Text>
           <Text style={[warmStyles.subtitle, { marginBottom: 16 }]}>{apiMessage}</Text>
           {!!getResolvedApiBase() && (
@@ -1179,26 +1205,35 @@ export default function App() {
         ((displayChild.first_name?.length ?? 0) + (displayChild.id ?? 0) + new Date().getDate()) % COACH_TIPS.length
       ];
     return (
-      <SafeAreaView style={warmStyles.screenAlt}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
+      <SafeInsetView style={[warmStyles.screenAlt, { flex: 1 }]} edges={["top", "left", "right"]}>
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={[warmStyles.pad, { paddingBottom: insets.bottom + 92 }]}
+          >
           <View style={warmStyles.coachBubble}>
-            <Text style={warmStyles.coachEmoji}>🦉</Text>
+            <View style={{ marginTop: 2 }}>
+              <Icon name="face-agent" size={40} color={T.primary} />
+            </View>
             <View style={{ flex: 1 }}>
               <Text style={warmStyles.coachText}>{coachTip}</Text>
-              <Text style={warmStyles.coachHint}>Astuce : avance etape par etape, comme une video Khan Academy.</Text>
+              <Text style={warmStyles.coachHint}>Astuce : avance etape par etape — une question a la fois.</Text>
             </View>
           </View>
 
           <Text style={[warmStyles.titleLight, { marginBottom: 6 }]}>Salut {displayChild?.first_name || "champion"} !</Text>
           <View style={warmStyles.statRow}>
-            <View style={warmStyles.statPill}>
-              <Text style={warmStyles.statPillText}>⭐ {displayChild?.points ?? 0} pts</Text>
+            <View style={[warmStyles.statPill, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+              <Icon name="star-circle-outline" size={18} color={T.amber} />
+              <Text style={warmStyles.statPillText}>{displayChild?.points ?? 0} pts</Text>
             </View>
-            <View style={warmStyles.statPill}>
-              <Text style={warmStyles.statPillText}>🎓 {displayChild?.grade}</Text>
+            <View style={[warmStyles.statPill, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+              <Icon name="school-outline" size={18} color={T.accent} />
+              <Text style={warmStyles.statPillText}>{displayChild?.grade}</Text>
             </View>
-            <View style={warmStyles.statPill}>
-              <Text style={warmStyles.statPillText}>🔥 {gamification?.streakDays ?? displayChild.streak_days ?? 0} j.</Text>
+            <View style={[warmStyles.statPill, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+              <Icon name="fire" size={18} color="#F76707" />
+              <Text style={warmStyles.statPillText}>{gamification?.streakDays ?? displayChild.streak_days ?? 0} j.</Text>
             </View>
           </View>
 
@@ -1208,27 +1243,6 @@ export default function App() {
               <View style={[warmStyles.xpBarFill, { width: `${xpPct}%` as `${number}%` }]} />
             </View>
             <Text style={[warmStyles.caption, { marginTop: 4 }]}>{xpTotal} XP cumules</Text>
-          </View>
-
-          <View style={warmStyles.tabBar}>
-            <TouchableOpacity
-              style={[warmStyles.tab, studentTab === "home" ? warmStyles.tabOn : undefined]}
-              onPress={() => setStudentTab("home")}
-            >
-              <Text style={[warmStyles.tabText, studentTab === "home" ? warmStyles.tabTextOn : undefined]}>🏠 Accueil</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[warmStyles.tab, studentTab === "eval" ? warmStyles.tabOn : undefined]}
-              onPress={() => setStudentTab("eval")}
-            >
-              <Text style={[warmStyles.tabText, studentTab === "eval" ? warmStyles.tabTextOn : undefined]}>📋 Evals</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[warmStyles.tab, studentTab === "learn" ? warmStyles.tabOn : undefined]}
-              onPress={() => setStudentTab("learn")}
-            >
-              <Text style={[warmStyles.tabText, studentTab === "learn" ? warmStyles.tabTextOn : undefined]}>📚 Apprendre</Text>
-            </TouchableOpacity>
           </View>
 
           {studentTab === "home" && displayChild && (
@@ -1303,9 +1317,10 @@ export default function App() {
                   <Text style={warmStyles.hint}>Continue, ton premier badge arrive vite !</Text>
                 ) : (
                   (gamification?.badges || displayChild.badges || []).map((b, i) => (
-                    <Text key={`badge-${i}`} style={warmStyles.hint}>
-                      - 🏅 {b}
-                    </Text>
+                    <View key={`badge-${i}`} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 4 }}>
+                      <Icon name="medal-outline" size={18} color={T.amber} />
+                      <Text style={[warmStyles.hint, { flex: 1 }]}>{b}</Text>
+                    </View>
                   ))
                 )}
               </View>
@@ -1313,9 +1328,14 @@ export default function App() {
               <View style={[warmStyles.card, warmStyles.cardLift]}>
                 <Text style={warmStyles.sectionTitle}>Quetes du jour</Text>
                 {(gamification?.quests || []).map((q) => (
-                  <Text key={q.id} style={warmStyles.hint}>
-                    {q.completed ? "✅" : "⬜"} {q.title}
-                  </Text>
+                  <View key={q.id} style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, marginVertical: 4 }}>
+                    <Icon
+                      name={q.completed ? "checkbox-marked-circle-outline" : "checkbox-blank-circle-outline"}
+                      size={20}
+                      color={q.completed ? T.primary : T.inkSubtle}
+                    />
+                    <Text style={[warmStyles.hint, { flex: 1 }]}>{q.title}</Text>
+                  </View>
                 ))}
               </View>
             </>
@@ -1337,9 +1357,9 @@ export default function App() {
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                       <Text style={{ fontWeight: "900", fontSize: 17, color: T.ink }}>{sub}</Text>
                       {done ? (
-                        <View style={warmStyles.chipGreen}>
+                        <View style={[warmStyles.chipGreen, { gap: 6 }]}>
+                          <Icon name="check-decagram" size={18} color={T.primaryDark} />
                           <Text style={{ fontWeight: "800", color: T.mintDark }}>Fait</Text>
-                          <View style={warmStyles.doneDot} />
                         </View>
                       ) : (
                         <Text style={warmStyles.hint}>A faire</Text>
@@ -1542,7 +1562,9 @@ export default function App() {
             </Text>
           </TouchableOpacity>
         </ScrollView>
-      </SafeAreaView>
+          <StudentBottomNav active={studentTab} onChange={setStudentTab} />
+        </View>
+      </SafeInsetView>
     );
   }
 
@@ -1560,6 +1582,14 @@ export default function App() {
   }
 
   return null;
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  );
 }
 
 const styles = StyleSheet.create({
