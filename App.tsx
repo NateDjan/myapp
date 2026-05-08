@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -100,6 +101,8 @@ export default function App() {
   } | null>(null);
   const [evalAnswer, setEvalAnswer] = useState("");
   const [evalBusy, setEvalBusy] = useState(false);
+  /** Affichee apres chaque reponse d'eval jusqu'a ce que l'eleve appuie sur Continuer. */
+  const [evalCorrection, setEvalCorrection] = useState<string | null>(null);
 
   const [newChild, setNewChild] = useState<NewChildDraft>(EMPTY_CHILD_DRAFT);
 
@@ -410,16 +413,25 @@ export default function App() {
     }
   };
 
-  const speak = (text: string) => {
+  /** Voix francaise plus lisible : debit adapte iOS / Android / Web. */
+  const speakFrench = (text: string) => {
     if (!text?.trim()) return;
     Speech.stop();
-    Speech.speak(text.trim(), { language: "fr-FR", rate: 0.92, pitch: 1.0 });
+    const t = text.trim().replace(/\s+/g, " ");
+    const rate =
+      Platform.OS === "ios" ? 0.44 : Platform.OS === "android" ? 0.88 : Platform.OS === "web" ? 0.95 : 0.9;
+    Speech.speak(t, {
+      language: "fr-FR",
+      pitch: 1.0,
+      rate,
+      volume: 1,
+    });
   };
 
   const speakDicteePhrase = (prompt: string, expected: string) => {
     const p = String(prompt || "");
-    if (/^Ecris\s*:/i.test(p)) speak(String(expected || "").trim());
-    else speak(String(expected || prompt || "").trim());
+    if (/^Ecris\s*:/i.test(p)) speakFrench(String(expected || "").trim());
+    else speakFrench(String(expected || prompt || "").trim());
   };
 
   const activeSubjectsList = useMemo(() => {
@@ -431,6 +443,7 @@ export default function App() {
     if (!token || !selectedChild) return;
     setEvalBusy(true);
     setErrorMessage("");
+    setEvalCorrection(null);
     try {
       const started = await api.startEvaluation(token, selectedChild.id, sub);
       const q = await api.getEvaluationQuestion(token, started.sessionId);
@@ -447,7 +460,7 @@ export default function App() {
       const autoSpeak =
         !!q.readAloudText &&
         (q.exerciseType !== "french-reading" || q.readAloudText.length <= 280);
-      if (autoSpeak) setTimeout(() => speak(q.readAloudText), 400);
+      if (autoSpeak) setTimeout(() => speakFrench(q.readAloudText), 400);
     } catch (error) {
       Alert.alert("Impossible", String(error));
     } finally {
@@ -455,38 +468,55 @@ export default function App() {
     }
   };
 
+  const advanceEvalAfterCorrection = async () => {
+    if (!token || !evalItem) return;
+    setEvalBusy(true);
+    setEvalCorrection(null);
+    try {
+      const q = await api.getEvaluationQuestion(token, evalItem.sessionId);
+      setEvalItem({
+        sessionId: evalItem.sessionId,
+        index: q.index,
+        total: q.total,
+        exerciseType: q.exerciseType,
+        prompt: q.prompt,
+        readAloudText: q.readAloudText,
+        subject: q.subject,
+      });
+      setEvalAnswer("");
+      const autoSpeak =
+        !!q.readAloudText &&
+        (q.exerciseType !== "french-reading" || q.readAloudText.length <= 280);
+      if (autoSpeak) setTimeout(() => speakFrench(q.readAloudText), 350);
+    } catch (error) {
+      Alert.alert("Erreur", String(error));
+    } finally {
+      setEvalBusy(false);
+    }
+  };
+
   const submitEvalSession = async () => {
-    if (!token || !selectedChild || !evalItem) return;
+    if (!token || !selectedChild || !evalItem || evalCorrection !== null) return;
     setEvalBusy(true);
     try {
       const result = await api.answerEvaluationQuestion(token, evalItem.sessionId, evalAnswer);
       if (!result.finished) {
-        const q = await api.getEvaluationQuestion(token, evalItem.sessionId);
-        setEvalItem({
-          sessionId: evalItem.sessionId,
-          index: q.index,
-          total: q.total,
-          exerciseType: q.exerciseType,
-          prompt: q.prompt,
-          readAloudText: q.readAloudText,
-          subject: q.subject,
-        });
+        setEvalCorrection(result.correction || "Voici la correction pour progresser.");
         setEvalAnswer("");
-        const autoSpeak =
-          !!q.readAloudText &&
-          (q.exerciseType !== "french-reading" || q.readAloudText.length <= 280);
-        if (autoSpeak) setTimeout(() => speak(q.readAloudText), 300);
-      } else {
-        await reloadChildren();
-        await loadSubjectsMeta();
-        await loadGamification();
-        setEvalItem(null);
-        setEvalAnswer("");
-        const reward = result.unlockedMinutes ? ` +${result.unlockedMinutes} min de temps d'ecran.` : "";
-        const xp = result.xpGain ? ` +${result.xpGain} XP.` : "";
-        const verdict = result.passed ? "Evaluation reussie !" : "Evaluation terminee (niveau a renforcer).";
-        Alert.alert("Resultat", `${verdict} Score final: ${result.finalScore || 0}/100.${reward}${xp}`);
+        return;
       }
+      await reloadChildren();
+      await loadSubjectsMeta();
+      await loadGamification();
+      setEvalItem(null);
+      setEvalAnswer("");
+      setEvalCorrection(null);
+      const reward = result.unlockedMinutes ? ` +${result.unlockedMinutes} min de temps d'ecran.` : "";
+      const xp = result.xpGain ? ` +${result.xpGain} XP.` : "";
+      const verdict = result.passed ? "Evaluation reussie !" : "Evaluation terminee (niveau a renforcer).";
+      const lastCorr = result.correction ? `\n\nDerniere question — correction :\n${result.correction}` : "";
+      const tip = result.sessionTip ? `\n\n${result.sessionTip}` : "";
+      Alert.alert("Resultat", `${verdict} Score final: ${result.finalScore || 0}/100.${reward}${xp}${lastCorr}${tip}`);
     } catch (error) {
       Alert.alert("Erreur", String(error));
     } finally {
@@ -1252,32 +1282,54 @@ export default function App() {
                     </View>
                     {evalItem?.subject === sub ? (
                       <>
-                        <Text style={warmStyles.hint}>
-                          Question {evalItem.index}/{evalItem.total}
-                        </Text>
-                        <Text style={warmStyles.hint}>{evalItem.prompt}</Text>
-                        <TouchableOpacity style={warmStyles.btnSun} onPress={() => speak(evalItem.readAloudText)}>
-                          <Text style={warmStyles.btnSunText}>Reecouter</Text>
-                        </TouchableOpacity>
-                        <TextInput
-                          style={warmStyles.inputKid}
-                          value={evalAnswer}
-                          onChangeText={setEvalAnswer}
-                          placeholder={
-                            evalItem.exerciseType === "dictee" || evalItem.exerciseType === "french-dictation"
-                              ? "Ecris la phrase"
-                              : "Ta reponse"
-                          }
-                          multiline={
-                            evalItem.exerciseType === "dictee" ||
-                            evalItem.exerciseType === "french-dictation" ||
-                            evalItem.exerciseType === "french-reading"
-                          }
-                        />
-                        <TouchableOpacity style={warmStyles.btnPrimary} onPress={submitEvalSession} disabled={evalBusy}>
-                          {evalBusy ? <ActivityIndicator color="#fff" /> : <Text style={warmStyles.btnPrimaryText}>Valider</Text>}
-                        </TouchableOpacity>
-                        <TouchableOpacity style={warmStyles.btnSoft} onPress={() => { setEvalItem(null); setEvalAnswer(""); }}>
+                        {evalCorrection !== null ? (
+                          <View style={[warmStyles.blockFun, { marginBottom: 10 }]}>
+                            <Text style={{ fontWeight: "800", fontSize: 16, color: T.ink, marginBottom: 8 }}>Correction</Text>
+                            <Text style={{ fontSize: 15, color: T.ink, lineHeight: 22 }}>{evalCorrection}</Text>
+                            <TouchableOpacity style={warmStyles.btnSun} onPress={() => speakFrench(evalCorrection)}>
+                              <Text style={warmStyles.btnSunText}>Ecouter la correction</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={warmStyles.btnPrimary} onPress={() => void advanceEvalAfterCorrection()} disabled={evalBusy}>
+                              {evalBusy ? <ActivityIndicator color="#fff" /> : <Text style={warmStyles.btnPrimaryText}>Question suivante</Text>}
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <>
+                            <Text style={warmStyles.hint}>
+                              Question {evalItem.index}/{evalItem.total}
+                            </Text>
+                            <Text style={warmStyles.hint}>{evalItem.prompt}</Text>
+                            <TouchableOpacity style={warmStyles.btnSun} onPress={() => speakFrench(evalItem.readAloudText)}>
+                              <Text style={warmStyles.btnSunText}>Reecouter</Text>
+                            </TouchableOpacity>
+                            <TextInput
+                              style={warmStyles.inputKid}
+                              value={evalAnswer}
+                              onChangeText={setEvalAnswer}
+                              placeholder={
+                                evalItem.exerciseType === "dictee" || evalItem.exerciseType === "french-dictation"
+                                  ? "Ecris la phrase"
+                                  : "Ta reponse"
+                              }
+                              multiline={
+                                evalItem.exerciseType === "dictee" ||
+                                evalItem.exerciseType === "french-dictation" ||
+                                evalItem.exerciseType === "french-reading"
+                              }
+                            />
+                            <TouchableOpacity style={warmStyles.btnPrimary} onPress={submitEvalSession} disabled={evalBusy}>
+                              {evalBusy ? <ActivityIndicator color="#fff" /> : <Text style={warmStyles.btnPrimaryText}>Valider</Text>}
+                            </TouchableOpacity>
+                          </>
+                        )}
+                        <TouchableOpacity
+                          style={warmStyles.btnSoft}
+                          onPress={() => {
+                            setEvalItem(null);
+                            setEvalAnswer("");
+                            setEvalCorrection(null);
+                          }}
+                        >
                           <Text style={styles.btnText}>Annuler</Text>
                         </TouchableOpacity>
                       </>

@@ -8,6 +8,7 @@ const path = require('node:path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { buildFrenchEvaluationQuestions } = require('./frenchEval');
+const { buildHistoryEvaluationQuestions } = require('./historyEval');
 
 const curriculum = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'content', 'curriculum.fr.json'), 'utf8')
@@ -231,6 +232,28 @@ function scoreFrenchWrittenAnswer(expected, answer) {
   const n = Math.min(a.length, e.length);
   for (let i = 0; i < n; i += 1) if (a[i] === e[i]) same += 1;
   return Math.max(0, Math.round((same / Math.max(e.length, 1)) * 100));
+}
+
+function normalizeQuizText(s) {
+  return stripLightPunctuation(foldAccents(String(s || '').toLowerCase()))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildEvaluationCorrectionFeedback(q, answer, score, isCorrect) {
+  const exp = String(q.expected || '').trim();
+  const expl = q.explanation ? String(q.explanation).trim() : '';
+  if (isCorrect && score >= 80) {
+    return expl ? `Correct ! ${expl}` : 'Tres bien, c\'est la bonne reponse.';
+  }
+  let msg = `La bonne reponse etait : « ${exp} ».`;
+  if (expl) msg += ` ${expl}`;
+  else if (q.type === 'math') msg += ' Refais le calcul lentement et verifie les signes.';
+  else if (q.type === 'history') msg += ' Retiens cette reponse pour la prochaine fois.';
+  else if (String(q.type || '').startsWith('french')) {
+    msg += ' Compare avec ta copie : orthographe, accents et sens.';
+  }
+  return msg;
 }
 
 function gradeBand(grade) {
@@ -1128,7 +1151,9 @@ function createApp(db) {
       const questions =
         subject === 'Francais'
           ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
-          : Array.from({ length: count }).map(() => generateSubjectQuestion(child, subject, tier));
+          : subject === 'Histoire'
+            ? buildHistoryEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
+            : Array.from({ length: count }).map(() => generateSubjectQuestion(child, subject, tier));
       const row = db
         .prepare(
           'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
@@ -1154,7 +1179,9 @@ function createApp(db) {
     const questions =
       subject === 'Francais'
         ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
-        : Array.from({ length: total }).map(() => generateSubjectQuestion(child, subject, tier));
+        : subject === 'Histoire'
+          ? buildHistoryEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
+          : Array.from({ length: total }).map(() => generateSubjectQuestion(child, subject, tier));
     const created = db
       .prepare(
         'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
@@ -1223,14 +1250,18 @@ function createApp(db) {
 
     const answer = String(parsed.data.answer || '').trim();
     let score;
-    if (q.type === 'math' || q.type === 'history') {
-      score = String(q.expected).trim().toLowerCase() === answer.toLowerCase().trim() ? 100 : 0;
+    if (q.type === 'math') {
+      score = normalizeQuizText(q.expected) === normalizeQuizText(answer) ? 100 : 0;
+    } else if (q.type === 'history') {
+      score = normalizeQuizText(q.expected) === normalizeQuizText(answer) ? 100 : 0;
     } else if (String(q.type || '').startsWith('french-')) {
       score = scoreFrenchWrittenAnswer(q.expected, answer);
     } else {
       score = scoreWrittenAnswer(q.expected, answer);
     }
     const isCorrect = score >= 80;
+    const correction = buildEvaluationCorrectionFeedback(q, answer, score, isCorrect);
+    const expectedAnswer = String(q.expected || '').trim();
     const nextIdx = idx + 1;
     const nextCorrect = Number(sess.correct_count || 0) + (isCorrect ? 1 : 0);
     const finished = nextIdx >= Number(sess.total_count || 0);
@@ -1244,7 +1275,15 @@ function createApp(db) {
     );
 
     if (!finished) {
-      return res.json({ finished: false, isCorrect, score, nextIndex: nextIdx + 1, total: sess.total_count });
+      return res.json({
+        finished: false,
+        isCorrect,
+        score,
+        nextIndex: nextIdx + 1,
+        total: sess.total_count,
+        correction,
+        expectedAnswer,
+      });
     }
 
     const finalScore = Math.round((nextCorrect / Number(sess.total_count || 1)) * 100);
@@ -1287,6 +1326,10 @@ function createApp(db) {
       xpGain: gamification.xpGain,
       streakDays: gamification.streakDays,
       badges: gamification.badges,
+      correction,
+      expectedAnswer,
+      sessionTip:
+        'Tu viens de voir une correction pour cette derniere question : garde ces idees pour les prochaines fois.',
     });
   });
 
@@ -1425,15 +1468,16 @@ function createApp(db) {
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
     const subj = parsed.data.subject || 'Francais';
-    const a = parsed.data.answer.trim().toLowerCase();
-    const e = parsed.data.expected.trim().toLowerCase();
     let score = 0;
     if (subj === 'Maths' || subj === 'Histoire') {
-      score = e === a.trim().toLowerCase() ? 100 : scoreWrittenAnswer(parsed.data.expected, parsed.data.answer);
+      score =
+        normalizeQuizText(parsed.data.expected) === normalizeQuizText(parsed.data.answer)
+          ? 100
+          : scoreWrittenAnswer(parsed.data.expected, parsed.data.answer);
+    } else if (subj === 'Francais') {
+      score = scoreFrenchWrittenAnswer(parsed.data.expected, parsed.data.answer);
     } else {
-      let same = 0;
-      for (let i = 0; i < Math.min(a.length, e.length); i += 1) if (a[i] === e[i]) same += 1;
-      score = Math.max(0, Math.round((same / e.length) * 100));
+      score = scoreWrittenAnswer(parsed.data.expected, parsed.data.answer);
     }
     const points = score > 80 ? 20 : 10;
 
@@ -1460,6 +1504,15 @@ function createApp(db) {
       );
     }
 
+    let feedback;
+    if (score === 100) {
+      feedback = 'Bravo, tout juste !';
+    } else if (subj === 'Francais') {
+      feedback = `Correction : la phrase attendue etait : « ${parsed.data.expected} ». Score ${score}/100. Compare mot a mot : accents, apostrophes et doubles consonnes.`;
+    } else {
+      feedback = `Correction : la bonne reponse etait : « ${parsed.data.expected} ». Score ${score}/100. Relis bien la consigne avant la prochaine fois.`;
+    }
+
     res.json({
       score,
       points,
@@ -1467,7 +1520,7 @@ function createApp(db) {
       xpGain: gamification.xpGain,
       streakDays: gamification.streakDays,
       badges: gamification.badges,
-      feedback: score === 100 ? 'Bravo, tout juste !' : `Score ${score}/100 — encore un petit effort !`,
+      feedback,
     });
   });
 
