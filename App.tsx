@@ -13,7 +13,15 @@ import {
 } from "react-native";
 import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, type Child, type GamificationState, type ParentNotification, type ParentSettings, type SubjectsMeta } from "./src/api";
+import {
+  api,
+  getResolvedApiBase,
+  type Child,
+  type GamificationState,
+  type ParentNotification,
+  type ParentSettings,
+  type SubjectsMeta,
+} from "./src/api";
 import { T, warmStyles } from "./src/theme";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
@@ -197,7 +205,31 @@ export default function App() {
       }
     };
 
+    let watchdog: ReturnType<typeof setTimeout> | undefined;
+
     const bootstrap = async () => {
+      const base = getResolvedApiBase();
+      if (!base) {
+        if (!cancelled) {
+          setApiMessage(
+            "API non configuree : mets l'URL HTTPS de ton API dans config/publicApi.json (racine du projet), puis relance Expo avec npx expo start -c."
+          );
+          setSessionLoading(false);
+        }
+        return;
+      }
+
+      watchdog = setTimeout(() => {
+        if (!cancelled) {
+          setSessionLoading(false);
+          setApiMessage((prev) =>
+            prev === "API non testee" || prev === "Serveur disponible"
+              ? "Connexion trop lente ou impossible. Verifie l'URL du serveur (affichee ci-dessous) et ton reseau."
+              : prev
+          );
+        }
+      }, 20000);
+
       try {
         try {
           await api.health();
@@ -219,13 +251,18 @@ export default function App() {
         const hasStudent = await tryHydrateStudent();
         if (!hasStudent) await hydrateParentSession();
       } finally {
+        if (watchdog !== undefined) {
+          clearTimeout(watchdog);
+          watchdog = undefined;
+        }
         if (!cancelled) setSessionLoading(false);
       }
     };
 
-    bootstrap();
+    void bootstrap();
     return () => {
       cancelled = true;
+      if (watchdog !== undefined) clearTimeout(watchdog);
     };
   }, []);
 
@@ -521,7 +558,7 @@ export default function App() {
 
   useEffect(() => {
     loadLesson();
-  }, [subject, selectedChildId]);
+  }, [subject, selectedChildId, token]);
 
   const proceedSession = async () => {
     if (!selectedChild || !token) return;
@@ -723,6 +760,11 @@ export default function App() {
           <Text style={warmStyles.heroEmoji}>📚✨</Text>
           <Text style={warmStyles.title}>EduCoach FR</Text>
           <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {!!getResolvedApiBase() && (
+            <Text style={[warmStyles.hint, { marginTop: 4 }]} selectable>
+              Serveur : {getResolvedApiBase()}
+            </Text>
+          )}
           {sessionLoading && <Text style={warmStyles.hint}>Chargement...</Text>}
           <Text style={warmStyles.sectionTitle}>Qui utilise l&apos;application ?</Text>
           <Text style={warmStyles.hint}>
@@ -747,6 +789,11 @@ export default function App() {
           <Text style={[warmStyles.heroEmoji, { fontSize: 48 }]}>👋</Text>
           <Text style={warmStyles.titleLight}>Salut champion !</Text>
           <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {!!getResolvedApiBase() && (
+            <Text style={[warmStyles.hint, { marginTop: 4 }]} selectable>
+              Serveur : {getResolvedApiBase()}
+            </Text>
+          )}
 
           <Text style={warmStyles.sectionTitle}>Ta connexion</Text>
           <Text style={warmStyles.hint}>Demande a tes parents ton identifiant et ton mot de passe.</Text>
@@ -786,6 +833,11 @@ export default function App() {
           <Text style={warmStyles.heroEmoji}>🏠</Text>
           <Text style={warmStyles.title}>Espace parents</Text>
           <Text style={warmStyles.subtitle}>{apiMessage}</Text>
+          {!!getResolvedApiBase() && (
+            <Text style={[warmStyles.hint, { marginTop: 4 }]} selectable>
+              Serveur : {getResolvedApiBase()}
+            </Text>
+          )}
           {sessionLoading && <Text style={warmStyles.hint}>Restauration de session en cours...</Text>}
 
           <Text style={warmStyles.sectionTitle}>Connexion parent / tuteur</Text>

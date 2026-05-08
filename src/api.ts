@@ -65,6 +65,9 @@ export type GamificationState = {
   quests: Array<{ id: string; title: string; completed: boolean }>;
 };
 
+/** Delai max pour eviter un fetch qui reste bloque (surtout sur Expo Go / certains reseaux). */
+const FETCH_TIMEOUT_MS = 18_000;
+
 function resolveApiBase(): string {
   const bundled = (Constants.expoConfig?.extra?.apiUrl as string | undefined)?.trim();
   if (bundled) return bundled.replace(/\/$/, "");
@@ -94,6 +97,29 @@ function resolveApiBase(): string {
   return "";
 }
 
+/** Pour diagnostics UI : meme logique que les appels reseau. */
+export function getResolvedApiBase(): string {
+  return resolveApiBase().trim();
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err: unknown) {
+    const name = err && typeof err === "object" && "name" in err ? String((err as { name?: string }).name) : "";
+    if (name === "AbortError") {
+      throw new Error(
+        `Le serveur met trop longtemps a repondre (>${FETCH_TIMEOUT_MS / 1000}s). Verifie l'URL API (config/publicApi.json) ou ton reseau.`
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function parseResponseBody(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text) return null;
@@ -120,8 +146,9 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
 
   let response: Response;
   try {
-    response = await fetch(`${base}${path}`, { ...options, headers });
-  } catch {
+    response = await fetchWithTimeout(`${base}${path}`, { ...options, headers });
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message.includes("trop longtemps")) throw e;
     throw new Error("Pas de connexion au serveur. Verifie ton internet ou reessaie plus tard.");
   }
 
