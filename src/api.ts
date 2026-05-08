@@ -207,20 +207,40 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ avatarId }),
     }, token),
-  getEvaluationItem: (token: string, childId: number, subject: string) =>
+  startEvaluation: (token: string, childId: number, subject: string) =>
+    request<{ sessionId: number; total: number; subject: string }>(
+      `/api/evaluation/${childId}/start`,
+      { method: "POST", body: JSON.stringify({ subject }) },
+      token
+    ),
+  getEvaluationQuestion: (token: string, sessionId: number) =>
     request<{
-      itemId: number;
+      sessionId: number;
+      index: number;
+      total: number;
+      subject: string;
       exerciseType: string;
       prompt: string;
       readAloudText: string;
-      subject: string;
-    }>(`/api/evaluation/${childId}/item?subject=${encodeURIComponent(subject)}`, {}, token),
-  submitEvaluation: (token: string, childId: number, payload: { itemId: number; subject: string; answer: string }) =>
-    request<{ score: number; completed: boolean; tierLabel: string; unlockedMinutes?: number; xpGain?: number; streakDays?: number; badges?: string[] }>(
-      `/api/evaluation/${childId}/submit`,
-      { method: "POST", body: JSON.stringify(payload) },
-      token
-    ),
+      finished?: boolean;
+      correct?: number;
+    }>(`/api/evaluation/session/${sessionId}/question`, {}, token),
+  answerEvaluationQuestion: (token: string, sessionId: number, answer: string) =>
+    request<{
+      finished: boolean;
+      isCorrect?: boolean;
+      score?: number;
+      nextIndex?: number;
+      total?: number;
+      finalScore?: number;
+      passed?: boolean;
+      completed?: boolean;
+      tierLabel?: string;
+      unlockedMinutes?: number;
+      xpGain?: number;
+      streakDays?: number;
+      badges?: string[];
+    }>(`/api/evaluation/session/${sessionId}/answer`, { method: "POST", body: JSON.stringify({ answer }) }, token),
   evaluateChild: (token: string, childId: number) =>
     request<{ score: number; readingLevel: number; spellingLevel: number }>(
       `/api/evaluation/${childId}`,
