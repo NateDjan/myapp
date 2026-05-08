@@ -2,15 +2,11 @@
   "metadata": {
     "country": "France",
     "language": "fr",
-    "version": "2026.05",
+    "version": "2026.08",
     "sources": [
-      "https://www.education.gouv.fr/programmes-scolaires-41483",
-      "https://eduscol.education.fr/pid38231/cm2.html",
-      "https://eduscol.education.fr/pid38233/6e.html",
-      "https://eduscol.education.fr/cid120461/competences-et-evaluation-histoire-geographie.html",
-      "https://eduscol.education.fr/5733/ressources-d-accompagnement-du-programme-de-francais-au-cycle-4"
+      "https://www.education.gouv.fr/programmes-scolaires-41483"
     ],
-    "notes": "Contenu pedagogique structure et simplifie pour usage applicatif; a valider par enseignants referents avant mise en production."
+    "notes": "6e : sciences integrees (physique-chimie + SVT + technologie absents comme matieres separees ; SVT et PC a partir de la 5e). Geometrie incluse dans Maths."
   },
   "grades": [
     {
@@ -19,43 +15,126 @@
       "subjects": {
         "Francais": {
           "competencies": [
-            "Decoder des syllabes puis des mots frequents",
-            "Lire a voix haute des phrases courtes de facon intelligible",
-            "Copier sans erreur une phrase simple",
-            "Ecrire des phrases en respectant majuscule et point"
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
           ],
           "microLessons": [
             {
-              "title": "Lecture syllabique rapide",
+              "title": "Francais",
               "durationMin": 10,
-              "activities": ["lecture guidee", "dictee de mots", "correction immediate"]
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
             }
           ]
         },
         "Maths": {
           "competencies": [
-            "Connaitre les nombres jusqu'a 100",
-            "Additionner et soustraire de petits nombres",
-            "Resoudre des problemes en une etape"
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
           ],
           "microLessons": [
             {
-              "title": "Calcul mental de base",
+              "title": "Mathematiques",
               "durationMin": 10,
-              "activities": ["flash additions", "comparaison de nombres", "mini probleme"]
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
             }
           ]
         },
-        "Histoire": {
+        "Anglais": {
           "competencies": [
-            "Se reperer dans la journee, la semaine, l'annee",
-            "Identifier des traces du passe proche"
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
           ],
           "microLessons": [
             {
-              "title": "Repere temporel debutant",
-              "durationMin": 8,
-              "activities": ["ordre d'images", "vocabulaire du temps"]
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Questionner le monde": {
+          "competencies": [
+            "Temps",
+            "Espace",
+            "Nature"
+          ],
+          "microLessons": [
+            {
+              "title": "Questionner le monde",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
             }
           ]
         }
@@ -67,18 +146,127 @@
       "subjects": {
         "Francais": {
           "competencies": [
-            "Lire avec fluidite des textes tres courts",
-            "Identifier verbe, nom et determinant",
-            "Orthographier les mots invariables frequents"
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
           ],
           "microLessons": [
-            { "title": "Dictes flash", "durationMin": 10, "activities": ["ecoute", "ecriture", "reecriture corrigee"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Calculer jusqu'a 100", "Maitriser doubles et moities", "Problemes additifs/soustractifs"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Strategie de calcul", "durationMin": 10, "activities": ["calcul mental", "explication orale", "verification"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
+          "microLessons": [
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Questionner le monde": {
+          "competencies": [
+            "Temps",
+            "Espace",
+            "Nature"
+          ],
+          "microLessons": [
+            {
+              "title": "Questionner le monde",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -88,15 +276,128 @@
       "cycle": "Cycle 2",
       "subjects": {
         "Francais": {
-          "competencies": ["Lire de courts paragraphes", "Accorder sujet-verbe", "Ponctuer correctement"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Orthographe grammaticale 1", "durationMin": 10, "activities": ["dictee phrase", "explication faute", "repetition espacee"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Tables de multiplication", "Calcul pose simple", "Resolution de problemes courts"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Tables 2-5-10", "durationMin": 10, "activities": ["quiz rapide", "application en probleme"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
+          "microLessons": [
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Questionner le monde": {
+          "competencies": [
+            "Temps",
+            "Espace",
+            "Nature"
+          ],
+          "microLessons": [
+            {
+              "title": "Questionner le monde",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -106,21 +407,163 @@
       "cycle": "Cycle 3",
       "subjects": {
         "Francais": {
-          "competencies": ["Lire avec fluidite", "Produire un texte court coherent", "Conjuguer present/imparfait/futur"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Conjugaison en contexte", "durationMin": 10, "activities": ["lecture", "transformation de phrases", "dictes ciblees"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Fractions simples", "Calcul decimal", "Problemes a etapes"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Fraction du quotidien", "durationMin": 10, "activities": ["question flash", "probleme concret"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Se reperer dans le temps historique", "Identifier des periodes majeures"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Frise historique", "durationMin": 10, "activities": ["ordonner dates", "associer evenement"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Sciences": {
+          "competencies": [
+            "Matiere, mouvement, energie",
+            "Le vivant",
+            "Terre et astronomie"
+          ],
+          "microLessons": [
+            {
+              "title": "Enseignements scientifiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -130,21 +573,163 @@
       "cycle": "Cycle 3",
       "subjects": {
         "Francais": {
-          "competencies": ["Lecture expressive", "Accords dans le groupe nominal", "Enrichir son vocabulaire"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Accords essentiels", "durationMin": 10, "activities": ["repere faute", "correction guidee"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Operations decimales", "Proportionnalite simple", "Problemes multi-etapes"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Problemes en chaine", "durationMin": 10, "activities": ["lecture enonce", "strategie", "resultat"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Reperes de l'histoire de France", "Analyser documents historiques simples"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Repere Revolution", "durationMin": 10, "activities": ["quiz date", "document image"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Sciences": {
+          "competencies": [
+            "Matiere, mouvement, energie",
+            "Le vivant",
+            "Terre et astronomie"
+          ],
+          "microLessons": [
+            {
+              "title": "Enseignements scientifiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -154,21 +739,163 @@
       "cycle": "Cycle 3",
       "subjects": {
         "Francais": {
-          "competencies": ["Comprendre texte narratif", "Maitriser les classes grammaticales", "Orthographe lexicale"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Lecture-comprehension", "durationMin": 10, "activities": ["lecture", "question de sens", "dictes courtes"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Nombres decimaux et fractions", "Geometrie de base", "Problemes"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Decimaux et mesure", "durationMin": 10, "activities": ["conversion", "mini-probleme"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Monde antique", "Debuts du monotheisme", "Repere dans l'espace"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Antiquite express", "durationMin": 10, "activities": ["frise", "lexique", "questionnaire"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Sciences": {
+          "competencies": [
+            "Matiere, mouvement, energie",
+            "Le vivant",
+            "Terre et astronomie"
+          ],
+          "microLessons": [
+            {
+              "title": "Enseignements scientifiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -178,21 +905,198 @@
       "cycle": "Cycle 4",
       "subjects": {
         "Francais": {
-          "competencies": ["Analyser un texte", "Consolider grammaire de phrase", "Orthographe grammaticale"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Phrase complexe 1", "durationMin": 10, "activities": ["lecture", "transformation", "dictee breve"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Proportionnalite", "Nombres relatifs", "Geometrie"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Relatifs en pratique", "durationMin": 10, "activities": ["calcul rapide", "probleme"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Moyen Age et Temps modernes", "Analyser sources"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Societe medievale", "durationMin": 10, "activities": ["carte mentale", "quiz"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Espagnol": {
+          "competencies": [
+            "LV2 : comprehension",
+            "Interaction"
+          ],
+          "microLessons": [
+            {
+              "title": "Espagnol LV2",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "SVT": {
+          "competencies": [
+            "Le vivant",
+            "Terre et environnement",
+            "Corps humain"
+          ],
+          "microLessons": [
+            {
+              "title": "SVT",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Physique-Chimie": {
+          "competencies": [
+            "Matiere",
+            "Energie",
+            "Reaction"
+          ],
+          "microLessons": [
+            {
+              "title": "Physique-Chimie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -202,21 +1106,198 @@
       "cycle": "Cycle 4",
       "subjects": {
         "Francais": {
-          "competencies": ["Argumentation de base", "Conjugaisons complexes", "Accords participes"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Argumenter en 5 lignes", "durationMin": 10, "activities": ["lecture modele", "production courte"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Puissances", "Equation simple", "Statistiques"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Equation minute", "durationMin": 10, "activities": ["3 equations", "verification"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["XVIIIe-XIXe siecles", "Revolutions", "Industrialisation"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Revolution et Empire", "durationMin": 10, "activities": ["frise", "causes-consequences"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Espagnol": {
+          "competencies": [
+            "LV2 : comprehension",
+            "Interaction"
+          ],
+          "microLessons": [
+            {
+              "title": "Espagnol LV2",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "SVT": {
+          "competencies": [
+            "Le vivant",
+            "Terre et environnement",
+            "Corps humain"
+          ],
+          "microLessons": [
+            {
+              "title": "SVT",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Physique-Chimie": {
+          "competencies": [
+            "Matiere",
+            "Energie",
+            "Reaction"
+          ],
+          "microLessons": [
+            {
+              "title": "Physique-Chimie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -226,21 +1307,198 @@
       "cycle": "Cycle 4",
       "subjects": {
         "Francais": {
-          "competencies": ["Preparation brevet", "Ecriture argumentee", "Orthographe avancee"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Revision brevet francais", "durationMin": 10, "activities": ["question texte", "reecriture"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Fonctions", "Theoreme de Pythagore", "Probabilites"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Brevet maths express", "durationMin": 10, "activities": ["3 exos types"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["XXe siecle", "Monde contemporain", "Citoyennete"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Histoire contemporaine", "durationMin": 10, "activities": ["quiz chronologique"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Espagnol": {
+          "competencies": [
+            "LV2 : comprehension",
+            "Interaction"
+          ],
+          "microLessons": [
+            {
+              "title": "Espagnol LV2",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "SVT": {
+          "competencies": [
+            "Le vivant",
+            "Terre et environnement",
+            "Corps humain"
+          ],
+          "microLessons": [
+            {
+              "title": "SVT",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Physique-Chimie": {
+          "competencies": [
+            "Matiere",
+            "Energie",
+            "Reaction"
+          ],
+          "microLessons": [
+            {
+              "title": "Physique-Chimie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -250,21 +1508,178 @@
       "cycle": "Lycee",
       "subjects": {
         "Francais": {
-          "competencies": ["Lecture analytique", "Commentaire guide", "Expression ecrite"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Commentaire court", "durationMin": 10, "activities": ["axe de lecture", "preuve textuelle"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Fonctions", "Statistiques", "Probabilites"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Fonctions de reference", "durationMin": 10, "activities": ["lecture graphique", "application"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Europe et monde", "Analyse de documents"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Document historique", "durationMin": 10, "activities": ["identifier", "contextualiser"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Enseignement scientifique": {
+          "competencies": [
+            "Demarche scientifique",
+            "Grands themes"
+          ],
+          "microLessons": [
+            {
+              "title": "Enseignement scientifique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "SES": {
+          "competencies": [
+            "Economie",
+            "Sociologie"
+          ],
+          "microLessons": [
+            {
+              "title": "SES",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Philo": {
+          "competencies": [
+            "Notions",
+            "Argumentation"
+          ],
+          "microLessons": [
+            {
+              "title": "Philosophie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Numerique et sciences informatiques": {
+          "competencies": [
+            "Algorithmique",
+            "Donnees"
+          ],
+          "microLessons": [
+            {
+              "title": "NSI",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -274,21 +1689,144 @@
       "cycle": "Lycee",
       "subjects": {
         "Francais": {
-          "competencies": ["Preparation EAF", "Dissertation courte", "Oral de francais"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "EAF micro-entrainement", "durationMin": 10, "activities": ["question grammaire", "mini plan"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Derivation", "Suites", "Probabilites conditionnelles"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Suites essentielles", "durationMin": 10, "activities": ["calcul terme", "sens variation"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Puissances et tensions", "Analyse critique de source"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Geopolitique introductive", "durationMin": 10, "activities": ["notions-clés", "question courte"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "SES": {
+          "competencies": [
+            "Economie",
+            "Sociologie"
+          ],
+          "microLessons": [
+            {
+              "title": "SES",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Philo": {
+          "competencies": [
+            "Notions",
+            "Argumentation"
+          ],
+          "microLessons": [
+            {
+              "title": "Philosophie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
@@ -298,21 +1836,144 @@
       "cycle": "Lycee",
       "subjects": {
         "Francais": {
-          "competencies": ["Consolidation expression ecrite et orale", "Lecture approfondie"],
+          "competencies": [
+            "Lecture",
+            "Ecriture",
+            "Oral",
+            "Vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Argumentation avancee", "durationMin": 10, "activities": ["these/antithese", "transition"] }
+            {
+              "title": "Francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Analyse", "Probabilites", "Modelisation"],
+          "competencies": [
+            "Nombres et calculs",
+            "Geometrie et mesures",
+            "Organisation et gestion de donnees"
+          ],
           "microLessons": [
-            { "title": "Bac maths express", "durationMin": 10, "activities": ["2 exercices type bac"] }
+            {
+              "title": "Mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Monde depuis 1945", "Debat historien", "Geopolitique"],
+        "Anglais": {
+          "competencies": [
+            "LV1 : comprehension et expression",
+            "Vocabulaire et prononciation"
+          ],
           "microLessons": [
-            { "title": "Revision bac HGGSP/Histoire", "durationMin": 10, "activities": ["fiches themes", "question argumentee"] }
+            {
+              "title": "Langue vivante 1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "Citoyennete",
+            "La Republique"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Repères dans le temps et les espaces",
+            "Questionner le monde"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "SES": {
+          "competencies": [
+            "Economie",
+            "Sociologie"
+          ],
+          "microLessons": [
+            {
+              "title": "SES",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "EPS",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
+          ]
+        },
+        "Philo": {
+          "competencies": [
+            "Notions",
+            "Argumentation"
+          ],
+          "microLessons": [
+            {
+              "title": "Philosophie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction",
+                "bilan"
+              ]
+            }
           ]
         }
       }
