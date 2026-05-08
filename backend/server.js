@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { buildFrenchEvaluationQuestions } = require('./frenchEval');
 
 const curriculum = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'content', 'curriculum.fr.json'), 'utf8')
@@ -197,6 +198,39 @@ function scoreWrittenAnswer(expected, answer) {
   const n = Math.min(a.length, e.length);
   for (let i = 0; i < n; i += 1) if (a[i] === e[i]) same += 1;
   return Math.max(0, Math.round((same / e.length) * 100));
+}
+
+function stripLightPunctuation(s) {
+  return String(s || '')
+    .replace(/['']/g, "'")
+    .replace(/[.,!?;:«»"""'''()[\]{}]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function foldAccents(s) {
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+/** Correction plus tolerante pour le francais oral/ecrit (accents, ponctuation legere). */
+function scoreFrenchWrittenAnswer(expected, answer) {
+  const norm = (x) =>
+    stripLightPunctuation(foldAccents(String(x || '').toLowerCase()))
+      .replace(/\s+/g, ' ')
+      .trim();
+  const e = norm(expected);
+  const a = norm(answer);
+  if (!e.length) return 0;
+  if (e === a) return 100;
+  const compactE = e.replace(/\s+/g, '');
+  const compactA = a.replace(/\s+/g, '');
+  if (compactE.length && compactE === compactA) return 100;
+  let same = 0;
+  const n = Math.min(a.length, e.length);
+  for (let i = 0; i < n; i += 1) if (a[i] === e[i]) same += 1;
+  return Math.max(0, Math.round((same / Math.max(e.length, 1)) * 100));
 }
 
 function gradeBand(grade) {
@@ -1090,8 +1124,11 @@ function createApp(db) {
     for (const subject of available) {
       const merged = mergeChildSubjectState(child);
       const tier = getSubjectTier(merged.levels, subject);
-      const count = subject === 'Francais' ? 6 : 8;
-      const questions = Array.from({ length: count }).map(() => generateSubjectQuestion(child, subject, tier));
+      const count = 8;
+      const questions =
+        subject === 'Francais'
+          ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
+          : Array.from({ length: count }).map(() => generateSubjectQuestion(child, subject, tier));
       const row = db
         .prepare(
           'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
@@ -1113,8 +1150,11 @@ function createApp(db) {
     }
     const { levels } = mergeChildSubjectState(child);
     const tier = getSubjectTier(levels, subject);
-    const total = subject === 'Francais' ? 6 : 8;
-    const questions = Array.from({ length: total }).map(() => generateSubjectQuestion(child, subject, tier));
+    const total = 8;
+    const questions =
+      subject === 'Francais'
+        ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
+        : Array.from({ length: total }).map(() => generateSubjectQuestion(child, subject, tier));
     const created = db
       .prepare(
         'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
@@ -1139,7 +1179,16 @@ function createApp(db) {
     const idx = Number(sess.current_index || 0);
     const q = questions[idx];
     if (!q) return res.status(400).json({ error: 'Question introuvable' });
-    const prompt = q.type === 'french-dictation' ? 'Ecris la phrase dictee (audio uniquement).' : q.prompt;
+    const prompt =
+      q.type === 'french-dictation'
+        ? 'Ecris la phrase dictee (audio uniquement).'
+        : q.type === 'french-reading'
+          ? q.prompt
+          : q.type === 'french-grammar'
+            ? `Grammaire\n\n${q.prompt}`
+            : q.type === 'french-spelling'
+              ? `Orthographe\n\n${q.prompt}`
+              : q.prompt;
     const readAloudText = q.readAloudText || q.prompt || '';
     res.json({
       sessionId,
@@ -1173,9 +1222,13 @@ function createApp(db) {
     if (!q) return res.status(400).json({ error: 'Question introuvable' });
 
     const answer = String(parsed.data.answer || '').trim();
-    let score = scoreWrittenAnswer(q.expected, answer);
+    let score;
     if (q.type === 'math' || q.type === 'history') {
-      score = String(q.expected).trim().toLowerCase() === answer.toLowerCase() ? 100 : 0;
+      score = String(q.expected).trim().toLowerCase() === answer.toLowerCase().trim() ? 100 : 0;
+    } else if (String(q.type || '').startsWith('french-')) {
+      score = scoreFrenchWrittenAnswer(q.expected, answer);
+    } else {
+      score = scoreWrittenAnswer(q.expected, answer);
     }
     const isCorrect = score >= 80;
     const nextIdx = idx + 1;

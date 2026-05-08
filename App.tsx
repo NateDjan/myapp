@@ -413,7 +413,10 @@ export default function App() {
         subject: q.subject,
       });
       setEvalAnswer("");
-      setTimeout(() => speak(q.readAloudText), 400);
+      const autoSpeak =
+        !!q.readAloudText &&
+        (q.exerciseType !== "french-reading" || q.readAloudText.length <= 280);
+      if (autoSpeak) setTimeout(() => speak(q.readAloudText), 400);
     } catch (error) {
       Alert.alert("Impossible", String(error));
     } finally {
@@ -438,7 +441,10 @@ export default function App() {
           subject: q.subject,
         });
         setEvalAnswer("");
-        setTimeout(() => speak(q.readAloudText), 300);
+        const autoSpeak =
+          !!q.readAloudText &&
+          (q.exerciseType !== "french-reading" || q.readAloudText.length <= 280);
+        if (autoSpeak) setTimeout(() => speak(q.readAloudText), 300);
       } else {
         await reloadChildren();
         await loadSubjectsMeta();
@@ -1206,8 +1212,16 @@ export default function App() {
                           style={warmStyles.inputKid}
                           value={evalAnswer}
                           onChangeText={setEvalAnswer}
-                          placeholder={evalItem.exerciseType === "dictee" ? "Ecris la phrase" : "Ta reponse"}
-                          multiline={evalItem.exerciseType === "dictee"}
+                          placeholder={
+                            evalItem.exerciseType === "dictee" || evalItem.exerciseType === "french-dictation"
+                              ? "Ecris la phrase"
+                              : "Ta reponse"
+                          }
+                          multiline={
+                            evalItem.exerciseType === "dictee" ||
+                            evalItem.exerciseType === "french-dictation" ||
+                            evalItem.exerciseType === "french-reading"
+                          }
                         />
                         <TouchableOpacity style={warmStyles.btnPrimary} onPress={submitEvalSession} disabled={evalBusy}>
                           {evalBusy ? <ActivityIndicator color="#fff" /> : <Text style={warmStyles.btnPrimaryText}>Valider</Text>}
