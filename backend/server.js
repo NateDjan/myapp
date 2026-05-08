@@ -1693,8 +1693,8 @@ if (require.main === module) {
   const db = createDb();
   const app = createApp(db);
   const PORT = process.env.PORT || 4000;
-  app.listen(PORT, () => {
-    console.log(`EduCoach API running on port ${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`EduCoach API listening on 0.0.0.0:${PORT}`);
   });
 }
 
