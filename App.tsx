@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, type Child, type SubjectsMeta } from "./src/api";
+import { api, type Child, type ParentNotification, type ParentSettings, type SubjectsMeta } from "./src/api";
 import { T, warmStyles } from "./src/theme";
 
 type SessionStep = "lecture" | "dictee" | "correction" | "revision" | "reward";
@@ -64,6 +64,8 @@ export default function App() {
   const [token, setToken] = useState("");
   const [refreshToken, setRefreshToken] = useState("");
   const [parentName, setParentName] = useState("");
+  const [parentFirstName, setParentFirstName] = useState("");
+  const [parentLastName, setParentLastName] = useState("");
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionKind, setSessionKind] = useState<"parent" | "student">("parent");
   const [authMode, setAuthMode] = useState<"login" | "register">("register");
@@ -103,6 +105,9 @@ export default function App() {
   const [dashboard, setDashboard] = useState<any[]>([]);
   const [homeworkTitle, setHomeworkTitle] = useState("");
   const [homeworkList, setHomeworkList] = useState<any[]>([]);
+  const [parentSettings, setParentSettings] = useState<ParentSettings>({ rewardMinutesPerSuccess: 5, notifyOnUnlock: true });
+  const [parentNotifications, setParentNotifications] = useState<ParentNotification[]>([]);
+  const [onlinePrograms, setOnlinePrograms] = useState<Array<{ subject: string; title: string; url: string }>>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [curriculumSources, setCurriculumSources] = useState<string[]>([]);
   const [curriculumNote, setCurriculumNote] = useState("");
@@ -121,7 +126,13 @@ export default function App() {
       try {
         const saved = await AsyncStorage.getItem(SESSION_STORAGE_KEY);
         if (!saved) return;
-        const parsed = JSON.parse(saved) as { token: string; refreshToken?: string; parentName?: string };
+        const parsed = JSON.parse(saved) as {
+          token: string;
+          refreshToken?: string;
+          parentName?: string;
+          parentFirstName?: string;
+          parentLastName?: string;
+        };
         let activeToken = parsed.token;
         let activeRefresh = parsed.refreshToken || "";
         let kids: Child[] | null = null;
@@ -140,13 +151,21 @@ export default function App() {
           setToken(activeToken);
           setRefreshToken(activeRefresh);
           setParentName(parsed.parentName || "");
+          setParentFirstName(parsed.parentFirstName || "");
+          setParentLastName(parsed.parentLastName || "");
           setChildren(kids);
           if (kids.length > 0) setSelectedChildId(kids[0].id);
           setSessionKind("parent");
           setRole("setup");
           await AsyncStorage.setItem(
             SESSION_STORAGE_KEY,
-            JSON.stringify({ token: activeToken, refreshToken: activeRefresh, parentName: parsed.parentName || "" })
+            JSON.stringify({
+              token: activeToken,
+              refreshToken: activeRefresh,
+              parentName: parsed.parentName || "",
+              parentFirstName: parsed.parentFirstName || "",
+              parentLastName: parsed.parentLastName || "",
+            })
           );
         }
       } catch {
@@ -217,11 +236,21 @@ export default function App() {
       Alert.alert("Mot de passe trop court", "Minimum 8 caracteres.");
       return;
     }
+    if (authMode === "register" && (!parentFirstName.trim() || !parentLastName.trim())) {
+      Alert.alert("Infos parent", "Saisis le prenom et le nom du parent.");
+      return;
+    }
     setAuthBusy(true);
     try {
       await AsyncStorage.removeItem(STUDENT_STORAGE_KEY);
       if (authMode === "register") {
-        await api.registerParent({ name: parentName || "Parent", email: email.trim(), password });
+        await api.registerParent({
+          firstName: parentFirstName.trim(),
+          lastName: parentLastName.trim(),
+          name: `${parentFirstName.trim()} ${parentLastName.trim()}`.trim(),
+          email: email.trim(),
+          password,
+        });
       }
       const logged = await api.loginParent({ email: email.trim(), password });
       const access = logged.token || logged.accessToken || "";
@@ -229,6 +258,8 @@ export default function App() {
       setToken(access);
       setRefreshToken(rt);
       setParentName(logged.parent.name);
+      setParentFirstName(logged.parent.firstName || parentFirstName.trim());
+      setParentLastName(logged.parent.lastName || parentLastName.trim());
       setSessionKind("parent");
       setRole("setup");
       const kids = await api.getChildren(access);
@@ -236,7 +267,13 @@ export default function App() {
       if (kids.length > 0) setSelectedChildId(kids[0].id);
       await AsyncStorage.setItem(
         SESSION_STORAGE_KEY,
-        JSON.stringify({ token: access, refreshToken: rt, parentName: logged.parent.name })
+        JSON.stringify({
+          token: access,
+          refreshToken: rt,
+          parentName: logged.parent.name,
+          parentFirstName: logged.parent.firstName || parentFirstName.trim(),
+          parentLastName: logged.parent.lastName || parentLastName.trim(),
+        })
       );
     } catch (error) {
       const msg = String(error);
@@ -473,7 +510,11 @@ export default function App() {
           answer: dictationInput,
           subject,
         });
-        setSessionFeedback(result.feedback);
+        const bonus =
+          result.unlockedMinutes && result.unlockedMinutes > 0
+            ? ` 🎉 +${result.unlockedMinutes} min de temps d'ecran debloquees.`
+            : "";
+        setSessionFeedback(`${result.feedback}${bonus}`);
         await reloadChildren();
         setStep("correction");
       } catch (error) {
@@ -529,6 +570,47 @@ export default function App() {
     }
   };
 
+  const loadParentSettings = async () => {
+    if (!token || sessionKind !== "parent") return;
+    try {
+      const s = await api.getParentSettings(token);
+      setParentSettings(s);
+    } catch {
+      // no-op
+    }
+  };
+
+  const loadParentNotifications = async () => {
+    if (!token || sessionKind !== "parent") return;
+    try {
+      const rows = await api.getParentNotifications(token);
+      setParentNotifications(rows);
+    } catch {
+      // no-op
+    }
+  };
+
+  const saveParentSettings = async () => {
+    if (!token || sessionKind !== "parent") return;
+    try {
+      await api.patchParentSettings(token, parentSettings);
+      await loadParentSettings();
+      Alert.alert("Parametres enregistres", "Les regles de temps d'ecran ont ete mises a jour.");
+    } catch (error) {
+      setErrorMessage(String(error));
+    }
+  };
+
+  const loadOnlinePrograms = async () => {
+    if (!token || !selectedChild) return;
+    try {
+      const data = await api.getOnlinePrograms(token, selectedChild.id, subject);
+      setOnlinePrograms(data.links || []);
+    } catch {
+      setOnlinePrograms([]);
+    }
+  };
+
   const addHomework = async () => {
     if (!token || !selectedChild || !homeworkTitle.trim()) return;
     try {
@@ -563,6 +645,17 @@ export default function App() {
   useEffect(() => {
     loadRecommendations();
   }, [selectedChildId, token]);
+
+  useEffect(() => {
+    loadOnlinePrograms();
+  }, [selectedChildId, token, subject]);
+
+  useEffect(() => {
+    if (role === "parent") {
+      loadParentSettings();
+      loadParentNotifications();
+    }
+  }, [role, token]);
 
   if (role === "landing") {
     return (
@@ -654,12 +747,20 @@ export default function App() {
           </View>
 
           {authMode === "register" && (
-            <TextInput
-              style={styles.input}
-              placeholder="Nom parent"
-              value={parentName}
-              onChangeText={setParentName}
-            />
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Prenom parent"
+                value={parentFirstName}
+                onChangeText={setParentFirstName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nom parent"
+                value={parentLastName}
+                onChangeText={setParentLastName}
+              />
+            </>
           )}
           <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
           <TextInput style={styles.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry />
@@ -689,7 +790,7 @@ export default function App() {
           <Text style={warmStyles.subtitle}>Parent : {parentName}</Text>
 
           <Text style={styles.sectionTitle}>Ajouter un profil enfant</Text>
-          <Text style={styles.hint}>Choisis la classe sur la liste (du CP a la Terminale). Tu definis l&apos;identifiant et le mot de passe pour cet enfant.</Text>
+          <Text style={styles.hint}>Choisis la classe sur la liste (du CP a la Terminale). Pour l&apos;enfant, seul le prenom est demande au profil.</Text>
           <TextInput style={styles.input} placeholder="Prenom" value={newChild.firstName} onChangeText={(v) => setNewChild((p) => ({ ...p, firstName: v }))} />
           <TouchableOpacity style={styles.inputLikePicker} onPress={() => setGradePickerOpen(true)}>
             <Text style={styles.inputLikePickerLabel}>Classe</Text>
@@ -711,8 +812,6 @@ export default function App() {
             value={newChild.studentPassword}
             onChangeText={(v) => setNewChild((p) => ({ ...p, studentPassword: v }))}
           />
-          <TextInput style={styles.input} placeholder="Points forts" value={newChild.strengths} onChangeText={(v) => setNewChild((p) => ({ ...p, strengths: v }))} />
-          <TextInput style={styles.input} placeholder="Points faibles" value={newChild.weaknesses} onChangeText={(v) => setNewChild((p) => ({ ...p, weaknesses: v }))} />
 
           <TouchableOpacity style={styles.primaryBtn} onPress={createChild}>
             <Text style={styles.btnText}>Ajouter l'enfant</Text>
@@ -822,9 +921,49 @@ export default function App() {
               <Text>Niveau lecture: {item.readingLevel}/3</Text>
               <Text>Niveau orthographe: {item.spellingLevel}/3</Text>
               <Text>Points: {item.points}</Text>
+              <Text>Temps d'ecran debloque: {item.screenTimeUnlockedMin || 0} min</Text>
+              <Text>
+                Fort: {item.strongestSubject || "-"} · A renforcer: {item.weakestSubject || "-"}
+              </Text>
               <Text>Revisions en attente: {item.pendingReviews}</Text>
             </View>
           ))}
+
+          <View style={[warmStyles.card, warmStyles.cardLift]}>
+            <Text style={warmStyles.sectionTitle}>Regles temps d'ecran</Text>
+            <Text style={warmStyles.hint}>Minutes debloquees quand l'enfant reussit une activite (score {'>='} 85).</Text>
+            <TextInput
+              style={warmStyles.input}
+              keyboardType="numeric"
+              value={String(parentSettings.rewardMinutesPerSuccess)}
+              onChangeText={(v) => setParentSettings((p) => ({ ...p, rewardMinutesPerSuccess: Number(v || 0) }))}
+              placeholder="Minutes par succes"
+            />
+            <TouchableOpacity
+              style={[warmStyles.btnSoft, { backgroundColor: parentSettings.notifyOnUnlock ? "#5cbf8a" : "#aab2c5" }]}
+              onPress={() => setParentSettings((p) => ({ ...p, notifyOnUnlock: !p.notifyOnUnlock }))}
+            >
+              <Text style={styles.btnText}>
+                Notification parent : {parentSettings.notifyOnUnlock ? "activee" : "desactivee"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={warmStyles.btnPrimary} onPress={saveParentSettings}>
+              <Text style={warmStyles.btnPrimaryText}>Enregistrer regles</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[warmStyles.card, warmStyles.cardLift]}>
+            <Text style={warmStyles.sectionTitle}>Notifications parent</Text>
+            {parentNotifications.length === 0 ? (
+              <Text style={warmStyles.hint}>Aucune notification pour le moment.</Text>
+            ) : (
+              parentNotifications.slice(0, 8).map((n) => (
+                <Text key={`notif-${n.id}`} style={warmStyles.hint}>
+                  - {n.message}
+                </Text>
+              ))
+            )}
+          </View>
 
           <Text style={styles.sectionTitle}>Ajout devoir (import manuel / Pronote)</Text>
           <TextInput style={styles.input} value={homeworkTitle} onChangeText={setHomeworkTitle} placeholder="Ex: Exercice de conjugaison p.42" />
@@ -869,6 +1008,11 @@ export default function App() {
 
   if (role === "student" && selectedChild) {
     const displayChild = selectedChild;
+    const ranked = Object.entries(displayChild.subjectTiersDisplay || {}).sort(
+      (a, b) => (b[1]?.tier || 1) - (a[1]?.tier || 1)
+    );
+    const strongest = ranked[0]?.[0] || "Francais";
+    const weakest = ranked[ranked.length - 1]?.[0] || "Francais";
     return (
       <SafeAreaView style={warmStyles.screenAlt}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={warmStyles.pad}>
@@ -923,6 +1067,8 @@ export default function App() {
                     </View>
                   );
                 })}
+                <Text style={warmStyles.hint}>Tu es le plus a l'aise en {strongest}.</Text>
+                <Text style={warmStyles.hint}>On va surtout t'aider en {weakest}.</Text>
               </View>
             </>
           )}
@@ -1073,6 +1219,19 @@ export default function App() {
                       - {lesson.title} (~{lesson.durationMin} min)
                     </Text>
                   ))}
+              </View>
+
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Programmes en ligne ({displayChild.grade})</Text>
+                {onlinePrograms.length === 0 ? (
+                  <Text style={warmStyles.hint}>Aucun lien disponible.</Text>
+                ) : (
+                  onlinePrograms.slice(0, 8).map((lnk, idx) => (
+                    <Text key={`prog-${idx}`} style={warmStyles.hint}>
+                      - [{lnk.subject}] {lnk.title}: {lnk.url}
+                    </Text>
+                  ))
+                )}
               </View>
             </>
           )}

@@ -22,6 +22,7 @@ export type Child = {
   subjectTiersDisplay?: Record<string, SubjectTierDisplay>;
   evaluationBySubject?: Record<string, EvaluationRecord>;
   optionalSubjectsEnabled?: string[];
+  screen_time_earned_min?: number;
 };
 
 export type SubjectsMeta = {
@@ -32,6 +33,21 @@ export type SubjectsMeta = {
   activeSubjects: string[];
   evaluationBySubject: Record<string, EvaluationRecord>;
   subjectLevels: Record<string, SubjectLevelState>;
+};
+
+export type ParentSettings = {
+  rewardMinutesPerSuccess: number;
+  notifyOnUnlock: boolean;
+};
+
+export type ParentNotification = {
+  id: number;
+  child_id: number;
+  type: string;
+  message: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+  is_read: boolean;
 };
 
 function resolveApiBase(): string {
@@ -113,13 +129,13 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
 
 export const api = {
   health: () => request<{ ok: boolean }>("/api/health"),
-  registerParent: (payload: { name: string; email: string; password: string }) =>
+  registerParent: (payload: { name?: string; firstName?: string; lastName?: string; email: string; password: string }) =>
     request<{ parentId: number }>("/api/parents/register", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   loginParent: (payload: { email: string; password: string }) =>
-    request<{ token: string; accessToken?: string; refreshToken: string; parent: { id: number; name: string } }>(
+    request<{ token: string; accessToken?: string; refreshToken: string; parent: { id: number; name: string; firstName?: string; lastName?: string } }>(
       "/api/parents/login",
       {
         method: "POST",
@@ -179,7 +195,7 @@ export const api = {
       subject: string;
     }>(`/api/evaluation/${childId}/item?subject=${encodeURIComponent(subject)}`, {}, token),
   submitEvaluation: (token: string, childId: number, payload: { itemId: number; subject: string; answer: string }) =>
-    request<{ score: number; completed: boolean; tierLabel: string }>(
+    request<{ score: number; completed: boolean; tierLabel: string; unlockedMinutes?: number }>(
       `/api/evaluation/${childId}/submit`,
       { method: "POST", body: JSON.stringify(payload) },
       token
@@ -201,7 +217,7 @@ export const api = {
     childId: number,
     payload: { expected: string; answer: string; subject?: string }
   ) =>
-    request<{ score: number; points: number; feedback: string }>(
+    request<{ score: number; points: number; feedback: string; unlockedMinutes?: number }>(
       `/api/session/${childId}/dictation`,
       { method: "POST", body: JSON.stringify(payload) },
       token
@@ -231,11 +247,21 @@ export const api = {
       {},
       token
     ),
+  getParentSettings: (token: string) => request<ParentSettings>("/api/parents/settings", {}, token),
+  patchParentSettings: (token: string, payload: ParentSettings) =>
+    request<{ ok: boolean }>("/api/parents/settings", { method: "PATCH", body: JSON.stringify(payload) }, token),
+  getParentNotifications: (token: string) => request<ParentNotification[]>("/api/parents/notifications", {}, token),
   getCurriculum: () =>
     request<{ metadata: { sources: string[]; notes: string }; grades: any[] }>("/api/curriculum"),
   getRecommendations: (token: string, childId: number) =>
     request<{ grade: string; cycle: string; recommendations: any[]; sources: string[] }>(
       `/api/recommendations/${childId}`,
+      {},
+      token
+    ),
+  getOnlinePrograms: (token: string, childId: number, subject?: string) =>
+    request<{ grade: string; links: Array<{ subject: string; title: string; url: string }> }>(
+      `/api/programs/${childId}${subject ? `?subject=${encodeURIComponent(subject)}` : ""}`,
       {},
       token
     ),

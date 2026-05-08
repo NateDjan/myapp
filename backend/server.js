@@ -81,6 +81,21 @@ function migrateSubjectTracking(db) {
   }
 }
 
+function migrateParentAndRewardTracking(db) {
+  try {
+    const parentCols = db.prepare("PRAGMA table_info('parents')").all();
+    const pNames = new Set(parentCols.map((c) => c.name));
+    if (!pNames.has('first_name')) db.exec('ALTER TABLE parents ADD COLUMN first_name TEXT');
+    if (!pNames.has('last_name')) db.exec('ALTER TABLE parents ADD COLUMN last_name TEXT');
+
+    const childCols = db.prepare("PRAGMA table_info('children')").all();
+    const cNames = new Set(childCols.map((c) => c.name));
+    if (!cNames.has('screen_time_earned_min')) db.exec('ALTER TABLE children ADD COLUMN screen_time_earned_min INTEGER NOT NULL DEFAULT 0');
+  } catch (e) {
+    log('error', 'migration_parent_reward_tracking_failed', { error: String(e) });
+  }
+}
+
 function safeJson(s, fallback) {
   try {
     return s && typeof s === 'string' ? JSON.parse(s) : fallback;
@@ -288,8 +303,29 @@ function setupDb(db) {
       history_level INTEGER NOT NULL DEFAULT 1,
       student_login TEXT,
       student_password TEXT,
+      screen_time_earned_min INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       FOREIGN KEY(parent_id) REFERENCES parents(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS parent_settings (
+      parent_id INTEGER PRIMARY KEY,
+      reward_minutes_per_success INTEGER NOT NULL DEFAULT 5,
+      notify_on_unlock INTEGER NOT NULL DEFAULT 1,
+      FOREIGN KEY(parent_id) REFERENCES parents(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS parent_notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      parent_id INTEGER NOT NULL,
+      child_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      message TEXT NOT NULL,
+      payload TEXT,
+      created_at TEXT NOT NULL,
+      is_read INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY(parent_id) REFERENCES parents(id),
+      FOREIGN KEY(child_id) REFERENCES children(id)
     );
 
     CREATE TABLE IF NOT EXISTS phrase_bank (
@@ -337,6 +373,7 @@ function setupDb(db) {
 
   migrateChildrenCredentials(db);
   migrateSubjectTracking(db);
+  migrateParentAndRewardTracking(db);
 
   // Legacy migration: early versions used auth_tokens(token,parent_id,created_at)
   // without expiry/revocation fields. Normalize to the current schema.
@@ -536,6 +573,37 @@ function createApp(db) {
     return db.prepare('SELECT * FROM children WHERE id = ? AND parent_id = ?').get(id, req.parentId);
   }
 
+  function getParentSettings(parentId) {
+    const row = db.prepare('SELECT * FROM parent_settings WHERE parent_id = ?').get(parentId);
+    if (row) return row;
+    db.prepare('INSERT INTO parent_settings (parent_id, reward_minutes_per_success, notify_on_unlock) VALUES (?, 5, 1)').run(parentId);
+    return db.prepare('SELECT * FROM parent_settings WHERE parent_id = ?').get(parentId);
+  }
+
+  function addParentNotification(parentId, childId, type, message, payload = {}) {
+    db.prepare(
+      'INSERT INTO parent_notifications (parent_id, child_id, type, message, payload, created_at, is_read) VALUES (?, ?, ?, ?, ?, ?, 0)'
+    ).run(parentId, childId, type, message, JSON.stringify(payload), nowIso());
+  }
+
+  function maybeAwardScreenTime(child, score, subject) {
+    if (score < 85) return 0;
+    const settings = getParentSettings(child.parent_id);
+    const minutes = Math.max(0, Number(settings.reward_minutes_per_success) || 0);
+    if (!minutes) return 0;
+    db.prepare('UPDATE children SET screen_time_earned_min = screen_time_earned_min + ? WHERE id = ?').run(minutes, child.id);
+    if (Number(settings.notify_on_unlock) === 1) {
+      addParentNotification(
+        child.parent_id,
+        child.id,
+        'screen_time_unlocked',
+        `${child.first_name} a debloque ${minutes} min de temps d'ecran en ${subject}.`,
+        { minutes, subject, score }
+      );
+    }
+    return minutes;
+  }
+
   app.get('/api/health', (_req, res) => {
     try {
       const dbOk = db.prepare('SELECT 1 as ok').get().ok === 1;
@@ -566,21 +634,32 @@ function createApp(db) {
   });
 
   app.post('/api/parents/register', rateLimitAuth, (req, res) => {
-    const schema = z.object({
-      name: z.string().min(1),
-      email: z.string().email(),
-      password: z.string().min(8),
-    });
+    const schema = z
+      .object({
+        name: z.string().min(1).optional(),
+        firstName: z.string().min(1).optional(),
+        lastName: z.string().min(1).optional(),
+        email: z.string().email(),
+        password: z.string().min(8),
+      })
+      .refine((v) => !!(v.name || (v.firstName && v.lastName)), {
+        message: 'name ou firstName+lastName requis',
+      });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-    const { name, email, password } = parsed.data;
+    const firstName = parsed.data.firstName?.trim();
+    const lastName = parsed.data.lastName?.trim();
+    const name = parsed.data.name?.trim() || `${firstName} ${lastName}`.trim();
+    const email = parsed.data.email;
+    const password = parsed.data.password;
     const hashed = bcrypt.hashSync(password, 12);
 
     try {
       const result = db
-        .prepare('INSERT INTO parents (name, email, password, created_at) VALUES (?, ?, ?, ?)')
-        .run(name, email.toLowerCase(), hashed, nowIso());
+        .prepare('INSERT INTO parents (name, first_name, last_name, email, password, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(name, firstName || null, lastName || null, email.toLowerCase(), hashed, nowIso());
+      getParentSettings(result.lastInsertRowid);
       logSecurityEvent({ parentId: result.lastInsertRowid, email: email.toLowerCase(), eventType: 'auth_register_success', ip: req.ip });
       return res.status(201).json({ parentId: result.lastInsertRowid });
     } catch {
@@ -608,7 +687,7 @@ function createApp(db) {
     }
 
     const parent = db
-      .prepare('SELECT id, name, password FROM parents WHERE email = ?')
+      .prepare('SELECT id, name, first_name, last_name, password FROM parents WHERE email = ?')
       .get(email);
     if (!parent) {
       markLoginFailure(email, ip);
@@ -654,7 +733,12 @@ function createApp(db) {
       payload: { tokenId },
     });
 
-    return res.json({ token: accessToken, accessToken, refreshToken, parent: { id: parent.id, name: parent.name } });
+    return res.json({
+      token: accessToken,
+      accessToken,
+      refreshToken,
+      parent: { id: parent.id, name: parent.name, firstName: parent.first_name || '', lastName: parent.last_name || '' },
+    });
   });
 
   app.post('/api/students/login', rateLimitAuth, (req, res) => {
@@ -923,10 +1007,13 @@ function createApp(db) {
       nowIso()
     );
 
+    const unlockedMinutes = maybeAwardScreenTime(child, score, subj);
+
     res.json({
       score,
       completed: true,
       tierLabel: tierGuess >= 3 ? 'A' : tierGuess >= 2 ? 'M' : 'E',
+      unlockedMinutes,
     });
   });
 
@@ -1018,6 +1105,7 @@ function createApp(db) {
 
     db.prepare('UPDATE children SET points = points + ? WHERE id = ?').run(points, childId);
     applySubjectProgressAfterScore(db, childId, subj, score);
+    const unlockedMinutes = maybeAwardScreenTime(child, score, subj);
     db.prepare('INSERT INTO activity_log (child_id, activity_type, score, points_delta, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
       childId,
       subj === 'Francais' ? 'dictation' : `quiz_${subj}`,
@@ -1037,7 +1125,12 @@ function createApp(db) {
       );
     }
 
-    res.json({ score, points, feedback: score === 100 ? 'Bravo, tout juste !' : `Score ${score}/100 — encore un petit effort !` });
+    res.json({
+      score,
+      points,
+      unlockedMinutes,
+      feedback: score === 100 ? 'Bravo, tout juste !' : `Score ${score}/100 — encore un petit effort !`,
+    });
   });
 
   app.post('/api/review/:reviewId/complete', auth, (req, res) => {
@@ -1103,6 +1196,10 @@ function createApp(db) {
     );
 
     const progress = children.map((child) => {
+      const merged = mergeChildSubjectState(child);
+      const ranking = Object.entries(merged.levels).sort((a, b) => (b[1].tier || 1) - (a[1].tier || 1));
+      const strongest = ranking[0]?.[0] || 'Francais';
+      const weakest = ranking[ranking.length - 1]?.[0] || 'Francais';
       const recent = db.prepare('SELECT activity_type, score, points_delta, created_at FROM activity_log WHERE child_id = ? ORDER BY id DESC LIMIT 8').all(child.id);
       const pendingReviews = db.prepare("SELECT COUNT(*) as c FROM review_queue WHERE child_id = ? AND status = 'pending'").get(child.id).c;
       return {
@@ -1111,12 +1208,43 @@ function createApp(db) {
         readingLevel: child.reading_level,
         spellingLevel: child.spelling_level,
         points: child.points,
+        screenTimeUnlockedMin: child.screen_time_earned_min || 0,
+        strongestSubject: strongest,
+        weakestSubject: weakest,
         pendingReviews,
         recent,
       };
     });
 
     res.json({ totals, progress });
+  });
+
+  app.get('/api/parents/settings', auth, requireParent, (req, res) => {
+    const row = getParentSettings(req.parentId);
+    res.json({
+      rewardMinutesPerSuccess: row.reward_minutes_per_success,
+      notifyOnUnlock: Number(row.notify_on_unlock) === 1,
+    });
+  });
+
+  app.patch('/api/parents/settings', auth, requireParent, (req, res) => {
+    const schema = z.object({
+      rewardMinutesPerSuccess: z.coerce.number().int().min(0).max(120),
+      notifyOnUnlock: z.boolean(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    db.prepare('INSERT INTO parent_settings (parent_id, reward_minutes_per_success, notify_on_unlock) VALUES (?, ?, ?) ON CONFLICT(parent_id) DO UPDATE SET reward_minutes_per_success = excluded.reward_minutes_per_success, notify_on_unlock = excluded.notify_on_unlock')
+      .run(req.parentId, parsed.data.rewardMinutesPerSuccess, parsed.data.notifyOnUnlock ? 1 : 0);
+    return res.json({ ok: true });
+  });
+
+  app.get('/api/parents/notifications', auth, requireParent, (req, res) => {
+    const rows = db
+      .prepare('SELECT id, child_id, type, message, payload, created_at, is_read FROM parent_notifications WHERE parent_id = ? ORDER BY id DESC LIMIT 50')
+      .all(req.parentId)
+      .map((r) => ({ ...r, payload: safeJson(r.payload, {}), is_read: Number(r.is_read) === 1 }));
+    res.json(rows);
   });
 
   app.get('/api/parents/security', auth, requireParent, (req, res) => {
@@ -1179,6 +1307,33 @@ function createApp(db) {
       recommendations,
       sources: metaSources,
     });
+  });
+
+  app.get('/api/programs/:childId', auth, (req, res) => {
+    const childId = Number(req.params.childId);
+    const subject = String(req.query.subject || '');
+    const child = getAuthorizedChild(req, childId);
+    if (!child) return res.status(404).json({ error: 'Child not found' });
+    const gradeData = curriculum.grades.find((g) => g.grade === child.grade);
+    if (!gradeData) return res.json({ grade: child.grade, links: [] });
+
+    const subjects = subject && gradeData.subjects[subject] ? [subject] : Object.keys(gradeData.subjects);
+    const links = [];
+    for (const sub of subjects) {
+      const query = encodeURIComponent(`programme ${child.grade} ${sub} education nationale`);
+      links.push({
+        subject: sub,
+        title: `Programme officiel ${child.grade} - ${sub}`,
+        url: `https://www.education.gouv.fr/recherche?query=${query}`,
+      });
+      links.push({
+        subject: sub,
+        title: `Ressources Eduscol ${child.grade} - ${sub}`,
+        url: `https://eduscol.education.fr/recherche?search_api_fulltext=${query}`,
+      });
+    }
+    const sourceLinks = (curriculum.metadata?.sources || []).map((u) => ({ subject: 'General', title: 'Source programme', url: u }));
+    res.json({ grade: child.grade, links: [...links, ...sourceLinks] });
   });
 
   app.use((error, req, res, _next) => {
