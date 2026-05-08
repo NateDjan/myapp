@@ -1,0 +1,382 @@
+/**
+ * Genere content/curriculum.fr.json et content/quizBanks.fr.json
+ * Matieres alignees sur les programmes (tronc commun simplifie par niveau).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const root = path.join(__dirname, '..');
+
+function mkSubject(shortName, competencies, lessonTitle) {
+  return {
+    [shortName]: {
+      competencies,
+      microLessons: [{ title: lessonTitle, durationMin: 10, activities: ['micro-exercice', 'correction guidee', 'bilan rapide'] }],
+    },
+  };
+}
+
+const SUBJECT_TEMPLATES = {
+  Francais: mkSubject('Francais', ['Lire et comprendre', 'Ecrire avec precision', 'Oral et vocabulaire'], 'Module francais'),
+  Maths: mkSubject('Maths', ['Calcul et resolution', 'Raisonnement', 'Geometrie et mesures'], 'Module mathematiques'),
+  Anglais: mkSubject('Anglais', ['Comprendre et produire oral/ecrit', 'Vocabulaire et grammaire de base'], 'Anglais LV1'),
+  EMC: mkSubject('EMC', ['Vivre ensemble', 'La Republique et la citoyennete', 'Libertes et responsabilites'], 'EMC'),
+  'Questionner le monde': mkSubject('Questionner le monde', ['Temps et histoire locale', 'Espace et territoires', 'Nature et technique'], 'Questionner le monde'),
+  Arts: mkSubject('Arts', ['Pratiques artistiques', 'Histoire des arts', 'Creation'], 'Arts et culture'),
+  EPS: mkSubject('EPS', ['Motricite', 'Cooperation', 'Sante'], 'Education physique'),
+  Sciences: mkSubject('Sciences', ['Matiere et energie', 'Vivant et environnement', 'Technologie'], 'Sciences et technologie'),
+  'Histoire-Geo': mkSubject('Histoire-Geo', ['Situer dans le temps', 'Situer dans l espace', 'Analyser documents'], 'Histoire et geographie'),
+  Technologie: mkSubject('Technologie', ['Objets techniques', 'Demarche de projet', 'Numerique'], 'Technologie'),
+  Espagnol: mkSubject('Espagnol', ['Comprendre oral/ecrit', 'Interaction', 'Culture'], 'Espagnol LV2'),
+  SVT: mkSubject('SVT', ['Le vivant', 'Terre et environnement', 'Corps humain'], 'Sciences de la vie et de la Terre'),
+  'Physique-Chimie': mkSubject('Physique-Chimie', ['Matiere et mouvement', 'Energie', 'Reaction chimique'], 'Physique-Chimie'),
+  SES: mkSubject('SES', ['Economie', 'Sociologie', 'Organisation'], 'Sciences economiques et sociales'),
+  Philo: mkSubject('Philo', ['Problemique', 'Notions', 'Argumentation'], 'Philosophie'),
+  'Enseignement scientifique': mkSubject('Enseignement scientifique', ['Demarche scientifique', 'Grands themes', 'Liens sciences-societe'], 'Enseignement scientifique 2nde'),
+  'Numerique et sciences informatiques': mkSubject('Numerique et sciences informatiques', ['Algorithmique', 'Donnees', 'Machines'], 'NSI'),
+};
+
+function mergeSubjects(names) {
+  const o = {};
+  for (const n of names) Object.assign(o, SUBJECT_TEMPLATES[n]);
+  return o;
+}
+
+const grades = [
+  {
+    grade: 'CP',
+    cycle: 'Cycle 2',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Questionner le monde', 'Arts', 'EPS']),
+  },
+  {
+    grade: 'CE1',
+    cycle: 'Cycle 2',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Questionner le monde', 'Arts', 'EPS']),
+  },
+  {
+    grade: 'CE2',
+    cycle: 'Cycle 2',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Questionner le monde', 'Arts', 'EPS']),
+  },
+  {
+    grade: 'CM1',
+    cycle: 'Cycle 3',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Sciences', 'Histoire-Geo', 'Arts', 'EPS', 'Technologie']),
+  },
+  {
+    grade: 'CM2',
+    cycle: 'Cycle 3',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Sciences', 'Histoire-Geo', 'Arts', 'EPS', 'Technologie']),
+  },
+  {
+    grade: '6e',
+    cycle: 'Cycle 3',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Sciences', 'Histoire-Geo', 'Arts', 'EPS', 'Technologie']),
+  },
+  {
+    grade: '5e',
+    cycle: 'Cycle 4',
+    subjects: mergeSubjects([
+      'Francais',
+      'Maths',
+      'Anglais',
+      'Espagnol',
+      'EMC',
+      'Histoire-Geo',
+      'SVT',
+      'Physique-Chimie',
+      'Technologie',
+      'Arts',
+      'EPS',
+    ]),
+  },
+  {
+    grade: '4e',
+    cycle: 'Cycle 4',
+    subjects: mergeSubjects([
+      'Francais',
+      'Maths',
+      'Anglais',
+      'Espagnol',
+      'EMC',
+      'Histoire-Geo',
+      'SVT',
+      'Physique-Chimie',
+      'Technologie',
+      'Arts',
+      'EPS',
+    ]),
+  },
+  {
+    grade: '3e',
+    cycle: 'Cycle 4',
+    subjects: mergeSubjects([
+      'Francais',
+      'Maths',
+      'Anglais',
+      'Espagnol',
+      'EMC',
+      'Histoire-Geo',
+      'SVT',
+      'Physique-Chimie',
+      'Technologie',
+      'Arts',
+      'EPS',
+    ]),
+  },
+  {
+    grade: '2nde',
+    cycle: 'Lycee',
+    subjects: mergeSubjects([
+      'Francais',
+      'Maths',
+      'Anglais',
+      'EMC',
+      'Enseignement scientifique',
+      'Histoire-Geo',
+      'SES',
+      'EPS',
+      'Philo',
+      'Numerique et sciences informatiques',
+    ]),
+  },
+  {
+    grade: '1ere',
+    cycle: 'Lycee',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Histoire-Geo', 'SES', 'EPS', 'Philo']),
+  },
+  {
+    grade: 'Terminale',
+    cycle: 'Lycee',
+    subjects: mergeSubjects(['Francais', 'Maths', 'Anglais', 'EMC', 'Histoire-Geo', 'SES', 'EPS', 'Philo']),
+  },
+];
+
+const curriculum = {
+  metadata: {
+    country: 'France',
+    language: 'fr',
+    version: '2026.06',
+    sources: [
+      'https://www.education.gouv.fr/programmes-scolaires-41483',
+      'https://eduscol.education.fr/',
+    ],
+    notes:
+      'Tronc commun par niveau (primaire, college, lycee). Les specialites terminales ne sont pas listees ici ; matieres activables par les parents si absentes de la classe.',
+  },
+  grades,
+};
+
+const qq = (key, prompt, expected, explanation, readAloud) => ({
+  key,
+  prompt,
+  expected,
+  explanation,
+  readAloud: readAloud || prompt,
+});
+
+/** Banques : au moins 10 questions courtes par matiere (reponses normalisees cote serveur). */
+const quizBanks = {
+  Anglais: [
+    qq('en-1', 'Traduis en anglais : bonjour', 'hello', "Hello / Hi sont corrects pour dire bonjour.", 'Traduis en anglais : bonjour'),
+    qq('en-2', 'Traduis : merci', 'thank you', 'Thank you se dit pour remercier.', 'Traduis : merci'),
+    qq('en-3', 'Comment dit-on « au revoir » en anglais courant ?', 'goodbye', 'Goodbye ou Bye sont courants.', 'Comment dit-on au revoir en anglais ?'),
+    qq('en-4', 'Quelle couleur en anglais : rouge ?', 'red', 'Red correspond au rouge.', 'Quelle couleur en anglais : rouge ?'),
+    qq('en-5', 'Traduis : un chat', 'a cat', 'Cat = chat.', 'Traduis : un chat'),
+    qq('en-6', 'Traduis : ecole', 'school', 'School = ecole.', 'Traduis : ecole'),
+    qq('en-7', 'Comment dit-on « oui » en anglais ?', 'yes', 'Yes = oui.', 'Comment dit-on oui en anglais ?'),
+    qq('en-8', 'Comment dit-on « non » en anglais ?', 'no', 'No = non.', 'Comment dit-on non en anglais ?'),
+    qq('en-9', 'Traduis : eau', 'water', 'Water = eau.', 'Traduis : eau'),
+    qq('en-10', 'Traduis : livre (objet pour lire)', 'book', 'Book = livre.', 'Traduis : livre'),
+    qq('en-11', 'Quel mot anglais pour « famille » ?', 'family', 'Family = famille.', 'Quel mot anglais pour famille ?'),
+    qq('en-12', 'Traduis : maison', 'house', 'House = maison.', 'Traduis : maison'),
+  ],
+  EMC: [
+    qq('emc-1', 'Dans la devise « Liberte, egalite, fraternite », que symbolise l\'egalite ?', 'memes droits', "L'egalite affirme les memes droits pour tous.", 'Que symbolise legalite dans la devise ?'),
+    qq('emc-2', 'Qui vote les lois en France ?', 'parlement', 'Le Parlement vote les lois avec le president de la Republique pour la promulgation.', 'Qui vote les lois en France ?'),
+    qq('emc-3', 'A quel age peut-on voter en France ?', '18 ans', 'Le droit de vote est a dix-huit ans.', 'A quel age peut-on voter en France ?'),
+    qq('emc-4', 'Que signifie respecter la difference des autres ?', 'vivre ensemble', 'La tolerance favorise le vivre-ensemble.', 'Que signifie respecter la difference ?'),
+    qq('emc-5', 'La laicite garantit la neutralite de qui vis-a-vis des religions ?', 'letat', "L'Etat est neutre.", 'La laicite : neutralite de qui ?'),
+    qq('emc-6', 'Comment appelle-t-on une action pour aider autrui sans payer ?', 'benevolat', 'Le benevolat est du don de son temps.', 'Action pour aider sans etre paye ?'),
+    qq('emc-7', 'Les maires sont elus par qui ?', 'les citoyens', 'Les citoyens elisent les conseils municipaux.', 'Les maires sont elus par qui ?'),
+    qq('emc-8', 'Un stereotype est une idee souvent ... ?', 'trop simple', 'Les stereotypes simplifient abusivement.', 'Un stereotype est une idee souvent ?'),
+    qq('emc-9', 'Que doit-on respecter dans un debat scolaire ?', 'les autres', 'Ecouter et respecter les tours de parole.', 'Que respecter dans un debat ?'),
+    qq('emc-10', 'La Constitution organise les pouvoirs en France : vrai ou faux ?', 'vrai', 'La Constitution fixe les regles de l Etat.', 'La Constitution organise les pouvoirs : vrai ou faux ?'),
+    qq('emc-11', 'Le drapeau europeen compte combien d etoiles ?', '12', 'Douze etoiles en cercle.', 'Combien d etoiles sur le drapeau europeen ?'),
+    qq('emc-12', 'Le harcelement scolaire doit etre ... ?', 'signale', 'Il doit etre signale a un adulte de confiance.', 'Le harcelement doit etre ?'),
+  ],
+  'Questionner le monde': [
+    qq('qm-1', 'Combien de saisons dans une annee en climat tempere ?', '4', 'Printemps, ete, automne, hiver.', 'Combien de saisons ?'),
+    qq('qm-2', 'Le Soleil se leve a l ... ?', 'est', 'Le Soleil se leve a lest en general.', 'Le Soleil se leve a l ?'),
+    qq('qm-3', 'Une riviere se jette souvent dans une ... ?', 'mer', 'Ou dans un ocean.', 'Une riviere se jette dans une ?'),
+    qq('qm-4', 'La Terre tourne autour de ... ?', 'soleil', 'Revolution annuelle.', 'La Terre tourne autour de ?'),
+    qq('qm-5', 'Un ecosysteme lie vivants et ... ?', 'milieu', 'Les etres vivants et leur milieu.', 'Un ecosysteme lie vivants et ?'),
+    qq('qm-6', 'Le cycle de leau comporte evaporation et ... ?', 'precipitations', 'Pluie et neige reviennent au sol.', 'Le cycle de leau : evaporation et ?'),
+    qq('qm-7', 'Une carte indique des ... ?', 'lieux', 'Lieux et legendes.', 'Une carte indique des ?'),
+    qq('qm-8', 'Un heritage du passe peut etre un ... ?', 'monument', 'Monument ou trace materielle.', 'Un heritage du passe ?'),
+    qq('qm-9', 'Le present precede le ... ?', 'futur', 'Ordre du temps.', 'Le present precede le ?'),
+    qq('qm-10', 'Une mesure du temps : une ... ?', 'seconde', 'Seconde, minute, heure...', 'Une mesure du temps : une ?'),
+    qq('qm-11', 'Le nord et le sud sont des ... ?', 'directions', 'Points cardinaux.', 'Le nord et le sud sont des ?'),
+    qq('qm-12', 'Une population habite un ... ?', 'territoire', 'Territoire communal ou national.', 'Une population habite un ?'),
+  ],
+  Arts: [
+    qq('ar-1', 'Les couleurs primaires en peinture soustractif : rouge, jaune et ... ?', 'bleu', 'Bleu complete les primaires.', 'Troisieme couleur primaire ?'),
+    qq('ar-2', 'Un rythme en musique organise les ... ?', 'temps', 'Temps forts et faibles.', 'Le rythme organise les ?'),
+    qq('ar-3', 'La symetrie copie une forme par ... ?', 'miroir', 'Axe de symetrie.', 'La symetrie copie par ?'),
+    qq('ar-4', 'Une sculpture en volume occupe l ... ?', 'espace', 'Travail en trois dimensions.', 'Une sculpture occupe l ?'),
+    qq('ar-5', 'Le contraste oppose clair et ... ?', 'sombre', 'Clair et sombre.', 'Le contraste oppose clair et ?'),
+    qq('ar-6', 'En theatre, le decor situe l ... ?', 'action', 'Lieu et epoque.', 'Le decor situe l ?'),
+    qq('ar-7', 'Une partition note la ... ?', 'musique', 'Ecriture musicale.', 'Une partition note la ?'),
+    qq('ar-8', 'Le mouvement en danse peut etre lent ou ... ?', 'rapide', 'Variations de tempo.', 'Le mouvement peut etre lent ou ?'),
+    qq('ar-9', 'Le dessin au trait utilise souvent un ... ?', 'crayon', 'Ou une plume numerique.', 'Le dessin au trait utilise un ?'),
+    qq('ar-10', 'Une harmonie de couleurs etait douce si elle est ... ?', 'proche', 'Teintes voisines sur le cercle chromatique.', 'Couleurs douces si elles sont ?'),
+    qq('ar-11', 'Le regard du spectateur rencontre l ... ?', 'oeuvre', 'Relation esthetique.', 'Le spectateur rencontre l ?'),
+    qq('ar-12', 'Un motif se ... sur une surface.', 'repete', 'Motifs ornementaux.', 'Un motif se ?'),
+  ],
+  EPS: [
+    qq('ep-1', 'Avant un effort, on fait souvent un ... ?', 'echauffement', "L'echauffement prepare le corps.", 'Avant un effort on fait un ?'),
+    qq('ep-2', 'Boire de leau evite la ... ?', 'deshydratation', 'Hydratation pendant le sport.', 'Boire evite la ?'),
+    qq('ep-3', 'Respecter les regles du jeu, cest ... ?', 'fair-play', 'Ethique sportive.', 'Respecter les regles cest ?'),
+    qq('ep-4', 'Le cardio travaille le ... ?', 'coeur', 'Endurance.', 'Le cardio travaille le ?'),
+    qq('ep-5', 'En gymnastique, la souplesse concerne les ... ?', 'muscles', 'Et les articulations.', 'La souplesse concerne les ?'),
+    qq('ep-6', 'Un panier au basketball vaut combien de points ?', '2', 'En general deux points.', 'Un panier vaut combien de points ?'),
+    qq('ep-7', 'Le football se joue principalement au ... ?', 'pied', 'Sauf le gardien dans sa zone.', 'Le football se joue au ?'),
+    qq('ep-8', 'Cooperer, cest jouer en ... ?', 'equipe', 'Collectif.', 'Cooperer cest jouer en ?'),
+    qq('ep-9', 'Apres leffort, la recuperation inclut le ... ?', 'calme', 'Retour au calme.', 'Apres leffort : le ?'),
+    qq('ep-10', 'Eviter les chocs : on protege sa ... ?', 'tete', 'Casque si velo par exemple.', 'On protege sa ?'),
+    qq('ep-11', 'La posture droite aide la ... ?', 'respiration', 'Epaules detendues.', 'La posture droite aide la ?'),
+    qq('ep-12', 'Les regles de securite du gymnase sont affichees pour etre ... ?', 'connues', 'Prevenir les accidents.', 'Les regles sont affichees pour etre ?'),
+  ],
+  Sciences: [
+    qq('sc-1', 'Leau peut exister solide, liquide ou ... ?', 'gazeux', 'Etats de la matiere.', 'Leau peut etre solide liquide ou ?'),
+    qq('sc-2', 'Les plantes fabriquent de l oxygenee grace a la ... ?', 'photosynthese', 'Feuilles et lumiere.', 'Les plantes et l oxygenee ?'),
+    qq('sc-3', 'Un circuit electrique simple contient une pile et une ... ?', 'lampe', 'Ou autre recepteur.', 'Un circuit contient pile et ?'),
+    qq('sc-4', 'La gravite attire les corps vers le ... ?', 'sol', 'Centre de la Terre.', 'La gravite attire vers le ?'),
+    qq('sc-5', 'Un levier pivote autour dun ... ?', 'axe', 'Point dappui.', 'Un levier pivote autour dun ?'),
+    qq('sc-6', 'Les animaux se nourrissent pour avoir de l ... ?', 'energie', 'Besoins vitaux.', 'Les animaux cherchent de l ?'),
+    qq('sc-7', 'Melanger acide et base peut produire une ... ?', 'reaction', 'Reaction chimique.', 'Melanger acide et base : une ?'),
+    qq('sc-8', 'Une ombre se forme si la lumiere est ... ?', 'bloquee', 'Objet opaque.', 'Une ombre si la lumiere est ?'),
+    qq('sc-9', 'Le sons se propage dans l ... ?', 'air', 'Et autres milieux.', 'Le son se propage dans l ?'),
+    qq('sc-10', 'Une roue est une machine ... ?', 'simple', 'Ou composee.', 'Une roue est une machine ?'),
+    qq('sc-11', 'Les fossiles temoignent du ... ?', 'passe', 'Vie ancienne.', 'Les fossiles temoignent du ?'),
+    qq('sc-12', 'Observer avec methode, cest faire une ... ?', 'experience', 'Protocole simple.', 'Observer avec methode : une ?'),
+  ],
+  Technologie: [
+    qq('tech-1', 'Un objet technique repond a un ... ?', 'besoin', 'Fonction principale.', 'Un objet technique repond a un ?'),
+    qq('tech-2', 'Le numerique stocke des ... ?', 'donnees', 'Fichiers et informations.', 'Le numerique stocke des ?'),
+    qq('tech-3', 'Une maquette sert a ... ?', 'tester', 'Verifier une idee avant fabrication.', 'Une maquette sert a ?'),
+    qq('tech-4', 'La securite sur internet inclut un ... ?', 'mot de passe', 'Secret robuste.', 'La securite inclut un ?'),
+    qq('tech-5', 'Un capteur ... une grandeur physique.', 'mesure', 'Temperature, distance...', 'Un capteur une grandeur ?'),
+    qq('tech-6', 'Pour concevoir, on suit une ... ?', 'demarche', 'Etapes de projet.', 'Pour concevoir on suit une ?'),
+    qq('tech-7', 'Recyclage : transformer des ... ?', 'dechets', 'Nouvelles matieres.', 'Le recyclage transforme des ?'),
+    qq('tech-8', 'Une maquette numerique peut etre un fichier ... ?', '3d', 'CAO.', 'Une maquette numerique fichier ?'),
+    qq('tech-9', 'Le materiau bois est ... ?', 'naturel', 'Par rapport au plastique.', 'Le bois est ?'),
+    qq('tech-10', 'Ameliorer un objet, cest modifier son ... ?', 'design', 'Ou ses materiaux.', 'Ameliorer : modifier le ?'),
+    qq('tech-11', 'Une notice explique le ... ?', 'usage', 'Mode demploi.', 'Une notice explique le ?'),
+    qq('tech-12', 'Linnovation apporte une ... ?', 'nouveaute', 'Amelioration ou rupture.', 'Linnovation apporte une ?'),
+  ],
+  Espagnol: [
+    qq('es-1', 'Traduis : hola', 'hola', 'Hola = bonjour en espagnol.', 'Traduis : hola'),
+    qq('es-2', 'Traduis : merci en espagnol', 'gracias', 'Gracias.', 'Merci en espagnol ?'),
+    qq('es-3', 'Traduis : au revoir', 'adios', 'Adios ou hasta luego.', 'Au revoir en espagnol ?'),
+    qq('es-4', 'Traduis : maison', 'casa', 'Casa.', 'Traduis : maison'),
+    qq('es-5', 'Traduis : ecole', 'escuela', 'Escuela.', 'Traduis : ecole'),
+    qq('es-6', 'Comment dit-on oui en espagnol ?', 'si', 'Si = oui.', 'Oui en espagnol ?'),
+    qq('es-7', 'Traduis : eau', 'agua', 'Agua.', 'Traduis : eau'),
+    qq('es-8', 'Traduis : livre', 'libro', 'Libro.', 'Traduis : livro'),
+    qq('es-9', 'Quelle couleur : rojo ?', 'rouge', 'Rojo = rouge.', 'Rojo en francais ?'),
+    qq('es-10', 'Traduis : famille', 'familia', 'Familia.', 'Traduis : famille'),
+    qq('es-11', 'Traduis : ami', 'amigo', 'Amigo ou amiga.', 'Traduis : ami'),
+    qq('es-12', 'Traduis : bonjour le matin', 'buenos dias', 'Buenos dias.', 'Bonjour le matin ?'),
+  ],
+  SVT: [
+    qq('svt-1', 'La photosynthese produit de l ... ?', 'oxygene', 'Et du glucose.', 'La photosynthese produit ?'),
+    qq('svt-2', 'Les vegetaux sont des organismes ... ?', 'autotrophes', 'Ils fabriquent leur matiere.', 'Les vegetaux sont ?'),
+    qq('svt-3', 'Le coeur pompe le ... ?', 'sang', 'Circulation.', 'Le coeur pompe le ?'),
+    qq('svt-4', 'Les poumons echangent des ... ?', 'gaz', 'Oxygene et dioxyde de carbone.', 'Les poumons echangent des ?'),
+    qq('svt-5', 'Une cellule possede une ... ?', 'membrane', 'Limite et controle.', 'Une cellule possede une ?'),
+    qq('svt-6', 'La biodiversite mesure la variete des ... ?', 'especes', 'Vivants.', 'La biodiversite : variete des ?'),
+    qq('svt-7', 'Les fossiles se forment dans les ... ?', 'roches', 'Sediments.', 'Les fossiles dans les ?'),
+    qq('svt-8', 'Lequilibre d un ecosysteme peut etre perturbe par une ... ?', 'pollution', 'Ou espece invasive.', 'Perturbe par une ?'),
+    qq('svt-9', 'Les mammiferes allaitent leurs ... ?', 'petits', 'Lait maternel.', 'Les mammiferes allaitent leurs ?'),
+    qq('svt-10', 'La mitose multiplie les ... ?', 'cellules', 'Division.', 'La mitose multiplie les ?'),
+    qq('svt-11', 'La fertilisation fusionne deux ... ?', 'gametes', 'Cellules sexuelles.', 'La fertilisation fusionne deux ?'),
+    qq('svt-12', 'Le genome est porte par l ... ?', 'adn', 'Information hereditaire.', 'Le genome est dans l ?'),
+  ],
+  'Physique-Chimie': [
+    qq('pc-1', 'La masse se mesure en ... ?', 'kilogrammes', 'Unite SI.', 'La masse en ?'),
+    qq('pc-2', 'La distance en metre est une unite de ... ?', 'longueur', 'Grandeur physique.', 'Le metre mesure ?'),
+    qq('pc-3', 'Le courant electrique circule dans un ... ?', 'circuit', 'Fil conducteur.', 'Le courant circule dans un ?'),
+    qq('pc-4', 'Leau bout a environ combien de degres Celsius a pression normale ?', '100', 'Cent degres.', 'Leau bout a combien de degres ?'),
+    qq('pc-5', 'La glace fond quand on chauffe : passage solide vers ... ?', 'liquide', 'Fusion.', 'La glace vers ?'),
+    qq('pc-6', 'Un atome contient noyau et ... ?', 'electrons', 'Autour du noyau.', 'Un atome contient noyau et ?'),
+    qq('pc-7', 'Une reaction chimique transforme des ... ?', 'reactifs', 'En produits.', 'Une reaction transforme des ?'),
+    qq('pc-8', 'La vitesse est distance sur ... ?', 'temps', 'v = d/t.', 'La vitesse est distance sur ?'),
+    qq('pc-9', 'La force se mesure souvent en ... ?', 'newtons', 'Symbole N.', 'La force en ?'),
+    qq('pc-10', 'Un isolant limite la conduction de la ... ?', 'chaleur', 'Ou electricite.', 'Un isolant limite la ?'),
+    qq('pc-11', 'Le pH mesure lacidite ou la ... ?', 'basicite', 'Echelle acide-base.', 'Le pH mesure lacidite ou ?'),
+    qq('pc-12', 'Une molecule est un assemblage d ... ?', 'atomes', 'Liaisons chimiques.', 'Une molecule dassemblage d ?'),
+  ],
+  SES: [
+    qq('ses-1', 'Le PIB mesure la richesse ... ?', 'produite', 'Sur un territoire.', 'Le PIB mesure la richesse ?'),
+    qq('ses-2', 'Linflation fait ... les prix.', 'monter', 'Hausse generalisee.', 'Linflation fait les prix ?'),
+    qq('ses-3', 'Le marche met en relation offre et ... ?', 'demande', 'Prix d equilibre.', 'Marche : offre et ?'),
+    qq('ses-4', 'Un salaire est une ... ?', 'remuneration', 'Du travail.', 'Un salaire est une ?'),
+    qq('ses-5', 'La sociologie etudie les ... ?', 'societes', 'Groupes humains.', 'La sociologie etudie les ?'),
+    qq('ses-6', 'Le chomage concerne les personnes sans ... ?', 'emploi', 'Cherchant actif un travail.', 'Le chomage : sans ?'),
+    qq('ses-7', 'Une entreprise produit des ... ?', 'biens', 'Ou services.', 'Une entreprise produit des ?'),
+    qq('ses-8', 'Le budget familier liste ... et depenses.', 'ressources', 'Equilibre financier.', 'Budget : ressources et ?'),
+    qq('ses-9', 'La democratie repose sur le suffrage ... ?', 'universel', 'Vote des citoyens.', 'Democratie et suffrage ?'),
+    qq('ses-10', 'Une externality peut etre positive ou ... ?', 'negative', 'Effet sur autrui.', 'Une externalite positive ou ?'),
+    qq('ses-11', 'Le commerce international echange des ... ?', 'marchandises', 'Et services.', 'Le commerce international echange ?'),
+    qq('ses-12', 'La croissance economique augmente souvent le ... ?', 'pib', 'Production.', 'La croissance augmente le ?'),
+  ],
+  Philo: [
+    qq('ph-1', 'Une conscience peut etre ... ?', 'reflechie', 'Activite de pensee.', 'Une conscience peut etre ?'),
+    qq('ph-2', 'La liberte peut etre ... ?', 'contrariee', 'Par des contraintes.', 'La liberte peut etre ?'),
+    qq('ph-3', 'Une verite peut etre ... ?', 'demontree', 'Par raisonnement.', 'Une verite peut etre ?'),
+    qq('ph-4', 'La morale guide la ... ?', 'conduite', 'Actions bonnes ou mauvaises.', 'La morale guide la ?'),
+    qq('ph-5', 'La justice vise le ... ?', 'equilibre', 'Entre droits et devoirs.', 'La justice vise le ?'),
+    qq('ph-6', 'La technique peut transformer la ... ?', 'nature', 'Ou les societes.', 'La technique transforme la ?'),
+    qq('ph-7', 'Raisonner, cest ... ?', 'argumenter', 'Avec premisses et conclusion.', 'Raisonner cest ?'),
+    qq('ph-8', 'Le doute peut etre une ... ?', 'methode', 'Chez Descartes.', 'Le doute peut etre une ?'),
+    qq('ph-9', 'Une loi morale peut etre ... ?', 'universelle', 'Selon Kant.', 'Une loi morale peut etre ?'),
+    qq('ph-10', 'Le bonheur est une ... ?', 'quete', 'Philosophique.', 'Le bonheur est une ?'),
+    qq('ph-11', 'La culture transmet des ... ?', 'valeurs', 'Et savoirs.', 'La culture transmet des ?'),
+    qq('ph-12', 'Philosopher, cest chercher le ... ?', 'sens', 'Des notions.', 'Philosopher : chercher le ?'),
+  ],
+  'Enseignement scientifique': [
+    qq('es2-1', 'Une energie renouvelable : le ... ?', 'solaire', 'Photovoltaique.', 'Energie renouvelable ?'),
+    qq('es2-2', 'Le climat depend des gaz a ... ?', 'effet de serre', 'Retention de chaleur.', 'Le climat et les gaz ?'),
+    qq('es2-3', 'Une mutation genetique peut affecter un ... ?', 'gene', 'Sequence ADN.', 'Une mutation affecte un ?'),
+    qq('es2-4', 'La demarche scientifique commence souvent par une ... ?', 'observation', 'Questions.', 'La demarche commence par ?'),
+    qq('es2-5', 'Une onde transporte de l ... ?', 'energie', 'Sans transport net de matiere.', 'Une onde transporte ?'),
+    qq('es2-6', 'Le numerique traite des ... ?', 'signaux', 'Information.', 'Le numerique traite des ?'),
+    qq('es2-7', 'Une epidemie touche une ... ?', 'population', 'Large echelle.', 'Une epidemie touche une ?'),
+    qq('es2-8', 'La chimie verte limite les ... ?', 'dechets', 'Solvents toxiques.', 'La chimie verte limite ?'),
+    qq('es2-9', 'Une exoplanete tourne autour d une ... ?', 'etoile', 'Autre que le Soleil.', 'Une exoplanete tourne autour d ?'),
+    qq('es2-10', 'La modelisation simplifie la ... ?', 'realite', 'Pour prevoir.', 'La modelisation simplifie ?'),
+    qq('es2-11', 'La biodiversite marine depend des ... ?', 'ecosystemes', 'Recifs...', 'La biodiversite marine depend ?'),
+    qq('es2-12', 'La trace du CO2 est un enjeu ... ?', 'planetaire', 'Climat.', 'Le CO2 est un enjeu ?'),
+  ],
+  'Numerique et sciences informatiques': [
+    qq('nsi-1', 'Un algorithme est une suite ... ?', 'dinstructions', 'Etapes finies.', 'Un algorithme est une suite ?'),
+    qq('nsi-2', 'Une boucle ... des repetitions.', 'automatise', 'While ou for.', 'Une boucle ?'),
+    qq('nsi-3', 'Une fonction renvoie souvent une ... ?', 'valeur', 'Resultat.', 'Une fonction renvoie une ?'),
+    qq('nsi-4', 'Le binaire utilise les chiffres ... ?', '0 et 1', 'Base 2.', 'Le binaire utilise ?'),
+    qq('nsi-5', 'Une liste est une structure ... ?', 'ordonnee', 'Elements indexes.', 'Une liste est ?'),
+    qq('nsi-6', 'Le cryptage protege la ... ?', 'confidentialite', 'Donnees.', 'Le cryptage protege ?'),
+    qq('nsi-7', 'Un programme est ecrit dans un ... ?', 'langage', 'Python...', 'Un programme est dans un ?'),
+    qq('nsi-8', 'Une cle API peut ... ?', 'authentifier', 'Securiser lacces.', 'Une cle API peut ?'),
+    qq('nsi-9', 'Le HTML structure une ... ?', 'page web', 'Balises.', 'Le HTML structure une ?'),
+    qq('nsi-10', 'Big data implique de tres grands ... ?', 'volumes', 'Donnees.', 'Big data : grands ?'),
+    qq('nsi-11', 'Un bug est une ... ?', 'erreur', 'Logicielle.', 'Un bug est une ?'),
+    qq('nsi-12', 'Tester un programme, cest chercher des ... ?', 'defauts', 'Avant livraison.', 'Tester : chercher des ?'),
+  ],
+};
+
+fs.writeFileSync(path.join(root, 'content', 'curriculum.fr.json'), JSON.stringify(curriculum, null, 2), 'utf8');
+fs.writeFileSync(path.join(root, 'content', 'quizBanks.fr.json'), JSON.stringify(quizBanks, null, 2), 'utf8');
+console.log('Wrote curriculum.fr.json and quizBanks.fr.json');

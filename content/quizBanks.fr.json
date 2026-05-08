@@ -1,0 +1,1206 @@
+{
+  "Anglais": [
+    {
+      "key": "en-1",
+      "prompt": "Traduis en anglais : bonjour",
+      "expected": "hello",
+      "explanation": "Hello / Hi sont corrects pour dire bonjour.",
+      "readAloud": "Traduis en anglais : bonjour"
+    },
+    {
+      "key": "en-2",
+      "prompt": "Traduis : merci",
+      "expected": "thank you",
+      "explanation": "Thank you se dit pour remercier.",
+      "readAloud": "Traduis : merci"
+    },
+    {
+      "key": "en-3",
+      "prompt": "Comment dit-on « au revoir » en anglais courant ?",
+      "expected": "goodbye",
+      "explanation": "Goodbye ou Bye sont courants.",
+      "readAloud": "Comment dit-on au revoir en anglais ?"
+    },
+    {
+      "key": "en-4",
+      "prompt": "Quelle couleur en anglais : rouge ?",
+      "expected": "red",
+      "explanation": "Red correspond au rouge.",
+      "readAloud": "Quelle couleur en anglais : rouge ?"
+    },
+    {
+      "key": "en-5",
+      "prompt": "Traduis : un chat",
+      "expected": "a cat",
+      "explanation": "Cat = chat.",
+      "readAloud": "Traduis : un chat"
+    },
+    {
+      "key": "en-6",
+      "prompt": "Traduis : ecole",
+      "expected": "school",
+      "explanation": "School = ecole.",
+      "readAloud": "Traduis : ecole"
+    },
+    {
+      "key": "en-7",
+      "prompt": "Comment dit-on « oui » en anglais ?",
+      "expected": "yes",
+      "explanation": "Yes = oui.",
+      "readAloud": "Comment dit-on oui en anglais ?"
+    },
+    {
+      "key": "en-8",
+      "prompt": "Comment dit-on « non » en anglais ?",
+      "expected": "no",
+      "explanation": "No = non.",
+      "readAloud": "Comment dit-on non en anglais ?"
+    },
+    {
+      "key": "en-9",
+      "prompt": "Traduis : eau",
+      "expected": "water",
+      "explanation": "Water = eau.",
+      "readAloud": "Traduis : eau"
+    },
+    {
+      "key": "en-10",
+      "prompt": "Traduis : livre (objet pour lire)",
+      "expected": "book",
+      "explanation": "Book = livre.",
+      "readAloud": "Traduis : livre"
+    },
+    {
+      "key": "en-11",
+      "prompt": "Quel mot anglais pour « famille » ?",
+      "expected": "family",
+      "explanation": "Family = famille.",
+      "readAloud": "Quel mot anglais pour famille ?"
+    },
+    {
+      "key": "en-12",
+      "prompt": "Traduis : maison",
+      "expected": "house",
+      "explanation": "House = maison.",
+      "readAloud": "Traduis : maison"
+    }
+  ],
+  "EMC": [
+    {
+      "key": "emc-1",
+      "prompt": "Dans la devise « Liberte, egalite, fraternite », que symbolise l'egalite ?",
+      "expected": "memes droits",
+      "explanation": "L'egalite affirme les memes droits pour tous.",
+      "readAloud": "Que symbolise legalite dans la devise ?"
+    },
+    {
+      "key": "emc-2",
+      "prompt": "Qui vote les lois en France ?",
+      "expected": "parlement",
+      "explanation": "Le Parlement vote les lois avec le president de la Republique pour la promulgation.",
+      "readAloud": "Qui vote les lois en France ?"
+    },
+    {
+      "key": "emc-3",
+      "prompt": "A quel age peut-on voter en France ?",
+      "expected": "18 ans",
+      "explanation": "Le droit de vote est a dix-huit ans.",
+      "readAloud": "A quel age peut-on voter en France ?"
+    },
+    {
+      "key": "emc-4",
+      "prompt": "Que signifie respecter la difference des autres ?",
+      "expected": "vivre ensemble",
+      "explanation": "La tolerance favorise le vivre-ensemble.",
+      "readAloud": "Que signifie respecter la difference ?"
+    },
+    {
+      "key": "emc-5",
+      "prompt": "La laicite garantit la neutralite de qui vis-a-vis des religions ?",
+      "expected": "letat",
+      "explanation": "L'Etat est neutre.",
+      "readAloud": "La laicite : neutralite de qui ?"
+    },
+    {
+      "key": "emc-6",
+      "prompt": "Comment appelle-t-on une action pour aider autrui sans payer ?",
+      "expected": "benevolat",
+      "explanation": "Le benevolat est du don de son temps.",
+      "readAloud": "Action pour aider sans etre paye ?"
+    },
+    {
+      "key": "emc-7",
+      "prompt": "Les maires sont elus par qui ?",
+      "expected": "les citoyens",
+      "explanation": "Les citoyens elisent les conseils municipaux.",
+      "readAloud": "Les maires sont elus par qui ?"
+    },
+    {
+      "key": "emc-8",
+      "prompt": "Un stereotype est une idee souvent ... ?",
+      "expected": "trop simple",
+      "explanation": "Les stereotypes simplifient abusivement.",
+      "readAloud": "Un stereotype est une idee souvent ?"
+    },
+    {
+      "key": "emc-9",
+      "prompt": "Que doit-on respecter dans un debat scolaire ?",
+      "expected": "les autres",
+      "explanation": "Ecouter et respecter les tours de parole.",
+      "readAloud": "Que respecter dans un debat ?"
+    },
+    {
+      "key": "emc-10",
+      "prompt": "La Constitution organise les pouvoirs en France : vrai ou faux ?",
+      "expected": "vrai",
+      "explanation": "La Constitution fixe les regles de l Etat.",
+      "readAloud": "La Constitution organise les pouvoirs : vrai ou faux ?"
+    },
+    {
+      "key": "emc-11",
+      "prompt": "Le drapeau europeen compte combien d etoiles ?",
+      "expected": "12",
+      "explanation": "Douze etoiles en cercle.",
+      "readAloud": "Combien d etoiles sur le drapeau europeen ?"
+    },
+    {
+      "key": "emc-12",
+      "prompt": "Le harcelement scolaire doit etre ... ?",
+      "expected": "signale",
+      "explanation": "Il doit etre signale a un adulte de confiance.",
+      "readAloud": "Le harcelement doit etre ?"
+    }
+  ],
+  "Questionner le monde": [
+    {
+      "key": "qm-1",
+      "prompt": "Combien de saisons dans une annee en climat tempere ?",
+      "expected": "4",
+      "explanation": "Printemps, ete, automne, hiver.",
+      "readAloud": "Combien de saisons ?"
+    },
+    {
+      "key": "qm-2",
+      "prompt": "Le Soleil se leve a l ... ?",
+      "expected": "est",
+      "explanation": "Le Soleil se leve a lest en general.",
+      "readAloud": "Le Soleil se leve a l ?"
+    },
+    {
+      "key": "qm-3",
+      "prompt": "Une riviere se jette souvent dans une ... ?",
+      "expected": "mer",
+      "explanation": "Ou dans un ocean.",
+      "readAloud": "Une riviere se jette dans une ?"
+    },
+    {
+      "key": "qm-4",
+      "prompt": "La Terre tourne autour de ... ?",
+      "expected": "soleil",
+      "explanation": "Revolution annuelle.",
+      "readAloud": "La Terre tourne autour de ?"
+    },
+    {
+      "key": "qm-5",
+      "prompt": "Un ecosysteme lie vivants et ... ?",
+      "expected": "milieu",
+      "explanation": "Les etres vivants et leur milieu.",
+      "readAloud": "Un ecosysteme lie vivants et ?"
+    },
+    {
+      "key": "qm-6",
+      "prompt": "Le cycle de leau comporte evaporation et ... ?",
+      "expected": "precipitations",
+      "explanation": "Pluie et neige reviennent au sol.",
+      "readAloud": "Le cycle de leau : evaporation et ?"
+    },
+    {
+      "key": "qm-7",
+      "prompt": "Une carte indique des ... ?",
+      "expected": "lieux",
+      "explanation": "Lieux et legendes.",
+      "readAloud": "Une carte indique des ?"
+    },
+    {
+      "key": "qm-8",
+      "prompt": "Un heritage du passe peut etre un ... ?",
+      "expected": "monument",
+      "explanation": "Monument ou trace materielle.",
+      "readAloud": "Un heritage du passe ?"
+    },
+    {
+      "key": "qm-9",
+      "prompt": "Le present precede le ... ?",
+      "expected": "futur",
+      "explanation": "Ordre du temps.",
+      "readAloud": "Le present precede le ?"
+    },
+    {
+      "key": "qm-10",
+      "prompt": "Une mesure du temps : une ... ?",
+      "expected": "seconde",
+      "explanation": "Seconde, minute, heure...",
+      "readAloud": "Une mesure du temps : une ?"
+    },
+    {
+      "key": "qm-11",
+      "prompt": "Le nord et le sud sont des ... ?",
+      "expected": "directions",
+      "explanation": "Points cardinaux.",
+      "readAloud": "Le nord et le sud sont des ?"
+    },
+    {
+      "key": "qm-12",
+      "prompt": "Une population habite un ... ?",
+      "expected": "territoire",
+      "explanation": "Territoire communal ou national.",
+      "readAloud": "Une population habite un ?"
+    }
+  ],
+  "Arts": [
+    {
+      "key": "ar-1",
+      "prompt": "Les couleurs primaires en peinture soustractif : rouge, jaune et ... ?",
+      "expected": "bleu",
+      "explanation": "Bleu complete les primaires.",
+      "readAloud": "Troisieme couleur primaire ?"
+    },
+    {
+      "key": "ar-2",
+      "prompt": "Un rythme en musique organise les ... ?",
+      "expected": "temps",
+      "explanation": "Temps forts et faibles.",
+      "readAloud": "Le rythme organise les ?"
+    },
+    {
+      "key": "ar-3",
+      "prompt": "La symetrie copie une forme par ... ?",
+      "expected": "miroir",
+      "explanation": "Axe de symetrie.",
+      "readAloud": "La symetrie copie par ?"
+    },
+    {
+      "key": "ar-4",
+      "prompt": "Une sculpture en volume occupe l ... ?",
+      "expected": "espace",
+      "explanation": "Travail en trois dimensions.",
+      "readAloud": "Une sculpture occupe l ?"
+    },
+    {
+      "key": "ar-5",
+      "prompt": "Le contraste oppose clair et ... ?",
+      "expected": "sombre",
+      "explanation": "Clair et sombre.",
+      "readAloud": "Le contraste oppose clair et ?"
+    },
+    {
+      "key": "ar-6",
+      "prompt": "En theatre, le decor situe l ... ?",
+      "expected": "action",
+      "explanation": "Lieu et epoque.",
+      "readAloud": "Le decor situe l ?"
+    },
+    {
+      "key": "ar-7",
+      "prompt": "Une partition note la ... ?",
+      "expected": "musique",
+      "explanation": "Ecriture musicale.",
+      "readAloud": "Une partition note la ?"
+    },
+    {
+      "key": "ar-8",
+      "prompt": "Le mouvement en danse peut etre lent ou ... ?",
+      "expected": "rapide",
+      "explanation": "Variations de tempo.",
+      "readAloud": "Le mouvement peut etre lent ou ?"
+    },
+    {
+      "key": "ar-9",
+      "prompt": "Le dessin au trait utilise souvent un ... ?",
+      "expected": "crayon",
+      "explanation": "Ou une plume numerique.",
+      "readAloud": "Le dessin au trait utilise un ?"
+    },
+    {
+      "key": "ar-10",
+      "prompt": "Une harmonie de couleurs etait douce si elle est ... ?",
+      "expected": "proche",
+      "explanation": "Teintes voisines sur le cercle chromatique.",
+      "readAloud": "Couleurs douces si elles sont ?"
+    },
+    {
+      "key": "ar-11",
+      "prompt": "Le regard du spectateur rencontre l ... ?",
+      "expected": "oeuvre",
+      "explanation": "Relation esthetique.",
+      "readAloud": "Le spectateur rencontre l ?"
+    },
+    {
+      "key": "ar-12",
+      "prompt": "Un motif se ... sur une surface.",
+      "expected": "repete",
+      "explanation": "Motifs ornementaux.",
+      "readAloud": "Un motif se ?"
+    }
+  ],
+  "EPS": [
+    {
+      "key": "ep-1",
+      "prompt": "Avant un effort, on fait souvent un ... ?",
+      "expected": "echauffement",
+      "explanation": "L'echauffement prepare le corps.",
+      "readAloud": "Avant un effort on fait un ?"
+    },
+    {
+      "key": "ep-2",
+      "prompt": "Boire de leau evite la ... ?",
+      "expected": "deshydratation",
+      "explanation": "Hydratation pendant le sport.",
+      "readAloud": "Boire evite la ?"
+    },
+    {
+      "key": "ep-3",
+      "prompt": "Respecter les regles du jeu, cest ... ?",
+      "expected": "fair-play",
+      "explanation": "Ethique sportive.",
+      "readAloud": "Respecter les regles cest ?"
+    },
+    {
+      "key": "ep-4",
+      "prompt": "Le cardio travaille le ... ?",
+      "expected": "coeur",
+      "explanation": "Endurance.",
+      "readAloud": "Le cardio travaille le ?"
+    },
+    {
+      "key": "ep-5",
+      "prompt": "En gymnastique, la souplesse concerne les ... ?",
+      "expected": "muscles",
+      "explanation": "Et les articulations.",
+      "readAloud": "La souplesse concerne les ?"
+    },
+    {
+      "key": "ep-6",
+      "prompt": "Un panier au basketball vaut combien de points ?",
+      "expected": "2",
+      "explanation": "En general deux points.",
+      "readAloud": "Un panier vaut combien de points ?"
+    },
+    {
+      "key": "ep-7",
+      "prompt": "Le football se joue principalement au ... ?",
+      "expected": "pied",
+      "explanation": "Sauf le gardien dans sa zone.",
+      "readAloud": "Le football se joue au ?"
+    },
+    {
+      "key": "ep-8",
+      "prompt": "Cooperer, cest jouer en ... ?",
+      "expected": "equipe",
+      "explanation": "Collectif.",
+      "readAloud": "Cooperer cest jouer en ?"
+    },
+    {
+      "key": "ep-9",
+      "prompt": "Apres leffort, la recuperation inclut le ... ?",
+      "expected": "calme",
+      "explanation": "Retour au calme.",
+      "readAloud": "Apres leffort : le ?"
+    },
+    {
+      "key": "ep-10",
+      "prompt": "Eviter les chocs : on protege sa ... ?",
+      "expected": "tete",
+      "explanation": "Casque si velo par exemple.",
+      "readAloud": "On protege sa ?"
+    },
+    {
+      "key": "ep-11",
+      "prompt": "La posture droite aide la ... ?",
+      "expected": "respiration",
+      "explanation": "Epaules detendues.",
+      "readAloud": "La posture droite aide la ?"
+    },
+    {
+      "key": "ep-12",
+      "prompt": "Les regles de securite du gymnase sont affichees pour etre ... ?",
+      "expected": "connues",
+      "explanation": "Prevenir les accidents.",
+      "readAloud": "Les regles sont affichees pour etre ?"
+    }
+  ],
+  "Sciences": [
+    {
+      "key": "sc-1",
+      "prompt": "Leau peut exister solide, liquide ou ... ?",
+      "expected": "gazeux",
+      "explanation": "Etats de la matiere.",
+      "readAloud": "Leau peut etre solide liquide ou ?"
+    },
+    {
+      "key": "sc-2",
+      "prompt": "Les plantes fabriquent de l oxygene grace a la ... ?",
+      "expected": "photosynthese",
+      "explanation": "Feuilles et lumiere.",
+      "readAloud": "Les plantes et l oxygene ?"
+    },
+    {
+      "key": "sc-3",
+      "prompt": "Un circuit electrique simple contient une pile et une ... ?",
+      "expected": "lampe",
+      "explanation": "Ou autre recepteur.",
+      "readAloud": "Un circuit contient pile et ?"
+    },
+    {
+      "key": "sc-4",
+      "prompt": "La gravite attire les corps vers le ... ?",
+      "expected": "sol",
+      "explanation": "Centre de la Terre.",
+      "readAloud": "La gravite attire vers le ?"
+    },
+    {
+      "key": "sc-5",
+      "prompt": "Un levier pivote autour dun ... ?",
+      "expected": "axe",
+      "explanation": "Point dappui.",
+      "readAloud": "Un levier pivote autour dun ?"
+    },
+    {
+      "key": "sc-6",
+      "prompt": "Les animaux se nourrissent pour avoir de l ... ?",
+      "expected": "energie",
+      "explanation": "Besoins vitaux.",
+      "readAloud": "Les animaux cherchent de l ?"
+    },
+    {
+      "key": "sc-7",
+      "prompt": "Melanger acide et base peut produire une ... ?",
+      "expected": "reaction",
+      "explanation": "Reaction chimique.",
+      "readAloud": "Melanger acide et base : une ?"
+    },
+    {
+      "key": "sc-8",
+      "prompt": "Une ombre se forme si la lumiere est ... ?",
+      "expected": "bloquee",
+      "explanation": "Objet opaque.",
+      "readAloud": "Une ombre si la lumiere est ?"
+    },
+    {
+      "key": "sc-9",
+      "prompt": "Le sons se propage dans l ... ?",
+      "expected": "air",
+      "explanation": "Et autres milieux.",
+      "readAloud": "Le son se propage dans l ?"
+    },
+    {
+      "key": "sc-10",
+      "prompt": "Une roue est une machine ... ?",
+      "expected": "simple",
+      "explanation": "Ou composee.",
+      "readAloud": "Une roue est une machine ?"
+    },
+    {
+      "key": "sc-11",
+      "prompt": "Les fossiles temoignent du ... ?",
+      "expected": "passe",
+      "explanation": "Vie ancienne.",
+      "readAloud": "Les fossiles temoignent du ?"
+    },
+    {
+      "key": "sc-12",
+      "prompt": "Observer avec methode, cest faire une ... ?",
+      "expected": "experience",
+      "explanation": "Protocole simple.",
+      "readAloud": "Observer avec methode : une ?"
+    }
+  ],
+  "Technologie": [
+    {
+      "key": "tech-1",
+      "prompt": "Un objet technique repond a un ... ?",
+      "expected": "besoin",
+      "explanation": "Fonction principale.",
+      "readAloud": "Un objet technique repond a un ?"
+    },
+    {
+      "key": "tech-2",
+      "prompt": "Le numerique stocke des ... ?",
+      "expected": "donnees",
+      "explanation": "Fichiers et informations.",
+      "readAloud": "Le numerique stocke des ?"
+    },
+    {
+      "key": "tech-3",
+      "prompt": "Une maquette sert a ... ?",
+      "expected": "tester",
+      "explanation": "Verifier une idee avant fabrication.",
+      "readAloud": "Une maquette sert a ?"
+    },
+    {
+      "key": "tech-4",
+      "prompt": "La securite sur internet inclut un ... ?",
+      "expected": "mot de passe",
+      "explanation": "Secret robuste.",
+      "readAloud": "La securite inclut un ?"
+    },
+    {
+      "key": "tech-5",
+      "prompt": "Un capteur ... une grandeur physique.",
+      "expected": "mesure",
+      "explanation": "Temperature, distance...",
+      "readAloud": "Un capteur une grandeur ?"
+    },
+    {
+      "key": "tech-6",
+      "prompt": "Pour concevoir, on suit une ... ?",
+      "expected": "demarche",
+      "explanation": "Etapes de projet.",
+      "readAloud": "Pour concevoir on suit une ?"
+    },
+    {
+      "key": "tech-7",
+      "prompt": "Recyclage : transformer des ... ?",
+      "expected": "dechets",
+      "explanation": "Nouvelles matieres.",
+      "readAloud": "Le recyclage transforme des ?"
+    },
+    {
+      "key": "tech-8",
+      "prompt": "Une maquette numerique peut etre un fichier ... ?",
+      "expected": "3d",
+      "explanation": "CAO.",
+      "readAloud": "Une maquette numerique fichier ?"
+    },
+    {
+      "key": "tech-9",
+      "prompt": "Le materiau bois est ... ?",
+      "expected": "naturel",
+      "explanation": "Par rapport au plastique.",
+      "readAloud": "Le bois est ?"
+    },
+    {
+      "key": "tech-10",
+      "prompt": "Ameliorer un objet, cest modifier son ... ?",
+      "expected": "design",
+      "explanation": "Ou ses materiaux.",
+      "readAloud": "Ameliorer : modifier le ?"
+    },
+    {
+      "key": "tech-11",
+      "prompt": "Une notice explique le ... ?",
+      "expected": "usage",
+      "explanation": "Mode demploi.",
+      "readAloud": "Une notice explique le ?"
+    },
+    {
+      "key": "tech-12",
+      "prompt": "Linnovation apporte une ... ?",
+      "expected": "nouveaute",
+      "explanation": "Amelioration ou rupture.",
+      "readAloud": "Linnovation apporte une ?"
+    }
+  ],
+  "Espagnol": [
+    {
+      "key": "es-1",
+      "prompt": "Traduis : hola",
+      "expected": "hola",
+      "explanation": "Hola = bonjour en espagnol.",
+      "readAloud": "Traduis : hola"
+    },
+    {
+      "key": "es-2",
+      "prompt": "Traduis : merci en espagnol",
+      "expected": "gracias",
+      "explanation": "Gracias.",
+      "readAloud": "Merci en espagnol ?"
+    },
+    {
+      "key": "es-3",
+      "prompt": "Traduis : au revoir",
+      "expected": "adios",
+      "explanation": "Adios ou hasta luego.",
+      "readAloud": "Au revoir en espagnol ?"
+    },
+    {
+      "key": "es-4",
+      "prompt": "Traduis : maison",
+      "expected": "casa",
+      "explanation": "Casa.",
+      "readAloud": "Traduis : maison"
+    },
+    {
+      "key": "es-5",
+      "prompt": "Traduis : ecole",
+      "expected": "escuela",
+      "explanation": "Escuela.",
+      "readAloud": "Traduis : ecole"
+    },
+    {
+      "key": "es-6",
+      "prompt": "Comment dit-on oui en espagnol ?",
+      "expected": "si",
+      "explanation": "Si = oui.",
+      "readAloud": "Oui en espagnol ?"
+    },
+    {
+      "key": "es-7",
+      "prompt": "Traduis : eau",
+      "expected": "agua",
+      "explanation": "Agua.",
+      "readAloud": "Traduis : eau"
+    },
+    {
+      "key": "es-8",
+      "prompt": "Traduis : livre",
+      "expected": "libro",
+      "explanation": "Libro.",
+      "readAloud": "Traduis : livro"
+    },
+    {
+      "key": "es-9",
+      "prompt": "Quelle couleur : rojo ?",
+      "expected": "rouge",
+      "explanation": "Rojo = rouge.",
+      "readAloud": "Rojo en francais ?"
+    },
+    {
+      "key": "es-10",
+      "prompt": "Traduis : famille",
+      "expected": "familia",
+      "explanation": "Familia.",
+      "readAloud": "Traduis : famille"
+    },
+    {
+      "key": "es-11",
+      "prompt": "Traduis : ami",
+      "expected": "amigo",
+      "explanation": "Amigo ou amiga.",
+      "readAloud": "Traduis : ami"
+    },
+    {
+      "key": "es-12",
+      "prompt": "Traduis : bonjour le matin",
+      "expected": "buenos dias",
+      "explanation": "Buenos dias.",
+      "readAloud": "Bonjour le matin ?"
+    }
+  ],
+  "SVT": [
+    {
+      "key": "svt-1",
+      "prompt": "La photosynthese produit de l ... ?",
+      "expected": "oxygene",
+      "explanation": "Et du glucose.",
+      "readAloud": "La photosynthese produit ?"
+    },
+    {
+      "key": "svt-2",
+      "prompt": "Les vegetaux sont des organismes ... ?",
+      "expected": "autotrophes",
+      "explanation": "Ils fabriquent leur matiere.",
+      "readAloud": "Les vegetaux sont ?"
+    },
+    {
+      "key": "svt-3",
+      "prompt": "Le coeur pompe le ... ?",
+      "expected": "sang",
+      "explanation": "Circulation.",
+      "readAloud": "Le coeur pompe le ?"
+    },
+    {
+      "key": "svt-4",
+      "prompt": "Les poumons echangent des ... ?",
+      "expected": "gaz",
+      "explanation": "Oxygene et dioxyde de carbone.",
+      "readAloud": "Les poumons echangent des ?"
+    },
+    {
+      "key": "svt-5",
+      "prompt": "Une cellule possede une ... ?",
+      "expected": "membrane",
+      "explanation": "Limite et controle.",
+      "readAloud": "Une cellule possede une ?"
+    },
+    {
+      "key": "svt-6",
+      "prompt": "La biodiversite mesure la variete des ... ?",
+      "expected": "especes",
+      "explanation": "Vivants.",
+      "readAloud": "La biodiversite : variete des ?"
+    },
+    {
+      "key": "svt-7",
+      "prompt": "Les fossiles se forment dans les ... ?",
+      "expected": "roches",
+      "explanation": "Sediments.",
+      "readAloud": "Les fossiles dans les ?"
+    },
+    {
+      "key": "svt-8",
+      "prompt": "Lequilibre d un ecosysteme peut etre perturbe par une ... ?",
+      "expected": "pollution",
+      "explanation": "Ou espece invasive.",
+      "readAloud": "Perturbe par une ?"
+    },
+    {
+      "key": "svt-9",
+      "prompt": "Les mammiferes allaitent leurs ... ?",
+      "expected": "petits",
+      "explanation": "Lait maternel.",
+      "readAloud": "Les mammiferes allaitent leurs ?"
+    },
+    {
+      "key": "svt-10",
+      "prompt": "La mitose multiplie les ... ?",
+      "expected": "cellules",
+      "explanation": "Division.",
+      "readAloud": "La mitose multiplie les ?"
+    },
+    {
+      "key": "svt-11",
+      "prompt": "La fertilisation fusionne deux ... ?",
+      "expected": "gametes",
+      "explanation": "Cellules sexuelles.",
+      "readAloud": "La fertilisation fusionne deux ?"
+    },
+    {
+      "key": "svt-12",
+      "prompt": "Le genome est porte par l ... ?",
+      "expected": "adn",
+      "explanation": "Information hereditaire.",
+      "readAloud": "Le genome est dans l ?"
+    }
+  ],
+  "Physique-Chimie": [
+    {
+      "key": "pc-1",
+      "prompt": "La masse se mesure en ... ?",
+      "expected": "kilogrammes",
+      "explanation": "Unite SI.",
+      "readAloud": "La masse en ?"
+    },
+    {
+      "key": "pc-2",
+      "prompt": "La distance en metre est une unite de ... ?",
+      "expected": "longueur",
+      "explanation": "Grandeur physique.",
+      "readAloud": "Le metre mesure ?"
+    },
+    {
+      "key": "pc-3",
+      "prompt": "Le courant electrique circule dans un ... ?",
+      "expected": "circuit",
+      "explanation": "Fil conducteur.",
+      "readAloud": "Le courant circule dans un ?"
+    },
+    {
+      "key": "pc-4",
+      "prompt": "Leau bout a environ combien de degres Celsius a pression normale ?",
+      "expected": "100",
+      "explanation": "Cent degres.",
+      "readAloud": "Leau bout a combien de degres ?"
+    },
+    {
+      "key": "pc-5",
+      "prompt": "La glace fond quand on chauffe : passage solide vers ... ?",
+      "expected": "liquide",
+      "explanation": "Fusion.",
+      "readAloud": "La glace vers ?"
+    },
+    {
+      "key": "pc-6",
+      "prompt": "Un atome contient noyau et ... ?",
+      "expected": "electrons",
+      "explanation": "Autour du noyau.",
+      "readAloud": "Un atome contient noyau et ?"
+    },
+    {
+      "key": "pc-7",
+      "prompt": "Une reaction chimique transforme des ... ?",
+      "expected": "reactifs",
+      "explanation": "En produits.",
+      "readAloud": "Une reaction transforme des ?"
+    },
+    {
+      "key": "pc-8",
+      "prompt": "La vitesse est distance sur ... ?",
+      "expected": "temps",
+      "explanation": "v = d/t.",
+      "readAloud": "La vitesse est distance sur ?"
+    },
+    {
+      "key": "pc-9",
+      "prompt": "La force se mesure souvent en ... ?",
+      "expected": "newtons",
+      "explanation": "Symbole N.",
+      "readAloud": "La force en ?"
+    },
+    {
+      "key": "pc-10",
+      "prompt": "Un isolant limite la conduction de la ... ?",
+      "expected": "chaleur",
+      "explanation": "Ou electricite.",
+      "readAloud": "Un isolant limite la ?"
+    },
+    {
+      "key": "pc-11",
+      "prompt": "Le pH mesure lacidite ou la ... ?",
+      "expected": "basicite",
+      "explanation": "Echelle acide-base.",
+      "readAloud": "Le pH mesure lacidite ou ?"
+    },
+    {
+      "key": "pc-12",
+      "prompt": "Une molecule est un assemblage d ... ?",
+      "expected": "atomes",
+      "explanation": "Liaisons chimiques.",
+      "readAloud": "Une molecule dassemblage d ?"
+    }
+  ],
+  "SES": [
+    {
+      "key": "ses-1",
+      "prompt": "Le PIB mesure la richesse ... ?",
+      "expected": "produite",
+      "explanation": "Sur un territoire.",
+      "readAloud": "Le PIB mesure la richesse ?"
+    },
+    {
+      "key": "ses-2",
+      "prompt": "Linflation fait ... les prix.",
+      "expected": "monter",
+      "explanation": "Hausse generalisee.",
+      "readAloud": "Linflation fait les prix ?"
+    },
+    {
+      "key": "ses-3",
+      "prompt": "Le marche met en relation offre et ... ?",
+      "expected": "demande",
+      "explanation": "Prix d equilibre.",
+      "readAloud": "Marche : offre et ?"
+    },
+    {
+      "key": "ses-4",
+      "prompt": "Un salaire est une ... ?",
+      "expected": "remuneration",
+      "explanation": "Du travail.",
+      "readAloud": "Un salaire est une ?"
+    },
+    {
+      "key": "ses-5",
+      "prompt": "La sociologie etudie les ... ?",
+      "expected": "societes",
+      "explanation": "Groupes humains.",
+      "readAloud": "La sociologie etudie les ?"
+    },
+    {
+      "key": "ses-6",
+      "prompt": "Le chomage concerne les personnes sans ... ?",
+      "expected": "emploi",
+      "explanation": "Cherchant actif un travail.",
+      "readAloud": "Le chomage : sans ?"
+    },
+    {
+      "key": "ses-7",
+      "prompt": "Une entreprise produit des ... ?",
+      "expected": "biens",
+      "explanation": "Ou services.",
+      "readAloud": "Une entreprise produit des ?"
+    },
+    {
+      "key": "ses-8",
+      "prompt": "Le budget familier liste ... et depenses.",
+      "expected": "ressources",
+      "explanation": "Equilibre financier.",
+      "readAloud": "Budget : ressources et ?"
+    },
+    {
+      "key": "ses-9",
+      "prompt": "La democratie repose sur le suffrage ... ?",
+      "expected": "universel",
+      "explanation": "Vote des citoyens.",
+      "readAloud": "Democratie et suffrage ?"
+    },
+    {
+      "key": "ses-10",
+      "prompt": "Une externality peut etre positive ou ... ?",
+      "expected": "negative",
+      "explanation": "Effet sur autrui.",
+      "readAloud": "Une externalite positive ou ?"
+    },
+    {
+      "key": "ses-11",
+      "prompt": "Le commerce international echange des ... ?",
+      "expected": "marchandises",
+      "explanation": "Et services.",
+      "readAloud": "Le commerce international echange ?"
+    },
+    {
+      "key": "ses-12",
+      "prompt": "La croissance economique augmente souvent le ... ?",
+      "expected": "produit interieur brut",
+      "explanation": "Production.",
+      "readAloud": "La croissance augmente le ?"
+    }
+  ],
+  "Philo": [
+    {
+      "key": "ph-1",
+      "prompt": "Une conscience peut etre ... ?",
+      "expected": "reflechie",
+      "explanation": "Activite de pensee.",
+      "readAloud": "Une conscience peut etre ?"
+    },
+    {
+      "key": "ph-2",
+      "prompt": "La liberte peut etre ... ?",
+      "expected": "contrariee",
+      "explanation": "Par des contraintes.",
+      "readAloud": "La liberte peut etre ?"
+    },
+    {
+      "key": "ph-3",
+      "prompt": "Une verite peut etre ... ?",
+      "expected": "demontree",
+      "explanation": "Par raisonnement.",
+      "readAloud": "Une verite peut etre ?"
+    },
+    {
+      "key": "ph-4",
+      "prompt": "La morale guide la ... ?",
+      "expected": "conduite",
+      "explanation": "Actions bonnes ou mauvaises.",
+      "readAloud": "La morale guide la ?"
+    },
+    {
+      "key": "ph-5",
+      "prompt": "La justice vise le ... ?",
+      "expected": "equilibre",
+      "explanation": "Entre droits et devoirs.",
+      "readAloud": "La justice vise le ?"
+    },
+    {
+      "key": "ph-6",
+      "prompt": "La technique peut transformer la ... ?",
+      "expected": "nature",
+      "explanation": "Ou les societes.",
+      "readAloud": "La technique transforme la ?"
+    },
+    {
+      "key": "ph-7",
+      "prompt": "Raisonner, cest ... ?",
+      "expected": "argumenter",
+      "explanation": "Avec premisses et conclusion.",
+      "readAloud": "Raisonner cest ?"
+    },
+    {
+      "key": "ph-8",
+      "prompt": "Le doute peut etre une ... ?",
+      "expected": "methode",
+      "explanation": "Chez Descartes.",
+      "readAloud": "Le doute peut etre une ?"
+    },
+    {
+      "key": "ph-9",
+      "prompt": "Une loi morale peut etre ... ?",
+      "expected": "universelle",
+      "explanation": "Selon Kant.",
+      "readAloud": "Une loi morale peut etre ?"
+    },
+    {
+      "key": "ph-10",
+      "prompt": "Le bonheur est une ... ?",
+      "expected": "quete",
+      "explanation": "Philosophique.",
+      "readAloud": "Le bonheur est une ?"
+    },
+    {
+      "key": "ph-11",
+      "prompt": "La culture transmet des ... ?",
+      "expected": "valeurs",
+      "explanation": "Et savoirs.",
+      "readAloud": "La culture transmet des ?"
+    },
+    {
+      "key": "ph-12",
+      "prompt": "Philosopher, cest chercher le ... ?",
+      "expected": "sens",
+      "explanation": "Des notions.",
+      "readAloud": "Philosopher : chercher le ?"
+    }
+  ],
+  "Enseignement scientifique": [
+    {
+      "key": "es2-1",
+      "prompt": "Une energie renouvelable : le ... ?",
+      "expected": "solaire",
+      "explanation": "Photovoltaique.",
+      "readAloud": "Energie renouvelable ?"
+    },
+    {
+      "key": "es2-2",
+      "prompt": "Le climat depend des gaz a ... ?",
+      "expected": "effet de serre",
+      "explanation": "Retention de chaleur.",
+      "readAloud": "Le climat et les gaz ?"
+    },
+    {
+      "key": "es2-3",
+      "prompt": "Une mutation genetique peut affecter un ... ?",
+      "expected": "gene",
+      "explanation": "Sequence ADN.",
+      "readAloud": "Une mutation affecte un ?"
+    },
+    {
+      "key": "es2-4",
+      "prompt": "La demarche scientifique commence souvent par une ... ?",
+      "expected": "observation",
+      "explanation": "Questions.",
+      "readAloud": "La demarche commence par ?"
+    },
+    {
+      "key": "es2-5",
+      "prompt": "Une onde transporte de l ... ?",
+      "expected": "energie",
+      "explanation": "Sans transport net de matiere.",
+      "readAloud": "Une onde transporte ?"
+    },
+    {
+      "key": "es2-6",
+      "prompt": "Le numerique traite des ... ?",
+      "expected": "signaux",
+      "explanation": "Information.",
+      "readAloud": "Le numerique traite des ?"
+    },
+    {
+      "key": "es2-7",
+      "prompt": "Une epidemie touche une ... ?",
+      "expected": "population",
+      "explanation": "Large echelle.",
+      "readAloud": "Une epidemie touche une ?"
+    },
+    {
+      "key": "es2-8",
+      "prompt": "La chimie verte limite les ... ?",
+      "expected": "dechets",
+      "explanation": "Solvents toxiques.",
+      "readAloud": "La chimie verte limite ?"
+    },
+    {
+      "key": "es2-9",
+      "prompt": "Une exoplanete tourne autour d une ... ?",
+      "expected": "etoile",
+      "explanation": "Autre que le Soleil.",
+      "readAloud": "Une exoplanete tourne autour d ?"
+    },
+    {
+      "key": "es2-10",
+      "prompt": "La modelisation simplifie la ... ?",
+      "expected": "realite",
+      "explanation": "Pour prevoir.",
+      "readAloud": "La modelisation simplifie ?"
+    },
+    {
+      "key": "es2-11",
+      "prompt": "La biodiversite marine depend des ... ?",
+      "expected": "ecosystemes",
+      "explanation": "Recifs...",
+      "readAloud": "La biodiversite marine depend ?"
+    },
+    {
+      "key": "es2-12",
+      "prompt": "La trace du CO2 est un enjeu ... ?",
+      "expected": "planetaire",
+      "explanation": "Climat.",
+      "readAloud": "Le CO2 est un enjeu ?"
+    }
+  ],
+  "Numerique et sciences informatiques": [
+    {
+      "key": "nsi-1",
+      "prompt": "Un algorithme est une suite ... ?",
+      "expected": "dinstructions",
+      "explanation": "Etapes finies.",
+      "readAloud": "Un algorithme est une suite ?"
+    },
+    {
+      "key": "nsi-2",
+      "prompt": "Une boucle ... des repetitions.",
+      "expected": "automatise",
+      "explanation": "While ou for.",
+      "readAloud": "Une boucle ?"
+    },
+    {
+      "key": "nsi-3",
+      "prompt": "Une fonction renvoie souvent une ... ?",
+      "expected": "valeur",
+      "explanation": "Resultat.",
+      "readAloud": "Une fonction renvoie une ?"
+    },
+    {
+      "key": "nsi-4",
+      "prompt": "Le binaire utilise les chiffres ... ?",
+      "expected": "0 et 1",
+      "explanation": "Base 2.",
+      "readAloud": "Le binaire utilise ?"
+    },
+    {
+      "key": "nsi-5",
+      "prompt": "Une liste est une structure ... ?",
+      "expected": "ordonnee",
+      "explanation": "Elements indexes.",
+      "readAloud": "Une liste est ?"
+    },
+    {
+      "key": "nsi-6",
+      "prompt": "Le cryptage protege la ... ?",
+      "expected": "confidentialite",
+      "explanation": "Donnees.",
+      "readAloud": "Le cryptage protege ?"
+    },
+    {
+      "key": "nsi-7",
+      "prompt": "Un programme est ecrit dans un ... ?",
+      "expected": "langage",
+      "explanation": "Python...",
+      "readAloud": "Un programme est dans un ?"
+    },
+    {
+      "key": "nsi-8",
+      "prompt": "Une cle API peut ... ?",
+      "expected": "authentifier",
+      "explanation": "Securiser lacces.",
+      "readAloud": "Une cle API peut ?"
+    },
+    {
+      "key": "nsi-9",
+      "prompt": "Le HTML structure une ... ?",
+      "expected": "page web",
+      "explanation": "Balises.",
+      "readAloud": "Le HTML structure une ?"
+    },
+    {
+      "key": "nsi-10",
+      "prompt": "Big data implique de tres grands ... ?",
+      "expected": "volumes",
+      "explanation": "Donnees.",
+      "readAloud": "Big data : grands ?"
+    },
+    {
+      "key": "nsi-11",
+      "prompt": "Un bug est une ... ?",
+      "expected": "erreur",
+      "explanation": "Logicielle.",
+      "readAloud": "Un bug est une ?"
+    },
+    {
+      "key": "nsi-12",
+      "prompt": "Tester un programme, cest chercher des ... ?",
+      "expected": "defauts",
+      "explanation": "Avant livraison.",
+      "readAloud": "Tester : chercher des ?"
+    }
+  ]
+}

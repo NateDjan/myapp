@@ -2,15 +2,12 @@
   "metadata": {
     "country": "France",
     "language": "fr",
-    "version": "2026.05",
+    "version": "2026.06",
     "sources": [
       "https://www.education.gouv.fr/programmes-scolaires-41483",
-      "https://eduscol.education.fr/pid38231/cm2.html",
-      "https://eduscol.education.fr/pid38233/6e.html",
-      "https://eduscol.education.fr/cid120461/competences-et-evaluation-histoire-geographie.html",
-      "https://eduscol.education.fr/5733/ressources-d-accompagnement-du-programme-de-francais-au-cycle-4"
+      "https://eduscol.education.fr/"
     ],
-    "notes": "Contenu pedagogique structure et simplifie pour usage applicatif; a valider par enseignants referents avant mise en production."
+    "notes": "Tronc commun par niveau (primaire, college, lycee). Les specialites terminales ne sont pas listees ici ; matieres activables par les parents si absentes de la classe."
   },
   "grades": [
     {
@@ -19,43 +16,126 @@
       "subjects": {
         "Francais": {
           "competencies": [
-            "Decoder des syllabes puis des mots frequents",
-            "Lire a voix haute des phrases courtes de facon intelligible",
-            "Copier sans erreur une phrase simple",
-            "Ecrire des phrases en respectant majuscule et point"
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
           ],
           "microLessons": [
             {
-              "title": "Lecture syllabique rapide",
+              "title": "Module francais",
               "durationMin": 10,
-              "activities": ["lecture guidee", "dictee de mots", "correction immediate"]
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
             }
           ]
         },
         "Maths": {
           "competencies": [
-            "Connaitre les nombres jusqu'a 100",
-            "Additionner et soustraire de petits nombres",
-            "Resoudre des problemes en une etape"
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
           ],
           "microLessons": [
             {
-              "title": "Calcul mental de base",
+              "title": "Module mathematiques",
               "durationMin": 10,
-              "activities": ["flash additions", "comparaison de nombres", "mini probleme"]
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
             }
           ]
         },
-        "Histoire": {
+        "Anglais": {
           "competencies": [
-            "Se reperer dans la journee, la semaine, l'annee",
-            "Identifier des traces du passe proche"
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
           ],
           "microLessons": [
             {
-              "title": "Repere temporel debutant",
-              "durationMin": 8,
-              "activities": ["ordre d'images", "vocabulaire du temps"]
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Questionner le monde": {
+          "competencies": [
+            "Temps et histoire locale",
+            "Espace et territoires",
+            "Nature et technique"
+          ],
+          "microLessons": [
+            {
+              "title": "Questionner le monde",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
             }
           ]
         }
@@ -67,18 +147,127 @@
       "subjects": {
         "Francais": {
           "competencies": [
-            "Lire avec fluidite des textes tres courts",
-            "Identifier verbe, nom et determinant",
-            "Orthographier les mots invariables frequents"
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
           ],
           "microLessons": [
-            { "title": "Dictes flash", "durationMin": 10, "activities": ["ecoute", "ecriture", "reecriture corrigee"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Calculer jusqu'a 100", "Maitriser doubles et moities", "Problemes additifs/soustractifs"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Strategie de calcul", "durationMin": 10, "activities": ["calcul mental", "explication orale", "verification"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
+          "microLessons": [
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Questionner le monde": {
+          "competencies": [
+            "Temps et histoire locale",
+            "Espace et territoires",
+            "Nature et technique"
+          ],
+          "microLessons": [
+            {
+              "title": "Questionner le monde",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -88,15 +277,128 @@
       "cycle": "Cycle 2",
       "subjects": {
         "Francais": {
-          "competencies": ["Lire de courts paragraphes", "Accorder sujet-verbe", "Ponctuer correctement"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Orthographe grammaticale 1", "durationMin": 10, "activities": ["dictee phrase", "explication faute", "repetition espacee"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Tables de multiplication", "Calcul pose simple", "Resolution de problemes courts"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Tables 2-5-10", "durationMin": 10, "activities": ["quiz rapide", "application en probleme"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
+          "microLessons": [
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Questionner le monde": {
+          "competencies": [
+            "Temps et histoire locale",
+            "Espace et territoires",
+            "Nature et technique"
+          ],
+          "microLessons": [
+            {
+              "title": "Questionner le monde",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -106,21 +408,164 @@
       "cycle": "Cycle 3",
       "subjects": {
         "Francais": {
-          "competencies": ["Lire avec fluidite", "Produire un texte court coherent", "Conjuguer present/imparfait/futur"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Conjugaison en contexte", "durationMin": 10, "activities": ["lecture", "transformation de phrases", "dictes ciblees"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Fractions simples", "Calcul decimal", "Problemes a etapes"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Fraction du quotidien", "durationMin": 10, "activities": ["question flash", "probleme concret"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Se reperer dans le temps historique", "Identifier des periodes majeures"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Frise historique", "durationMin": 10, "activities": ["ordonner dates", "associer evenement"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Sciences": {
+          "competencies": [
+            "Matiere et energie",
+            "Vivant et environnement",
+            "Technologie"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences et technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche de projet",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -130,21 +575,164 @@
       "cycle": "Cycle 3",
       "subjects": {
         "Francais": {
-          "competencies": ["Lecture expressive", "Accords dans le groupe nominal", "Enrichir son vocabulaire"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Accords essentiels", "durationMin": 10, "activities": ["repere faute", "correction guidee"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Operations decimales", "Proportionnalite simple", "Problemes multi-etapes"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Problemes en chaine", "durationMin": 10, "activities": ["lecture enonce", "strategie", "resultat"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Reperes de l'histoire de France", "Analyser documents historiques simples"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Repere Revolution", "durationMin": 10, "activities": ["quiz date", "document image"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Sciences": {
+          "competencies": [
+            "Matiere et energie",
+            "Vivant et environnement",
+            "Technologie"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences et technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche de projet",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -154,21 +742,164 @@
       "cycle": "Cycle 3",
       "subjects": {
         "Francais": {
-          "competencies": ["Comprendre texte narratif", "Maitriser les classes grammaticales", "Orthographe lexicale"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Lecture-comprehension", "durationMin": 10, "activities": ["lecture", "question de sens", "dictes courtes"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Nombres decimaux et fractions", "Geometrie de base", "Problemes"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Decimaux et mesure", "durationMin": 10, "activities": ["conversion", "mini-probleme"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Monde antique", "Debuts du monotheisme", "Repere dans l'espace"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Antiquite express", "durationMin": 10, "activities": ["frise", "lexique", "questionnaire"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Sciences": {
+          "competencies": [
+            "Matiere et energie",
+            "Vivant et environnement",
+            "Technologie"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences et technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche de projet",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -178,21 +909,200 @@
       "cycle": "Cycle 4",
       "subjects": {
         "Francais": {
-          "competencies": ["Analyser un texte", "Consolider grammaire de phrase", "Orthographe grammaticale"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Phrase complexe 1", "durationMin": 10, "activities": ["lecture", "transformation", "dictee breve"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Proportionnalite", "Nombres relatifs", "Geometrie"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Relatifs en pratique", "durationMin": 10, "activities": ["calcul rapide", "probleme"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Moyen Age et Temps modernes", "Analyser sources"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Societe medievale", "durationMin": 10, "activities": ["carte mentale", "quiz"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Espagnol": {
+          "competencies": [
+            "Comprendre oral/ecrit",
+            "Interaction",
+            "Culture"
+          ],
+          "microLessons": [
+            {
+              "title": "Espagnol LV2",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "SVT": {
+          "competencies": [
+            "Le vivant",
+            "Terre et environnement",
+            "Corps humain"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences de la vie et de la Terre",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Physique-Chimie": {
+          "competencies": [
+            "Matiere et mouvement",
+            "Energie",
+            "Reaction chimique"
+          ],
+          "microLessons": [
+            {
+              "title": "Physique-Chimie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche de projet",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -202,21 +1112,200 @@
       "cycle": "Cycle 4",
       "subjects": {
         "Francais": {
-          "competencies": ["Argumentation de base", "Conjugaisons complexes", "Accords participes"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Argumenter en 5 lignes", "durationMin": 10, "activities": ["lecture modele", "production courte"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Puissances", "Equation simple", "Statistiques"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Equation minute", "durationMin": 10, "activities": ["3 equations", "verification"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["XVIIIe-XIXe siecles", "Revolutions", "Industrialisation"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Revolution et Empire", "durationMin": 10, "activities": ["frise", "causes-consequences"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Espagnol": {
+          "competencies": [
+            "Comprendre oral/ecrit",
+            "Interaction",
+            "Culture"
+          ],
+          "microLessons": [
+            {
+              "title": "Espagnol LV2",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "SVT": {
+          "competencies": [
+            "Le vivant",
+            "Terre et environnement",
+            "Corps humain"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences de la vie et de la Terre",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Physique-Chimie": {
+          "competencies": [
+            "Matiere et mouvement",
+            "Energie",
+            "Reaction chimique"
+          ],
+          "microLessons": [
+            {
+              "title": "Physique-Chimie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche de projet",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -226,21 +1315,200 @@
       "cycle": "Cycle 4",
       "subjects": {
         "Francais": {
-          "competencies": ["Preparation brevet", "Ecriture argumentee", "Orthographe avancee"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Revision brevet francais", "durationMin": 10, "activities": ["question texte", "reecriture"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Fonctions", "Theoreme de Pythagore", "Probabilites"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Brevet maths express", "durationMin": 10, "activities": ["3 exos types"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["XXe siecle", "Monde contemporain", "Citoyennete"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Histoire contemporaine", "durationMin": 10, "activities": ["quiz chronologique"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Espagnol": {
+          "competencies": [
+            "Comprendre oral/ecrit",
+            "Interaction",
+            "Culture"
+          ],
+          "microLessons": [
+            {
+              "title": "Espagnol LV2",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "SVT": {
+          "competencies": [
+            "Le vivant",
+            "Terre et environnement",
+            "Corps humain"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences de la vie et de la Terre",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Physique-Chimie": {
+          "competencies": [
+            "Matiere et mouvement",
+            "Energie",
+            "Reaction chimique"
+          ],
+          "microLessons": [
+            {
+              "title": "Physique-Chimie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Technologie": {
+          "competencies": [
+            "Objets techniques",
+            "Demarche de projet",
+            "Numerique"
+          ],
+          "microLessons": [
+            {
+              "title": "Technologie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Arts": {
+          "competencies": [
+            "Pratiques artistiques",
+            "Histoire des arts",
+            "Creation"
+          ],
+          "microLessons": [
+            {
+              "title": "Arts et culture",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -250,21 +1518,182 @@
       "cycle": "Lycee",
       "subjects": {
         "Francais": {
-          "competencies": ["Lecture analytique", "Commentaire guide", "Expression ecrite"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Commentaire court", "durationMin": 10, "activities": ["axe de lecture", "preuve textuelle"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Fonctions", "Statistiques", "Probabilites"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Fonctions de reference", "durationMin": 10, "activities": ["lecture graphique", "application"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Europe et monde", "Analyse de documents"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Document historique", "durationMin": 10, "activities": ["identifier", "contextualiser"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Enseignement scientifique": {
+          "competencies": [
+            "Demarche scientifique",
+            "Grands themes",
+            "Liens sciences-societe"
+          ],
+          "microLessons": [
+            {
+              "title": "Enseignement scientifique 2nde",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "SES": {
+          "competencies": [
+            "Economie",
+            "Sociologie",
+            "Organisation"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences economiques et sociales",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Philo": {
+          "competencies": [
+            "Problemique",
+            "Notions",
+            "Argumentation"
+          ],
+          "microLessons": [
+            {
+              "title": "Philosophie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Numerique et sciences informatiques": {
+          "competencies": [
+            "Algorithmique",
+            "Donnees",
+            "Machines"
+          ],
+          "microLessons": [
+            {
+              "title": "NSI",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -274,21 +1703,146 @@
       "cycle": "Lycee",
       "subjects": {
         "Francais": {
-          "competencies": ["Preparation EAF", "Dissertation courte", "Oral de francais"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "EAF micro-entrainement", "durationMin": 10, "activities": ["question grammaire", "mini plan"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Derivation", "Suites", "Probabilites conditionnelles"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Suites essentielles", "durationMin": 10, "activities": ["calcul terme", "sens variation"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Puissances et tensions", "Analyse critique de source"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Geopolitique introductive", "durationMin": 10, "activities": ["notions-clés", "question courte"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "SES": {
+          "competencies": [
+            "Economie",
+            "Sociologie",
+            "Organisation"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences economiques et sociales",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Philo": {
+          "competencies": [
+            "Problemique",
+            "Notions",
+            "Argumentation"
+          ],
+          "microLessons": [
+            {
+              "title": "Philosophie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
@@ -298,21 +1852,146 @@
       "cycle": "Lycee",
       "subjects": {
         "Francais": {
-          "competencies": ["Consolidation expression ecrite et orale", "Lecture approfondie"],
+          "competencies": [
+            "Lire et comprendre",
+            "Ecrire avec precision",
+            "Oral et vocabulaire"
+          ],
           "microLessons": [
-            { "title": "Argumentation avancee", "durationMin": 10, "activities": ["these/antithese", "transition"] }
+            {
+              "title": "Module francais",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
         "Maths": {
-          "competencies": ["Analyse", "Probabilites", "Modelisation"],
+          "competencies": [
+            "Calcul et resolution",
+            "Raisonnement",
+            "Geometrie et mesures"
+          ],
           "microLessons": [
-            { "title": "Bac maths express", "durationMin": 10, "activities": ["2 exercices type bac"] }
+            {
+              "title": "Module mathematiques",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         },
-        "Histoire": {
-          "competencies": ["Monde depuis 1945", "Debat historien", "Geopolitique"],
+        "Anglais": {
+          "competencies": [
+            "Comprendre et produire oral/ecrit",
+            "Vocabulaire et grammaire de base"
+          ],
           "microLessons": [
-            { "title": "Revision bac HGGSP/Histoire", "durationMin": 10, "activities": ["fiches themes", "question argumentee"] }
+            {
+              "title": "Anglais LV1",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EMC": {
+          "competencies": [
+            "Vivre ensemble",
+            "La Republique et la citoyennete",
+            "Libertes et responsabilites"
+          ],
+          "microLessons": [
+            {
+              "title": "EMC",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Histoire-Geo": {
+          "competencies": [
+            "Situer dans le temps",
+            "Situer dans l espace",
+            "Analyser documents"
+          ],
+          "microLessons": [
+            {
+              "title": "Histoire et geographie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "SES": {
+          "competencies": [
+            "Economie",
+            "Sociologie",
+            "Organisation"
+          ],
+          "microLessons": [
+            {
+              "title": "Sciences economiques et sociales",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "EPS": {
+          "competencies": [
+            "Motricite",
+            "Cooperation",
+            "Sante"
+          ],
+          "microLessons": [
+            {
+              "title": "Education physique",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
+          ]
+        },
+        "Philo": {
+          "competencies": [
+            "Problemique",
+            "Notions",
+            "Argumentation"
+          ],
+          "microLessons": [
+            {
+              "title": "Philosophie",
+              "durationMin": 10,
+              "activities": [
+                "micro-exercice",
+                "correction guidee",
+                "bilan rapide"
+              ]
+            }
           ]
         }
       }
