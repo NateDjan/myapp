@@ -5,6 +5,24 @@ export type SubjectLevelState = { tier: number; streak: number };
 export type SubjectTierDisplay = { tier: number; label: string; streak: number };
 export type EvaluationRecord = { done?: boolean; score?: number; at?: string };
 
+export type InterestTheme = {
+  categoryId: string;
+  favoriteId: string;
+  categoryLabel: string;
+  favoriteLabel: string;
+  blurb?: string;
+};
+
+export type InterestOption = { id: string; label: string; blurb?: string };
+
+export type InterestCategory = { id: string; label: string; options: InterestOption[] };
+
+export type InterestCatalogPayload = {
+  version?: string;
+  meta?: { note?: string };
+  categories: InterestCategory[];
+};
+
 export type Child = {
   id: number;
   first_name: string;
@@ -27,6 +45,7 @@ export type Child = {
   xp_total?: number;
   streak_days?: number;
   badges?: string[];
+  interestTheme?: InterestTheme | null;
 };
 
 export type SubjectsMeta = {
@@ -331,6 +350,17 @@ export const api = {
     request<{ grade: string; links: Array<{ subject: string; title: string; url: string }> }>(
       `/api/programs/${childId}${subject ? `?subject=${encodeURIComponent(subject)}` : ""}`,
       {},
+      token
+    ),
+  getInterestCatalog: () => request<InterestCatalogPayload>("/api/interests/catalog"),
+  patchChildInterests: (
+    token: string,
+    childId: number,
+    payload: { categoryId: string; favoriteId: string } | { clear: true }
+  ) =>
+    request<{ ok: boolean; interestTheme: InterestTheme | null; child: Child }>(
+      `/api/children/${childId}/interests`,
+      { method: "PATCH", body: JSON.stringify(payload) },
       token
     ),
 };

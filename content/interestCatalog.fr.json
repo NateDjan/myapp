@@ -1,0 +1,84 @@
+{
+  "version": "2026.05",
+  "meta": {
+    "note": "Listes 'tendances' mises a jour periodiquement par l'equipe — les exercices utilisent ces themes comme decor d'apprentissage."
+  },
+  "categories": [
+    {
+      "id": "gaming",
+      "label": "Jeux video",
+      "options": [
+        { "id": "fortnite", "label": "Fortnite", "blurb": "battle royale tres suivi" },
+        { "id": "minecraft", "label": "Minecraft", "blurb": "construction et aventure" },
+        { "id": "roblox", "label": "Roblox", "blurb": "mini-jeux communautaires" },
+        { "id": "mario-kart", "label": "Mario Kart", "blurb": "course arcade Nintendo" },
+        { "id": "zelda", "label": "Zelda (Tears of the Kingdom)", "blurb": "aventure et exploration" },
+        { "id": "fc25", "label": "EA Sports FC / FIFA", "blurb": "football esport" },
+        { "id": "rocket-league", "label": "Rocket League", "blurb": "foot voitures" },
+        { "id": "valorant", "label": "Valorant", "blurb": "FPS tactique" },
+        { "id": "lol", "label": "League of Legends", "blurb": "MOBA competitif" },
+        { "id": "among-us", "label": "Among Us", "blurb": "deduction sociale" },
+        { "id": "animal-crossing", "label": "Animal Crossing", "blurb": "vie quotidienne relax" },
+        { "id": "brawl-stars", "label": "Brawl Stars", "blurb": "arena mobile" }
+      ]
+    },
+    {
+      "id": "sport",
+      "label": "Sport",
+      "options": [
+        { "id": "football", "label": "Football", "blurb": "clubs et joueurs comme Mbappe ou Giroud" },
+        { "id": "tennis", "label": "Tennis", "blurb": "ATP, Nadal, Alcaraz, Swiatek" },
+        { "id": "basket", "label": "Basketball", "blurb": "NBA, equipes europeennes" },
+        { "id": "rugby", "label": "Rugby", "blurb": "Top 14 et XV de France" },
+        { "id": "natation", "label": "Natation", "blurb": "championnats et nageurs" },
+        { "id": "cyclisme", "label": "Cyclisme", "blurb": "Tour de France, Vingegaard" },
+        { "id": "equitation", "label": "Equitation", "blurb": "CSO et dressage" },
+        { "id": "handball", "label": "Handball", "blurb": "ligue et equipe de France" },
+        { "id": "volley", "label": "Volleyball", "blurb": "championnats et Beach volley" },
+        { "id": "judo", "label": "Judo", "blurb": "ceintures et championnats" },
+        { "id": "ski", "label": "Ski alpin", "blurb": "Coupe du monde, Descente" },
+        { "id": "athletisme", "label": "Athletisme", "blurb": "JO, sprint et haies" }
+      ]
+    },
+    {
+      "id": "music",
+      "label": "Musique",
+      "options": [
+        { "id": "pop-fr", "label": "Pop francophone", "blurb": "hits du moment en France" },
+        { "id": "rap-fr", "label": "Rap / Hip-hop FR", "blurb": "scene francaise actuelle" },
+        { "id": "kpop", "label": "K-pop", "blurb": "groupes et comebacks" },
+        { "id": "rock", "label": "Rock / Indie", "blurb": "concerts et festivals" },
+        { "id": "electro", "label": "Electro / Dance", "blurb": "DJ et festivals" },
+        { "id": "classique", "label": "Musique classique", "blurb": "orchestre et piano" },
+        { "id": "metal", "label": "Metal", "blurb": "groupes internationaux" },
+        { "id": "variete", "label": "Variété internationale", "blurb": "charts mondiaux" }
+      ]
+    },
+    {
+      "id": "cinema",
+      "label": "Cinema et series",
+      "options": [
+        { "id": "marvel", "label": "Univers Marvel / super-heros", "blurb": "films et series MCU" },
+        { "id": "anime", "label": "Anime / manga", "blurb": "sorties et studios" },
+        { "id": "fantasy", "label": "Fantasy et SF", "blurb": "mondes imaginaires" },
+        { "id": "docu", "label": "Documentaires", "blurb": "decouverte du reel" },
+        { "id": "comedie", "label": "Comedie", "blurb": "films et series droles" },
+        { "id": "streaming", "label": "Series en streaming", "blurb": "plateformes et saisons" },
+        { "id": "horreur", "label": "Horreur / thriller", "blurb": "suspense" },
+        { "id": "animation", "label": "Films d'animation", "blurb": "studios et longs-metrages" }
+      ]
+    },
+    {
+      "id": "creativity",
+      "label": "Creation",
+      "options": [
+        { "id": "drawing", "label": "Dessin et BD", "blurb": "croquis et mangas" },
+        { "id": "youtube", "label": "YouTube / creation video", "blurb": "chaines et formats" },
+        { "id": "photo", "label": "Photo et montage", "blurb": "smartphone et logiciels" },
+        { "id": "coding", "label": "Programmation et jeux codes", "blurb": "scratch et python" },
+        { "id": "writing", "label": "Ecriture et fanfiction", "blurb": "histoires et blogs" },
+        { "id": "craft", "label": "Bricolage et DIY", "blurb": "projets creatifs" }
+      ]
+    }
+  ]
+}

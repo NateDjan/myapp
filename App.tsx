@@ -23,6 +23,7 @@ import {
   getResolvedApiBase,
   type Child,
   type GamificationState,
+  type InterestCatalogPayload,
   type ParentNotification,
   type ParentSettings,
   type SubjectsMeta,
@@ -140,12 +141,76 @@ function AppContent() {
   const [curriculumNote, setCurriculumNote] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
+  const [interestCatalog, setInterestCatalog] = useState<InterestCatalogPayload | null>(null);
+  const [interestCatModalOpen, setInterestCatModalOpen] = useState(false);
+  const [interestFavModalOpen, setInterestFavModalOpen] = useState(false);
+  const [interestDraftCategoryId, setInterestDraftCategoryId] = useState("");
+  const [interestDraftFavoriteId, setInterestDraftFavoriteId] = useState("");
+  const [interestSaving, setInterestSaving] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const interestOptionsForCategory = useMemo(() => {
+    if (!interestCatalog || !interestDraftCategoryId) return [];
+    return interestCatalog.categories.find((c) => c.id === interestDraftCategoryId)?.options ?? [];
+  }, [interestCatalog, interestDraftCategoryId]);
 
   const selectedChild = useMemo(
     () => children.find((c) => c.id === selectedChildId) ?? null,
     [children, selectedChildId]
   );
+
+  useEffect(() => {
+    if (role !== "student") return;
+    void api.getInterestCatalog().then(setInterestCatalog).catch(() => setInterestCatalog(null));
+  }, [role]);
+
+  useEffect(() => {
+    if (role !== "student" || !selectedChild) return;
+    const it = selectedChild.interestTheme;
+    if (it?.categoryId && it?.favoriteId) {
+      setInterestDraftCategoryId(it.categoryId);
+      setInterestDraftFavoriteId(it.favoriteId);
+    } else {
+      setInterestDraftCategoryId("");
+      setInterestDraftFavoriteId("");
+    }
+  }, [role, selectedChild?.id, selectedChild?.interestTheme?.favoriteId]);
+
+  const persistStudentInterests = async () => {
+    if (!token || sessionKind !== "student" || !selectedChild) return;
+    if (!interestDraftCategoryId || !interestDraftFavoriteId) {
+      Alert.alert("Choix incomplet", "Choisis un domaine puis une passion dans la deuxieme liste.");
+      return;
+    }
+    setInterestSaving(true);
+    try {
+      const res = await api.patchChildInterests(token, selectedChild.id, {
+        categoryId: interestDraftCategoryId,
+        favoriteId: interestDraftFavoriteId,
+      });
+      setChildren([res.child]);
+      Alert.alert("Enregistre", `Les exercices utiliseront souvent : ${res.interestTheme?.favoriteLabel ?? ""}.`);
+    } catch (e) {
+      Alert.alert("Erreur", String(e));
+    } finally {
+      setInterestSaving(false);
+    }
+  };
+
+  const clearStudentInterests = async () => {
+    if (!token || sessionKind !== "student" || !selectedChild) return;
+    setInterestSaving(true);
+    try {
+      const res = await api.patchChildInterests(token, selectedChild.id, { clear: true });
+      setChildren([res.child]);
+      setInterestDraftCategoryId("");
+      setInterestDraftFavoriteId("");
+    } catch (e) {
+      Alert.alert("Erreur", String(e));
+    } finally {
+      setInterestSaving(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -1248,6 +1313,60 @@ function AppContent() {
           {studentTab === "home" && displayChild && (
             <>
               <View style={[warmStyles.card, warmStyles.cardLift]}>
+                <Text style={warmStyles.sectionTitle}>Tes passions</Text>
+                <Text style={warmStyles.hint}>
+                  Choisis ce que tu aimes : les maths, le francais et les autres matieres replacent souvent les exercices dans ce
+                  decor (jeux video populaires, sports du moment, musique...).
+                </Text>
+                <TouchableOpacity
+                  style={[warmStyles.pill, { marginTop: 10, alignSelf: "stretch" }]}
+                  onPress={() => setInterestCatModalOpen(true)}
+                >
+                  <Text style={{ fontWeight: "800", color: T.ink }}>
+                    1.{" "}
+                    {interestCatalog?.categories.find((c) => c.id === interestDraftCategoryId)?.label ||
+                      "Domaine (jeux video, sport...)"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    warmStyles.pill,
+                    { marginTop: 8, alignSelf: "stretch", opacity: interestDraftCategoryId ? 1 : 0.5 },
+                  ]}
+                  disabled={!interestDraftCategoryId}
+                  onPress={() => interestDraftCategoryId && setInterestFavModalOpen(true)}
+                >
+                  <Text style={{ fontWeight: "800", color: T.ink }}>
+                    2.{" "}
+                    {interestOptionsForCategory.find((o) => o.id === interestDraftFavoriteId)?.label ||
+                      "Ta passion du moment (liste mise a jour)"}
+                  </Text>
+                </TouchableOpacity>
+                {displayChild.interestTheme && (
+                  <Text style={[warmStyles.hint, { marginTop: 10 }]}>
+                    Actif : {displayChild.interestTheme.favoriteLabel}
+                    {displayChild.interestTheme.blurb ? ` — ${displayChild.interestTheme.blurb}` : ""}
+                  </Text>
+                )}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
+                  <TouchableOpacity
+                    style={[warmStyles.btnSun, { opacity: interestSaving ? 0.6 : 1 }]}
+                    onPress={persistStudentInterests}
+                    disabled={interestSaving}
+                  >
+                    <Text style={warmStyles.btnSunText}>{interestSaving ? "..." : "Enregistrer"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[warmStyles.btnOutline, { opacity: interestSaving ? 0.6 : 1 }]}
+                    onPress={clearStudentInterests}
+                    disabled={interestSaving}
+                  >
+                    <Text style={warmStyles.btnOutlineText}>Effacer</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={[warmStyles.card, warmStyles.cardLift]}>
                 <Text style={warmStyles.sectionTitle}>Tes niveaux par matiere</Text>
                 <Text style={warmStyles.hint}>
                   E = essentiel · M = confort · A = avance. Chaque matiere progressse independamment — comme des badges sur une
@@ -1567,6 +1686,61 @@ function AppContent() {
         </ScrollView>
           <StudentBottomNav active={studentTab} onChange={setStudentTab} />
         </View>
+
+        <Modal transparent animationType="fade" visible={interestCatModalOpen} onRequestClose={() => setInterestCatModalOpen(false)}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalSheet}>
+              <Text style={styles.modalTitle}>Choisis ton domaine</Text>
+              <ScrollView style={styles.gradeList} keyboardShouldPersistTaps="handled">
+                {(interestCatalog?.categories ?? []).map((c) => (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={[styles.gradeRow, interestDraftCategoryId === c.id ? styles.gradeRowActive : undefined]}
+                    onPress={() => {
+                      setInterestDraftCategoryId(c.id);
+                      setInterestDraftFavoriteId("");
+                      setInterestCatModalOpen(false);
+                      setInterestFavModalOpen(true);
+                    }}
+                  >
+                    <Text style={styles.gradeRowText}>{c.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setInterestCatModalOpen(false)}>
+                <Text style={styles.btnText}>Fermer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal transparent animationType="fade" visible={interestFavModalOpen} onRequestClose={() => setInterestFavModalOpen(false)}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalSheet}>
+              <Text style={styles.modalTitle}>Ta passion du moment</Text>
+              <ScrollView style={styles.gradeList} keyboardShouldPersistTaps="handled">
+                {interestOptionsForCategory.map((o) => (
+                  <TouchableOpacity
+                    key={o.id}
+                    style={[styles.gradeRow, interestDraftFavoriteId === o.id ? styles.gradeRowActive : undefined]}
+                    onPress={() => {
+                      setInterestDraftFavoriteId(o.id);
+                      setInterestFavModalOpen(false);
+                    }}
+                  >
+                    <Text style={styles.gradeRowText}>{o.label}</Text>
+                    {!!o.blurb && (
+                      <Text style={[styles.subtitle, { marginTop: 2 }]}>{o.blurb}</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setInterestFavModalOpen(false)}>
+                <Text style={styles.btnText}>Fermer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeInsetView>
     );
   }
