@@ -8,6 +8,7 @@ const path = require('node:path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { buildFrenchEvaluationQuestions } = require('./frenchEval');
+const { buildGenericEvaluationQuestions, generateQuizFromBank, hasQuizBank } = require('./genericQuiz');
 
 const curriculum = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'content', 'curriculum.fr.json'), 'utf8')
@@ -141,19 +142,31 @@ function defaultSubjectLevelsFromLegacy(child) {
   const fr = Number(child.reading_level) || 1;
   const ma = Number(child.math_level) || 1;
   const hi = Number(child.history_level) || 1;
-  return {
+  const base = {
     Francais: { tier: Math.min(3, Math.max(1, fr)), streak: 0 },
     Maths: { tier: Math.min(3, Math.max(1, ma)), streak: 0 },
     Histoire: { tier: Math.min(3, Math.max(1, hi)), streak: 0 },
   };
+  for (const sub of gradeSubjectsFromCurriculum(child.grade)) {
+    if (!base[sub]) base[sub] = { tier: 1, streak: 0 };
+  }
+  return base;
 }
 
 function mergeChildSubjectState(child) {
+  const defaults = defaultSubjectLevelsFromLegacy(child);
   let levels = safeJson(child.subject_levels_json, null);
   if (!levels || Object.keys(levels).length === 0) {
-    levels = defaultSubjectLevelsFromLegacy(child);
+    levels = { ...defaults };
+  } else {
+    levels = { ...defaults, ...levels };
   }
-  for (const sub of ['Francais', 'Maths', 'Histoire']) {
+  const names = new Set([
+    ...Object.keys(defaults),
+    ...gradeSubjectsFromCurriculum(child.grade),
+    ...Object.keys(levels),
+  ]);
+  for (const sub of names) {
     if (!levels[sub]) levels[sub] = { tier: 1, streak: 0 };
     if (typeof levels[sub].tier !== 'number') levels[sub].tier = 1;
     if (typeof levels[sub].streak !== 'number') levels[sub].streak = 0;
@@ -231,6 +244,12 @@ function scoreFrenchWrittenAnswer(expected, answer) {
   const n = Math.min(a.length, e.length);
   for (let i = 0; i < n; i += 1) if (a[i] === e[i]) same += 1;
   return Math.max(0, Math.round((same / Math.max(e.length, 1)) * 100));
+}
+
+function normalizeQuizText(s) {
+  return stripLightPunctuation(foldAccents(String(s || '').toLowerCase()))
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function gradeBand(grade) {
@@ -338,10 +357,33 @@ function generateHistoryQuestion(grade, tier) {
   return { prompt: q.prompt, expected: q.expected, type: 'history' };
 }
 
+function isHistorySubject(subject) {
+  return subject === 'Histoire' || subject === 'Histoire-Geo';
+}
+
 function generateSubjectQuestion(child, subject, tier) {
   if (subject === 'Francais') return generateFrenchDictationQuestion(tier);
   if (subject === 'Maths') return generateMathQuestion(child.grade, tier);
+  if (isHistorySubject(subject)) return generateHistoryQuestion(child.grade, tier);
+  if (hasQuizBank(subject)) return generateQuizFromBank(subject, randomInt);
   return generateHistoryQuestion(child.grade, tier);
+}
+
+/** Jeu de questions pour une evaluation (8 items). */
+function buildEvaluationQuestionSet(child, subject, tier) {
+  if (subject === 'Francais') {
+    return buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier });
+  }
+  if (isHistorySubject(subject)) {
+    return Array.from({ length: 8 }).map(() => {
+      const q = generateHistoryQuestion(child.grade, tier);
+      return { ...q, readAloudText: q.prompt, explanation: '', contentKey: `h-${q.prompt?.slice(0, 24)}` };
+    });
+  }
+  if (subject === 'Maths') {
+    return Array.from({ length: 8 }).map(() => generateMathQuestion(child.grade, tier));
+  }
+  return buildGenericEvaluationQuestions(subject, { randomInt });
 }
 
 const AVATARS = ['fox', 'owl', 'lion', 'dolphin', 'cat', 'rocket'];
@@ -426,7 +468,7 @@ function applySubjectProgressAfterScore(db, childId, subject, score) {
     getSubjectTier(levels, 'Francais'),
     getSubjectTier(levels, 'Francais'),
     getSubjectTier(levels, 'Maths'),
-    getSubjectTier(levels, 'Histoire'),
+    Math.max(getSubjectTier(levels, 'Histoire'), getSubjectTier(levels, 'Histoire-Geo')),
     childId
   );
 }
@@ -1125,10 +1167,7 @@ function createApp(db) {
       const merged = mergeChildSubjectState(child);
       const tier = getSubjectTier(merged.levels, subject);
       const count = 8;
-      const questions =
-        subject === 'Francais'
-          ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
-          : Array.from({ length: count }).map(() => generateSubjectQuestion(child, subject, tier));
+      const questions = buildEvaluationQuestionSet(child, subject, tier);
       const row = db
         .prepare(
           'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
@@ -1151,10 +1190,7 @@ function createApp(db) {
     const { levels } = mergeChildSubjectState(child);
     const tier = getSubjectTier(levels, subject);
     const total = 8;
-    const questions =
-      subject === 'Francais'
-        ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
-        : Array.from({ length: total }).map(() => generateSubjectQuestion(child, subject, tier));
+    const questions = buildEvaluationQuestionSet(child, subject, tier);
     const created = db
       .prepare(
         'INSERT INTO evaluation_sessions (child_id, parent_id, subject, questions_json, current_index, correct_count, total_count, status, created_at, updated_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)'
@@ -1223,8 +1259,8 @@ function createApp(db) {
 
     const answer = String(parsed.data.answer || '').trim();
     let score;
-    if (q.type === 'math' || q.type === 'history') {
-      score = String(q.expected).trim().toLowerCase() === answer.toLowerCase().trim() ? 100 : 0;
+    if (q.type === 'math' || q.type === 'history' || q.type === 'quiz') {
+      score = normalizeQuizText(q.expected) === normalizeQuizText(answer) ? 100 : 0;
     } else if (String(q.type || '').startsWith('french-')) {
       score = scoreFrenchWrittenAnswer(q.expected, answer);
     } else {
@@ -1264,12 +1300,12 @@ function createApp(db) {
       getSubjectTier(levels, 'Francais'),
       getSubjectTier(levels, 'Francais'),
       getSubjectTier(levels, 'Maths'),
-      getSubjectTier(levels, 'Histoire'),
+      Math.max(getSubjectTier(levels, 'Histoire'), getSubjectTier(levels, 'Histoire-Geo')),
       sess.child_id
     );
     db.prepare('INSERT INTO activity_log (child_id, activity_type, score, points_delta, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
       sess.child_id,
-      `evaluation_${sess.subject}`,
+      `evaluation_${sess.subject.replace(/\s+/g, '_')}`,
       finalScore,
       0,
       JSON.stringify({ sessionId }),
@@ -1336,7 +1372,11 @@ function createApp(db) {
             .prepare(
               "SELECT COUNT(*) as c FROM activity_log WHERE child_id = ? AND date(created_at)=date('now') AND (activity_type LIKE ? OR activity_type = ?)"
             )
-            .get(child.id, `%${weakestSubject}%`, weakestSubject === 'Francais' ? 'dictation' : `quiz_${weakestSubject}`).c > 0,
+            .get(
+              child.id,
+              `%${weakestSubject.replace(/\s+/g, '_')}%`,
+              weakestSubject === 'Francais' ? 'dictation' : `quiz_${weakestSubject.replace(/\s+/g, '_')}`
+            ).c > 0,
       },
       {
         id: 'weekly-streak',
@@ -1425,15 +1465,14 @@ function createApp(db) {
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
     const subj = parsed.data.subject || 'Francais';
-    const a = parsed.data.answer.trim().toLowerCase();
-    const e = parsed.data.expected.trim().toLowerCase();
     let score = 0;
-    if (subj === 'Maths' || subj === 'Histoire') {
-      score = e === a.trim().toLowerCase() ? 100 : scoreWrittenAnswer(parsed.data.expected, parsed.data.answer);
+    if (subj === 'Francais') {
+      score = scoreFrenchWrittenAnswer(parsed.data.expected, parsed.data.answer);
     } else {
-      let same = 0;
-      for (let i = 0; i < Math.min(a.length, e.length); i += 1) if (a[i] === e[i]) same += 1;
-      score = Math.max(0, Math.round((same / e.length) * 100));
+      score =
+        normalizeQuizText(parsed.data.expected) === normalizeQuizText(parsed.data.answer)
+          ? 100
+          : scoreWrittenAnswer(parsed.data.expected, parsed.data.answer);
     }
     const points = score > 80 ? 20 : 10;
 
@@ -1443,7 +1482,7 @@ function createApp(db) {
     const gamification = grantGamificationProgress(db, childId, { subject: subj, score });
     db.prepare('INSERT INTO activity_log (child_id, activity_type, score, points_delta, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
       childId,
-      subj === 'Francais' ? 'dictation' : `quiz_${subj}`,
+      subj === 'Francais' ? 'dictation' : `quiz_${subj.replace(/\s+/g, '_')}`,
       score,
       points,
       JSON.stringify({ expected: parsed.data.expected, subject: subj }),
@@ -1467,7 +1506,12 @@ function createApp(db) {
       xpGain: gamification.xpGain,
       streakDays: gamification.streakDays,
       badges: gamification.badges,
-      feedback: score === 100 ? 'Bravo, tout juste !' : `Score ${score}/100 — encore un petit effort !`,
+      feedback:
+        score === 100
+          ? 'Bravo, tout juste !'
+          : subj === 'Francais'
+            ? `Correction : la phrase attendue etait : « ${parsed.data.expected} ». Score ${score}/100. Verifie accents et orthographe.`
+            : `Correction : la bonne reponse etait : « ${parsed.data.expected} ». Score ${score}/100.`,
     });
   });
 
