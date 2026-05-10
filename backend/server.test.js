@@ -207,3 +207,49 @@ test('security endpoint returns session and audit info', async () => {
   assert.ok(security.body.recentEvents.length >= 1);
   cleanupDb(db, dbPath);
 });
+
+test('interest catalog and saving passions', async () => {
+  const { app, db, dbPath } = buildTestApp();
+
+  await request(app)
+    .post('/api/parents/register')
+    .send({ name: 'Parent', email: 'interest@test.local', password: 'password123' });
+
+  const login = await request(app)
+    .post('/api/parents/login')
+    .send({ email: 'interest@test.local', password: 'password123' });
+  assert.equal(login.status, 200);
+  const token = login.body.token;
+
+  const catalog = await request(app).get('/api/interests/catalog');
+  assert.equal(catalog.status, 200);
+  assert.ok(Array.isArray(catalog.body.categories));
+  assert.ok(catalog.body.categories.length >= 1);
+
+  const child = await request(app)
+    .post('/api/parents/children')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      firstName: 'Lee',
+      grade: '6e',
+      age: 11,
+      strengths: '',
+      weaknesses: '',
+      studentLogin: 'lee_6e',
+      studentPassword: 'kidsecret1',
+    });
+  assert.equal(child.status, 201);
+
+  const patch = await request(app)
+    .patch(`/api/children/${child.body.childId}/interests`)
+    .set('Authorization', `Bearer ${token}`)
+    .send({ categoryId: 'gaming', favoriteId: 'minecraft' });
+  assert.equal(patch.status, 200);
+  assert.equal(patch.body.interestTheme?.favoriteLabel, 'Minecraft');
+
+  const kids = await request(app).get('/api/parents/children').set('Authorization', `Bearer ${token}`);
+  assert.equal(kids.status, 200);
+  assert.equal(kids.body[0].interestTheme?.favoriteId, 'minecraft');
+
+  cleanupDb(db, dbPath);
+});

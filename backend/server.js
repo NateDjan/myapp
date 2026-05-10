@@ -8,6 +8,12 @@ const path = require('node:path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { buildFrenchEvaluationQuestions } = require('./frenchEval');
+const {
+  loadCatalog,
+  validateAndPackTheme,
+  applyInterestToQuestion,
+  applyInterestToQuestions,
+} = require('./interestTheme');
 
 const curriculum = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'content', 'curriculum.fr.json'), 'utf8')
@@ -107,6 +113,16 @@ function migrateEngagementTracking(db) {
     if (!cNames.has('badges_json')) db.exec("ALTER TABLE children ADD COLUMN badges_json TEXT NOT NULL DEFAULT '[]'");
   } catch (e) {
     log('error', 'migration_engagement_tracking_failed', { error: String(e) });
+  }
+}
+
+function migrateInterestTheme(db) {
+  try {
+    const childCols = db.prepare("PRAGMA table_info('children')").all();
+    const cNames = new Set(childCols.map((c) => c.name));
+    if (!cNames.has('interest_theme_json')) db.exec('ALTER TABLE children ADD COLUMN interest_theme_json TEXT');
+  } catch (e) {
+    log('error', 'migration_interest_theme_failed', { error: String(e) });
   }
 }
 
@@ -244,45 +260,47 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateMathQuestion(grade, tier) {
+function generateMathQuestion(grade, tier, child) {
   const band = gradeBand(grade);
+  let q;
   if (band === 'cycle2') {
     const max = tier === 1 ? 20 : tier === 2 ? 100 : 200;
     const a = randomInt(1, max);
     const b = randomInt(1, max);
     const op = tier === 1 ? '+' : ['+', '-', '+'][randomInt(0, 2)];
     const expected = op === '+' ? String(a + b) : String(a - b);
-    return { prompt: `Calcule: ${a} ${op} ${b}`, expected, type: 'math' };
-  }
-  if (band === 'cycle3') {
+    q = { prompt: `Calcule: ${a} ${op} ${b}`, expected, type: 'math' };
+  } else if (band === 'cycle3') {
     const op = ['+', '-', 'x'][randomInt(0, 2)];
     if (op === 'x') {
       const a = randomInt(2, tier === 1 ? 9 : 12);
       const b = randomInt(2, tier === 1 ? 9 : 12);
-      return { prompt: `Calcule: ${a} x ${b}`, expected: String(a * b), type: 'math' };
+      q = { prompt: `Calcule: ${a} x ${b}`, expected: String(a * b), type: 'math' };
+    } else {
+      const a = randomInt(20, tier === 1 ? 120 : 300);
+      const b = randomInt(10, tier === 1 ? 90 : 200);
+      q = { prompt: `Calcule: ${a} ${op} ${b}`, expected: String(op === '+' ? a + b : a - b), type: 'math' };
     }
-    const a = randomInt(20, tier === 1 ? 120 : 300);
-    const b = randomInt(10, tier === 1 ? 90 : 200);
-    return { prompt: `Calcule: ${a} ${op} ${b}`, expected: String(op === '+' ? a + b : a - b), type: 'math' };
-  }
-  if (band === 'cycle4') {
+  } else if (band === 'cycle4') {
     const a = randomInt(2, 20);
     const b = randomInt(2, 20);
     const c = randomInt(1, 15);
-    return {
+    q = {
       prompt: `Calcule: (${a} x ${b}) - ${c}`,
       expected: String(a * b - c),
       type: 'math',
     };
+  } else {
+    const a = randomInt(1, 12);
+    const b = randomInt(1, 12);
+    const c = randomInt(1, 8);
+    q = {
+      prompt: `Calcule: (${a}² + ${b}²) - ${c}`,
+      expected: String(a * a + b * b - c),
+      type: 'math',
+    };
   }
-  const a = randomInt(1, 12);
-  const b = randomInt(1, 12);
-  const c = randomInt(1, 8);
-  return {
-    prompt: `Calcule: (${a}² + ${b}²) - ${c}`,
-    expected: String(a * a + b * b - c),
-    type: 'math',
-  };
+  return child ? applyInterestToQuestion(q, child) : q;
 }
 
 function generateFrenchDictationQuestion(tier) {
@@ -339,9 +357,13 @@ function generateHistoryQuestion(grade, tier) {
 }
 
 function generateSubjectQuestion(child, subject, tier) {
-  if (subject === 'Francais') return generateFrenchDictationQuestion(tier);
-  if (subject === 'Maths') return generateMathQuestion(child.grade, tier);
-  return generateHistoryQuestion(child.grade, tier);
+  let q;
+  if (subject === 'Francais') q = generateFrenchDictationQuestion(tier);
+  else if (subject === 'Maths') q = generateMathQuestion(child.grade, tier, child);
+  else q = applyInterestToQuestion(generateHistoryQuestion(child.grade, tier), child);
+  if (subject === 'Francais') return applyInterestToQuestion(q, child);
+  if (subject === 'Maths') return q;
+  return q;
 }
 
 const AVATARS = ['fox', 'owl', 'lion', 'dolphin', 'cat', 'rocket'];
@@ -433,7 +455,15 @@ function applySubjectProgressAfterScore(db, childId, subject, score) {
 
 function sanitizeChildRow(row) {
   if (!row) return row;
-  const { student_password: _pw, subject_levels_json: _sl, evaluation_by_subject_json: _ev, optional_subjects_json: _os, badges_json: _badges, ...rest } = row;
+  const {
+    student_password: _pw,
+    subject_levels_json: _sl,
+    evaluation_by_subject_json: _ev,
+    optional_subjects_json: _os,
+    badges_json: _badges,
+    interest_theme_json: _it,
+    ...rest
+  } = row;
   const merged = mergeChildSubjectState(row);
   const tierLabel = (t) => (t >= 3 ? 'A' : t >= 2 ? 'M' : 'E');
   const tiersDisplay = {};
@@ -447,6 +477,7 @@ function sanitizeChildRow(row) {
     evaluationBySubject: merged.evals,
     optionalSubjectsEnabled: merged.optionalEnabled,
     badges: safeJson(row.badges_json, []),
+    interestTheme: safeJson(row.interest_theme_json, null),
   };
 }
 
@@ -607,6 +638,7 @@ function setupDb(db) {
   migrateSubjectTracking(db);
   migrateParentAndRewardTracking(db);
   migrateEngagementTracking(db);
+  migrateInterestTheme(db);
 
   // Legacy migration: early versions used auth_tokens(token,parent_id,created_at)
   // without expiry/revocation fields. Normalize to the current schema.
@@ -1127,7 +1159,10 @@ function createApp(db) {
       const count = 8;
       const questions =
         subject === 'Francais'
-          ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
+          ? applyInterestToQuestions(
+              buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier }),
+              child
+            )
           : Array.from({ length: count }).map(() => generateSubjectQuestion(child, subject, tier));
       const row = db
         .prepare(
@@ -1153,7 +1188,10 @@ function createApp(db) {
     const total = 8;
     const questions =
       subject === 'Francais'
-        ? buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier })
+        ? applyInterestToQuestions(
+            buildFrenchEvaluationQuestions(child, { gradeBand, randomInt, mergeChildSubjectState, getSubjectTier }),
+            child
+          )
         : Array.from({ length: total }).map(() => generateSubjectQuestion(child, subject, tier));
     const created = db
       .prepare(
@@ -1181,7 +1219,9 @@ function createApp(db) {
     if (!q) return res.status(400).json({ error: 'Question introuvable' });
     const prompt =
       q.type === 'french-dictation'
-        ? 'Ecris la phrase dictee (audio uniquement).'
+        ? q.prompt && String(q.prompt).trim().length > 0
+          ? q.prompt
+          : 'Ecris la phrase dictee (audio uniquement).'
         : q.type === 'french-reading'
           ? q.prompt
           : q.type === 'french-grammar'
@@ -1368,6 +1408,33 @@ function createApp(db) {
     return res.json({ ok: true, avatarId: parsed.data.avatarId });
   });
 
+  app.get('/api/interests/catalog', (_req, res) => {
+    res.json(loadCatalog());
+  });
+
+  app.patch('/api/children/:childId/interests', auth, (req, res) => {
+    const childId = Number(req.params.childId);
+    const child = getAuthorizedChild(req, childId);
+    if (!child) return res.status(404).json({ error: 'Child not found' });
+
+    if (req.body && req.body.clear === true) {
+      db.prepare('UPDATE children SET interest_theme_json = NULL WHERE id = ?').run(childId);
+      const row = db.prepare('SELECT * FROM children WHERE id = ?').get(childId);
+      return res.json({ ok: true, interestTheme: null, child: sanitizeChildRow(row) });
+    }
+
+    const schema = z.object({ categoryId: z.string().min(1), favoriteId: z.string().min(1) });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+    const packed = validateAndPackTheme(parsed.data.categoryId, parsed.data.favoriteId);
+    if (!packed.ok) return res.status(400).json({ error: packed.error });
+
+    db.prepare('UPDATE children SET interest_theme_json = ? WHERE id = ?').run(JSON.stringify(packed.theme), childId);
+    const row = db.prepare('SELECT * FROM children WHERE id = ?').get(childId);
+    res.json({ ok: true, interestTheme: packed.theme, child: sanitizeChildRow(row) });
+  });
+
   app.patch('/api/parents/children/:childId/optional-subjects', auth, requireParent, (req, res) => {
     const childId = Number(req.params.childId);
     const schema = z.object({ subjects: z.array(z.string()) });
@@ -1391,16 +1458,40 @@ function createApp(db) {
     const { levels } = mergeChildSubjectState(child);
     const level = getSubjectTier(levels, subject);
 
-    const lesson =
+    let lesson =
       subject === 'Francais'
         ? db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? AND level = ? LIMIT 1').get('Francais', 'lecture', level) ||
           db.prepare('SELECT * FROM phrase_bank WHERE subject = ? LIMIT 1').get('Francais')
         : generateSubjectQuestion(child, subject, level);
+    if (subject === 'Francais' && lesson) {
+      const w = applyInterestToQuestion(
+        {
+          type: 'french-reading',
+          prompt: String(lesson.prompt || ''),
+          expected: String(lesson.expected || ''),
+          readAloudText: String(lesson.prompt || ''),
+        },
+        child
+      );
+      lesson = { ...lesson, prompt: w.prompt, readAloudText: w.readAloudText };
+    }
     const spellingT = getSubjectTier(levels, 'Francais');
-    const dictation =
+    let dictation =
       subject === 'Francais'
         ? db.prepare('SELECT * FROM phrase_bank WHERE subject = ? AND mode = ? AND level = ? LIMIT 1').get('Francais', 'dictee', spellingT)
         : { prompt: lesson.prompt, expected: lesson.expected };
+    if (subject === 'Francais' && dictation && dictation.expected) {
+      const w = applyInterestToQuestion(
+        {
+          type: 'french-dictation',
+          prompt: String(dictation.prompt || ''),
+          expected: String(dictation.expected || ''),
+          readAloudText: String(dictation.expected || ''),
+        },
+        child
+      );
+      dictation = { ...dictation, prompt: w.prompt, expected: dictation.expected, readAloudText: w.readAloudText };
+    }
 
     const review = db
       .prepare(
