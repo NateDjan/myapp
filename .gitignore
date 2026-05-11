@@ -1,3 +1,6 @@
+game/.godot/
+game/**/*.import
+
 node_modules/
 .expo/
 .expo-shared/
