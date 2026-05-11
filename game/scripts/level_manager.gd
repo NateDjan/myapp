@@ -1,9 +1,10 @@
 extends Node
-## Bubble Bobble–style rounds: clear every monster on screen; difficulty ramps.
+## Hommage « cage à bulles » : vides tout l’écran ; vies comme à l’arcade.
 
 signal level_cleared(level: int, rank: String, score: int)
 signal game_over(final_score: int)
 signal kills_updated(done: int, target: int)
+signal lives_changed(lives: int)
 
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 const POWERUP_SCENE := preload("res://scenes/powerup.tscn")
@@ -20,6 +21,9 @@ var difficulty: float = 1.0
 var active: bool = false
 var level_elapsed: float = 0.0
 var _hurt_cd: float = 0.0
+var lives: int = 3
+const RESPAWN := Vector2(360, 965)
+const PLAYER_HURT_RADIUS := 18.0
 
 @onready var enemies_holder: Node2D = $"../Enemies"
 @onready var bubbles_holder: Node2D = $"../Bubbles"
@@ -47,6 +51,8 @@ func start_run() -> void:
 	difficulty = 1.0
 	kills_done = 0
 	level_elapsed = 0.0
+	lives = 3
+	lives_changed.emit(lives)
 	if ComboManager:
 		ComboManager.reset_run()
 	_plan_wave()
@@ -72,8 +78,7 @@ func _update_slow_motion() -> void:
 
 
 func _wave_enemy_count() -> int:
-	## Few more monsters each round — capped like arcade cabinets.
-	return clampi(3 + level_index, 4, 14)
+	return clampi(2 + level_index, 3, 12)
 
 
 func _plan_wave() -> void:
@@ -221,14 +226,30 @@ func _juice_at(p: Vector2, points_earned: int) -> void:
 func _check_player_hit() -> void:
 	if _hurt_cd > 0.0:
 		return
+	if player.has_method("is_damage_invulnerable") and player.is_damage_invulnerable():
+		return
 	for e in enemies_holder.get_children():
 		if not e.is_in_group("enemies"):
 			continue
 		if int(e.get("state")) == ENEMY_STATE_BUBBLED:
 			continue
-		if player.global_position.distance_to(e.global_position) < 26.0:
-			_trigger_game_over()
+		if player.global_position.distance_to(e.global_position) < PLAYER_HURT_RADIUS:
+			_player_hit()
 			return
+
+
+func _player_hit() -> void:
+	lives -= 1
+	lives_changed.emit(lives)
+	if is_instance_valid(player):
+		player.set("iframes_sec", 3.2)
+		player.global_position = RESPAWN
+		player.velocity = Vector2.ZERO
+	_hurt_cd = 2.8
+	if ArcadeSfx:
+		ArcadeSfx.play_hurt()
+	if lives <= 0:
+		_trigger_game_over()
 
 
 func _trigger_game_over() -> void:

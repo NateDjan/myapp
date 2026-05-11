@@ -30,6 +30,8 @@ func _ready() -> void:
 		level_manager.level_cleared.connect(_on_level_cleared)
 		level_manager.game_over.connect(_on_game_over)
 		level_manager.kills_updated.connect(_on_kills)
+		if level_manager.has_signal("lives_changed"):
+			level_manager.lives_changed.connect(_on_lives)
 	_connect_title_buttons()
 	_connect_rank_buttons()
 	_connect_go_buttons()
@@ -152,6 +154,15 @@ func _on_combo(mult: int, streak: int) -> void:
 
 func _on_kills(done: int, target: int) -> void:
 	hud_layer.get_node("MarginContainer/VBox/Wave").text = "MONSTRES %d / %d" % [done, target]
+
+
+func _on_lives(n: int) -> void:
+	var lab: Label = hud_layer.get_node_or_null("MarginContainer/VBox/Lives") as Label
+	if lab:
+		var hearts := ""
+		for _i in range(clampi(n, 0, 9)):
+			hearts += "♥"
+		lab.text = "VIES  %s  (%d)" % [hearts, n]
 
 
 func _refresh_hud() -> void:

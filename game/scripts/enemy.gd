@@ -6,9 +6,9 @@ signal trapped_state_changed(enemy: Node, bubbled: bool)
 
 enum State { ROAM, CHASE, BUBBLED }
 
-const POP_DISTANCE := 44.0
+const POP_DISTANCE := 76.0
 
-@export var move_speed: float = 72.0
+@export var move_speed: float = 56.0
 @export var max_hp: int = 1
 @export var is_boss: bool = false
 
@@ -74,8 +74,10 @@ func _physics_process(delta: float) -> void:
 func _try_pop_by_player() -> void:
 	if _player == null or _stomp_cd > 0.0:
 		return
-	if global_position.distance_to(_player.global_position) < POP_DISTANCE:
-		_stomp_cd = 0.32
+	# Zone large : buste / corne (comme sauter dans la bulle).
+	var aim := _player.global_position + Vector2(0.0, -16.0)
+	if aim.distance_to(global_position) < POP_DISTANCE:
+		_stomp_cd = 0.22
 		_apply_bubble_stomp()
 
 
