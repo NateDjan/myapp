@@ -2,7 +2,6 @@ extends CharacterBody2D
 ## Minimal controls: move, jump, shoot; powerups tweak cadence and bubble style.
 
 const BUBBLE_SCENE := preload("res://scenes/bubble.tscn")
-const _NeonArt := preload("res://scripts/neon_runtime_art.gd")
 
 @export var base_speed: float = 260.0
 @export var jump_velocity: float = -420.0
@@ -19,7 +18,10 @@ var _jump_pressed: bool = false
 var _shoot_pressed: bool = false
 
 @onready var muzzle: Marker2D = $Muzzle
-@onready var visual: Polygon2D = $Polygon2D
+@onready var flip: Node2D = $Flip
+@onready var body_poly: Polygon2D = $Flip/Body
+@onready var belly_poly: Polygon2D = $Flip/Belly
+@onready var horn_poly: Polygon2D = $Flip/Horn
 
 
 func _input(event: InputEvent) -> void:
@@ -36,8 +38,6 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1 + 8 # world + bubble platforms
 	apply_skin(UpgradeStore.selected_skin if UpgradeStore else "default")
-	if visual:
-		_NeonArt.attach_blob_sprite(visual, "player")
 
 
 func _physics_process(delta: float) -> void:
@@ -51,9 +51,9 @@ func _physics_process(delta: float) -> void:
 	if dir != 0.0:
 		facing = signf(dir)
 	if muzzle:
-		muzzle.position.x = 22.0 * facing
-	if visual:
-		visual.scale.x = facing
+		muzzle.position.x = 24.0 * facing
+	if flip:
+		flip.scale.x = facing
 	velocity.x = move_toward(velocity.x, dir * sp, sp * 10.0 * delta)
 
 	var on_floor_before := is_on_floor()
@@ -159,18 +159,21 @@ func _emit_freeze_wave() -> void:
 
 
 func apply_skin(skin: String) -> void:
-	if visual == null:
+	if body_poly == null:
 		return
 	match skin:
 		"magenta":
-			visual.color = Color(1.0, 0.35, 0.85, 1.0)
+			body_poly.color = Color(0.95, 0.35, 0.72, 1.0)
+			belly_poly.color = Color(1.0, 0.75, 0.92, 1.0)
+			horn_poly.color = Color(0.85, 0.25, 0.55, 1.0)
 		"lime":
-			visual.color = Color(0.55, 1.0, 0.35, 1.0)
+			body_poly.color = Color(0.35, 0.92, 0.42, 1.0)
+			belly_poly.color = Color(0.95, 1.0, 0.65, 1.0)
+			horn_poly.color = Color(0.25, 0.72, 0.35, 1.0)
 		_:
-			visual.color = Color(0.25, 0.95, 0.95, 1.0)
-	var spr := get_node_or_null("NeonSprite") as Sprite2D
-	if spr:
-		spr.modulate = visual.color
+			body_poly.color = Color(0.22, 0.82, 0.58, 1.0)
+			belly_poly.color = Color(0.96, 0.98, 0.55, 1.0)
+			horn_poly.color = Color(0.92, 0.52, 0.32, 1.0)
 
 
 func is_slow_active() -> bool:

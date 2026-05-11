@@ -10,7 +10,7 @@ static func spawn(root: Node, at: Vector2, text: String, color: Color = Color.WH
 	l.modulate = color
 	l.global_position = at + Vector2(-40, -36)
 	l.z_index = 50
-	l.add_theme_font_size_override("font_size", 22)
+	l.add_theme_font_size_override("font_size", 30)
 	root.add_child(l)
 	var tw := l.create_tween()
 	tw.set_parallel(true)

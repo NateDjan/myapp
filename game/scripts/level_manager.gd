@@ -1,5 +1,5 @@
 extends Node
-## Procedural waves, difficulty ramp, boss cadence, pickups, and fail state.
+## Bubble Bobble–style rounds: clear every monster on screen; difficulty ramps.
 
 signal level_cleared(level: int, rank: String, score: int)
 signal game_over(final_score: int)
@@ -13,7 +13,7 @@ const ENEMY_STATE_BUBBLED := 2
 
 var run_mode: int = 0 # 0 arcade, 1 daily
 var level_index: int = 1
-var kills_target: int = 8
+var kills_target: int = 0
 var kills_done: int = 0
 var rng := RandomNumberGenerator.new()
 var difficulty: float = 1.0
@@ -26,6 +26,7 @@ var _hurt_cd: float = 0.0
 @onready var pickups_holder: Node2D = $"../Pickups"
 @onready var vfx_holder: Node2D = $"../VFX"
 @onready var player: CharacterBody2D = $"../Player"
+@onready var spawn_points: Node2D = $"../SpawnPoints"
 
 
 func configure_arcade() -> void:
@@ -70,44 +71,59 @@ func _update_slow_motion() -> void:
 	Engine.time_scale = 0.58 if slow else 1.0
 
 
+func _wave_enemy_count() -> int:
+	## Few more monsters each round — capped like arcade cabinets.
+	return clampi(3 + level_index, 4, 14)
+
+
 func _plan_wave() -> void:
 	var boss_wave := level_index % 10 == 0
 	if boss_wave:
 		kills_target = 1
 	else:
-		kills_target = mini(36, 6 + level_index * 2)
+		kills_target = _wave_enemy_count()
 	kills_updated.emit(kills_done, kills_target)
 
 
 func _spawn_wave() -> void:
 	var boss_wave := level_index % 10 == 0
+	kills_done = 0
+	kills_updated.emit(0, kills_target)
 	if boss_wave:
 		_spawn_boss()
 		return
-	var count := mini(10, 2 + level_index / 2)
-	for i in count:
+	var n := kills_target
+	for i in n:
 		_spawn_enemy(false)
 
 
 func _spawn_boss() -> void:
 	var e := ENEMY_SCENE.instantiate()
 	e.is_boss = true
-	e.max_hp = 1
-	e.hp = 1
+	e.max_hp = 12 + level_index * 2
+	e.hp = e.max_hp
 	enemies_holder.add_child(e)
 	_bind_enemy(e)
-	e.global_position = Vector2(360, 140)
+	e.global_position = Vector2(360, 368)
 
 
-func _spawn_enemy(is_extra: bool) -> void:
+func _spawn_enemy(_is_extra: bool) -> void:
 	var e := ENEMY_SCENE.instantiate()
 	enemies_holder.add_child(e)
 	_bind_enemy(e)
-	var x := rng.randf_range(120.0, 600.0)
-	var y := rng.randf_range(90.0, 220.0)
-	e.global_position = Vector2(x, y)
-	if not is_extra and e.has_method("set_difficulty_scale"):
+	e.global_position = _random_spawn_point()
+	if e.has_method("set_difficulty_scale"):
 		e.call("set_difficulty_scale", difficulty)
+
+
+func _random_spawn_point() -> Vector2:
+	if spawn_points == null:
+		return Vector2(rng.randf_range(140.0, 580.0), 960.0)
+	var markers := spawn_points.get_children()
+	if markers.is_empty():
+		return Vector2(rng.randf_range(140.0, 580.0), 960.0)
+	var m: Node2D = markers[rng.randi() % markers.size()] as Node2D
+	return m.global_position + Vector2(rng.randf_range(-36.0, 36.0), rng.randf_range(-6.0, 6.0))
 
 
 func _bind_enemy(e: Node) -> void:
@@ -117,12 +133,12 @@ func _bind_enemy(e: Node) -> void:
 		e.popped.connect(_on_enemy_popped)
 
 
-func _on_enemy_popped(enemy: Node, _points: int) -> void:
+func _on_enemy_popped(enemy: Node, points: int) -> void:
 	if not active:
 		return
 	kills_done += 1
 	kills_updated.emit(kills_done, kills_target)
-	_juice_at(enemy.global_position)
+	_juice_at(enemy.global_position, points)
 	_maybe_drop_pickup(enemy.global_position)
 	if kills_done >= kills_target:
 		_finish_level()
@@ -134,12 +150,12 @@ func _finish_level() -> void:
 	_clear_world_entities()
 	var rank := _compute_rank()
 	var sc := ComboManager.score if ComboManager else 0
-	var coin_gain := kills_target * 3 + level_index * 4
+	var coin_gain := kills_target * 4 + level_index * 5
 	if UpgradeStore:
 		UpgradeStore.add_coins(coin_gain)
 	level_cleared.emit(level_index, rank, sc)
 	level_index += 1
-	difficulty = mini(2.4, difficulty + 0.07)
+	difficulty = mini(2.2, difficulty + 0.06)
 
 
 func continue_next_level() -> void:
@@ -155,8 +171,8 @@ func continue_next_level() -> void:
 func _compute_rank() -> String:
 	var sc := ComboManager.score if ComboManager else 0
 	var t := level_elapsed
-	var s_threshold := 900 + level_index * 120
-	if sc >= s_threshold and t < 55.0:
+	var s_threshold := 600 + level_index * 100
+	if sc >= s_threshold and t < 75.0:
 		return "S"
 	if sc >= s_threshold * 0.72:
 		return "A"
@@ -167,7 +183,7 @@ func _compute_rank() -> String:
 
 func _maybe_drop_pickup(at: Vector2) -> void:
 	var luck := UpgradeStore.luck_bonus() if UpgradeStore else 1.0
-	if rng.randf() > 0.12 * luck:
+	if rng.randf() > 0.14 * luck:
 		return
 	var p := POWERUP_SCENE.instantiate()
 	pickups_holder.add_child(p)
@@ -176,11 +192,11 @@ func _maybe_drop_pickup(at: Vector2) -> void:
 		p.call("setup_random", rng)
 
 
-func _juice_at(p: Vector2) -> void:
-	VfxBurst.spawn(vfx_holder, p, Color(0.4, 1.0, 0.85, 1.0))
+func _juice_at(p: Vector2, points_earned: int) -> void:
+	VfxBurst.spawn(vfx_holder, p, Color(0.55, 1.0, 0.75, 1.0))
 	var cam: Node = get_viewport().get_camera_2d()
 	if cam and cam.has_method("add_shake"):
-		cam.call("add_shake", 0.18)
+		cam.call("add_shake", 0.15)
 	var mult := ComboManager.multiplier if ComboManager else 1
 	if ArcadeSfx:
 		if mult >= 4:
@@ -190,9 +206,16 @@ func _juice_at(p: Vector2) -> void:
 	FloatingPopup.spawn(
 		vfx_holder,
 		p,
-		"x%d" % mult,
-		Color(1.0, 0.85, 0.35) if mult > 1 else Color(0.85, 1.0, 1.0)
+		"+%d" % points_earned,
+		Color(1.0, 0.92, 0.35)
 	)
+	if mult > 1:
+		FloatingPopup.spawn(
+			vfx_holder,
+			p + Vector2(0, 28),
+			"CHAIN x%d" % mult,
+			Color(1.0, 0.55, 0.85)
+		)
 
 
 func _check_player_hit() -> void:

@@ -87,7 +87,7 @@ func _begin_game() -> void:
 	if _touch_hud and _touch_hud.has_method("set_gameplay_active"):
 		_touch_hud.set_gameplay_active(true)
 	if is_instance_valid(player):
-		player.global_position = Vector2(360, 900)
+		player.global_position = Vector2(360, 965)
 		player.velocity = Vector2.ZERO
 	hud_layer.show()
 	rank_layer.hide()
@@ -140,15 +140,18 @@ func _cycle_skin() -> void:
 
 
 func _on_score(total: int) -> void:
+	var big: Label = hud_layer.get_node_or_null("ScoreBig") as Label
+	if big:
+		big.text = "%06d" % total
 	hud_layer.get_node("MarginContainer/VBox/Score").text = "SCORE %d" % total
 
 
 func _on_combo(mult: int, streak: int) -> void:
-	hud_layer.get_node("MarginContainer/VBox/Combo").text = "COMBO x%d  (%d)" % [mult, streak]
+	hud_layer.get_node("MarginContainer/VBox/Combo").text = "CHAIN x%d  (%d pops)" % [mult, streak]
 
 
 func _on_kills(done: int, target: int) -> void:
-	hud_layer.get_node("MarginContainer/VBox/Wave").text = "CLEAR %d / %d" % [done, target]
+	hud_layer.get_node("MarginContainer/VBox/Wave").text = "MONSTRES %d / %d" % [done, target]
 
 
 func _refresh_hud() -> void:
