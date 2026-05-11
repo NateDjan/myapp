@@ -1,16 +1,15 @@
 extends CharacterBody2D
-## Bulle qui **monte** : dérive vers le haut + tir en diagonale haute (pas ping-pong horizontal infini).
+## Bulle « arcade » : surtout **horizontale**, portance vers le haut (pas ping-pong vertical).
 
 signal enemy_trapped(bubble: Node, enemy: Node)
 signal bubble_popped(bubble: Node, world_pos: Vector2)
 
-const FLOAT_SPEED := 56.0
+const FLOAT_SPEED := 58.0
 const ENEMY_STATE_BUBBLED := 2
-const BUOY_STEER := 0.11 ## Vers où on pousse la direction chaque frame (vers le haut).
-const HORIZ_DAMP := 0.985 ## Réduit peu à peu le va-et-vient horizontal.
+const UPLIFT := 520.0 ## Réduit vy (monte) chaque seconde — vy positif = vers le bas en Godot.
+const MAX_UP := -780.0
 
-var dir: Vector2 = Vector2.RIGHT
-var speed: float = 300.0
+var vel: Vector2 = Vector2.ZERO
 var electric: bool = false
 var trapped_enemy: Node = null
 var _alive: bool = true
@@ -45,8 +44,8 @@ func _build_ring() -> void:
 		var a := TAU * float(i) / float(segs)
 		pts.append(Vector2(cos(a), sin(a)) * rad)
 	ring.points = pts
-	ring.width = 5.0
-	ring.default_color = Color(0.95, 1.0, 1.0, 1.0)
+	ring.width = 6.0
+	ring.default_color = Color(1.0, 1.0, 1.0, 1.0)
 	ring.closed = true
 
 
@@ -55,8 +54,7 @@ func _process(delta: float) -> void:
 		return
 	_pulse_t += delta
 	if ring:
-		var w := 4.2 + sin(_pulse_t * 6.0) * 1.5
-		ring.width = w
+		ring.width = 5.0 + sin(_pulse_t * 7.0) * 1.8
 
 
 func configure(
@@ -66,15 +64,17 @@ func configure(
 	is_electric: bool
 ) -> void:
 	_flight_time = 0.0
-	dir = shot_dir.normalized()
-	# Forcer une composante vers le haut si le tir est trop plat
-	if dir.y > -0.15:
-		dir = Vector2(dir.x, -0.65).normalized()
-	speed = shot_speed
+	var d := shot_dir.normalized()
+	# Tir prioritairement horizontal (style Mario / BB tir latéral)
+	if absf(d.x) < 0.55:
+		d.x = signf(d.x) if absf(d.x) > 0.08 else 1.0
+		d.y = -0.22
+		d = d.normalized()
+	vel = d * shot_speed
 	electric = is_electric
 	if giant:
 		scale = Vector2(1.55, 1.55)
-		speed *= 0.92
+		vel *= 0.92
 	if visual:
 		visual.color = visual.color.lerp(Color(1.0, 0.55, 0.95), 0.35 if giant else 0.0)
 		if electric:
@@ -82,7 +82,7 @@ func configure(
 	if ring:
 		if giant:
 			ring.scale = Vector2(1.12, 1.12)
-		ring.default_color = Color(1.0, 0.65, 0.95, 0.95) if giant else Color(0.85, 1.0, 1.0, 1.0)
+		ring.default_color = Color(1.0, 0.65, 0.95, 0.95) if giant else Color(0.75, 1.0, 1.0, 1.0)
 		if electric:
 			ring.default_color = Color(1.0, 0.95, 0.35, 1.0)
 
@@ -96,34 +96,26 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_flight_time += delta
-	# Monte toujours un peu : objectif diagonale haut + vers le côté du dernier rebond
-	var side := signf(dir.x)
-	if absf(side) < 0.1:
-		side = 1.0
-	var up_bias := Vector2(side * 0.42, -1.0).normalized()
-	dir = dir.lerp(up_bias, BUOY_STEER * 60.0 * delta).normalized()
-	dir.x *= HORIZ_DAMP
-	dir = dir.normalized()
-	if dir.length_squared() < 0.04:
-		dir = Vector2(side * 0.45, -0.92).normalized()
+	# Portance : monte tout en gardant le côté horizontal
+	vel.y -= UPLIFT * delta
+	vel.y = maxf(vel.y, MAX_UP)
 
-	velocity = dir * speed
+	velocity = vel
 	move_and_slide()
 
 	for i in get_slide_collision_count():
 		var col := get_slide_collision(i)
-		var collider_node := col.get_collider()
-		if collider_node and collider_node.is_in_group("enemies"):
-			_try_trap(collider_node)
+		var hit := col.get_collider()
+		if hit and hit.is_in_group("enemies"):
+			_try_trap(hit)
 			return
 		var n := col.get_normal()
-		if absf(n.x) > 0.52:
-			dir.x *= -1.0
-			dir.y = minf(dir.y, -0.38)
-			dir = dir.normalized()
+		if absf(n.x) > 0.48:
+			vel.x *= -0.94
+		elif n.y > 0.52:
+			vel.y = maxf(-vel.y * 0.35, 120.0)
 
-	# Sécurité : pas de bulle piégée en ping-pong 40s
-	if _flight_time > 36.0:
+	if _flight_time > 28.0:
 		queue_free()
 
 
@@ -134,6 +126,7 @@ func _try_trap(enemy: Node) -> void:
 	enemy_trapped.emit(self, enemy)
 	if enemy.has_method("enter_bubble"):
 		enemy.call("enter_bubble", self)
+	vel = Vector2.ZERO
 	velocity = Vector2.ZERO
 	collision_mask = 1
 	_enable_platform()

@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/level_manager.gd" id="2_lm"]
 [ext_resource type="Script" path="res://scripts/juice_camera.gd" id="3_cam"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="4_pl"]
+[ext_resource type="Script" path="res://scripts/brick_platform_visual.gd" id="5_brick"]
 
 [sub_resource type="RectangleShape2D" id="Rect_floor"]
 size = Vector2(680, 40)
@@ -56,10 +57,40 @@ offset_left = -120.0
 offset_top = -120.0
 offset_right = 840.0
 offset_bottom = 1400.0
-color = Color(0.07, 0.11, 0.22, 1)
+color = Color(0.38, 0.58, 0.92, 1)
+
+[node name="BrickFloor" type="Node2D" parent="GameWorld/World"]
+z_index = -2
+position = Vector2(360, 1020)
+script = ExtResource("5_brick")
+brick_size = Vector2(680, 40)
 
 [node name="Platforms" type="StaticBody2D" parent="GameWorld/World"]
 collision_layer = 1
+
+[node name="Vis_L" type="Node2D" parent="GameWorld/World/Platforms"]
+z_index = -2
+position = Vector2(170, 886)
+script = ExtResource("5_brick")
+brick_size = Vector2(260, 22)
+
+[node name="Vis_R" type="Node2D" parent="GameWorld/World/Platforms"]
+z_index = -2
+position = Vector2(550, 886)
+script = ExtResource("5_brick")
+brick_size = Vector2(260, 22)
+
+[node name="Vis_MID" type="Node2D" parent="GameWorld/World/Platforms"]
+z_index = -2
+position = Vector2(360, 752)
+script = ExtResource("5_brick")
+brick_size = Vector2(340, 22)
+
+[node name="Vis_TOP" type="Node2D" parent="GameWorld/World/Platforms"]
+z_index = -2
+position = Vector2(360, 618)
+script = ExtResource("5_brick")
+brick_size = Vector2(220, 22)
 
 [node name="P_L" type="CollisionShape2D" parent="GameWorld/World/Platforms"]
 position = Vector2(170, 886)

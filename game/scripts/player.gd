@@ -123,9 +123,9 @@ func _consume_shoot() -> bool:
 
 func _shoot_bubbles() -> void:
 	var count := maxi(1, _multi_shots)
-	var spread := deg_to_rad(8.0)
-	# Tir diagonale **haute** (monte tout seul), pas horizontal pur.
-	var base_dir := Vector2(facing * 0.42, -0.91).normalized()
+	var spread := deg_to_rad(6.0)
+	# Tir surtout **horizontal** ; la bulle monte grâce à la portance dans bubble.gd
+	var base_dir := Vector2(facing * 0.93, -0.28).normalized()
 	for i in count:
 		var ang := spread * (float(i) - float(count - 1) * 0.5)
 		var d := base_dir.rotated(ang)
@@ -146,7 +146,7 @@ func _spawn_bubble(d: Vector2) -> void:
 	else:
 		get_parent().add_child(bubble)
 	bubble.global_position = muzzle.global_position
-	var spd := 290.0 * (0.92 if _slow_timer > 0.0 else 1.0)
+	var spd := 340.0 * (0.92 if _slow_timer > 0.0 else 1.0)
 	if bubble.has_method("configure"):
 		bubble.call("configure", d, spd, _next_giant, _next_electric)
 	_next_giant = false
