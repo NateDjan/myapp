@@ -9,6 +9,10 @@ Application smartphone (Expo React Native) + API Node.js/SQLite pour aider les e
 - La session parent est restauree automatiquement (memoire locale) sur web et mobile.
 - En se connectant avec le meme compte, vous retrouvez vos avances des deux cotes.
 
+## Travailler avec Cursor depuis le mobile
+
+Pour lancer des agents **hors bureau** et reprendre le travail sur les **pull requests** au bureau, voir le guide [docs/flux-cursor-mobile.md](docs/flux-cursor-mobile.md). Sur GitHub, le modèle d’issue **Demande agent Cursor** aide à formuler les tâches avant un commentaire `@cursor`.
+
 ## Stack
 
 - Mobile: Expo + React Native + TypeScript
