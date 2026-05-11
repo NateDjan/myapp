@@ -1,0 +1,268 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/level_manager.gd" id="2_lm"]
+[ext_resource type="Script" path="res://scripts/juice_camera.gd" id="3_cam"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="4_pl"]
+
+[sub_resource type="RectangleShape2D" id="Rect_floor"]
+size = Vector2(680, 40)
+
+[sub_resource type="RectangleShape2D" id="Rect_side"]
+size = Vector2(44, 1040)
+
+[sub_resource type="RectangleShape2D" id="Rect_top"]
+size = Vector2(720, 36)
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="GameWorld" type="Node2D" parent="."]
+visible = false
+
+[node name="World" type="Node2D" parent="GameWorld"]
+
+[node name="Arena" type="StaticBody2D" parent="GameWorld/World"]
+collision_layer = 1
+
+[node name="Floor" type="CollisionShape2D" parent="GameWorld/World/Arena"]
+position = Vector2(360, 1020)
+shape = SubResource("Rect_floor")
+
+[node name="WallL" type="CollisionShape2D" parent="GameWorld/World/Arena"]
+position = Vector2(22, 640)
+shape = SubResource("Rect_side")
+
+[node name="WallR" type="CollisionShape2D" parent="GameWorld/World/Arena"]
+position = Vector2(698, 640)
+shape = SubResource("Rect_side")
+
+[node name="Ceiling" type="CollisionShape2D" parent="GameWorld/World/Arena"]
+position = Vector2(360, 18)
+shape = SubResource("Rect_top")
+
+[node name="Backdrop" type="ColorRect" parent="GameWorld/World"]
+z_index = -5
+offset_left = -120.0
+offset_top = -120.0
+offset_right = 840.0
+offset_bottom = 1400.0
+color = Color(0.05, 0.06, 0.1, 1)
+
+[node name="NeonGrid" type="Line2D" parent="GameWorld/World"]
+z_index = -4
+width = 1.5
+default_color = Color(0.2, 0.85, 0.75, 0.12)
+points = PackedVector2Array(0, 260, 720, 260, 0, 520, 720, 520, 0, 780, 720, 780)
+
+[node name="Player" parent="GameWorld/World" instance=ExtResource("4_pl")]
+position = Vector2(360, 900)
+
+[node name="Enemies" type="Node2D" parent="GameWorld/World"]
+
+[node name="Bubbles" type="Node2D" parent="GameWorld/World"]
+
+[node name="Pickups" type="Node2D" parent="GameWorld/World"]
+
+[node name="VFX" type="Node2D" parent="GameWorld/World"]
+
+[node name="LevelManager" type="Node" parent="GameWorld/World"]
+script = ExtResource("2_lm")
+
+[node name="Camera2D" type="Camera2D" parent="GameWorld/World"]
+position = Vector2(360, 640)
+current = true
+limit_left = -200
+limit_top = -200
+limit_right = 920
+limit_bottom = 1400
+script = ExtResource("3_cam")
+
+[node name="CanvasTitle" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="ColorRect" type="ColorRect" parent="CanvasTitle"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.04, 0.07, 0.94)
+
+[node name="CenterContainer" type="CenterContainer" parent="CanvasTitle"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasTitle/CenterContainer"]
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="CanvasTitle/CenterContainer/VBoxContainer"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 34
+text = "NEON BUBBLE RUSH"
+theme_override_colors/font_color = Color(0.4, 1, 0.9, 1)
+
+[node name="Hint" type="Label" parent="CanvasTitle/CenterContainer/VBoxContainer"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+text = "Arrows / WASD move · Space jump · Z shoot
+Trap enemies in bubbles, touch to pop, chain combos."
+
+[node name="Arcade" type="Button" parent="CanvasTitle/CenterContainer/VBoxContainer"]
+text = "INFINITE ARCADE"
+
+[node name="Daily" type="Button" parent="CanvasTitle/CenterContainer/VBoxContainer"]
+text = "DAILY CHALLENGE"
+
+[node name="Leaderboard" type="Button" parent="CanvasTitle/CenterContainer/VBoxContainer"]
+text = "LOCAL LEADERBOARD"
+
+[node name="Skins" type="Button" parent="CanvasTitle/CenterContainer/VBoxContainer"]
+text = "CYCLE SKIN"
+
+[node name="CanvasHUD" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasHUD"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 120.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+
+[node name="VBox" type="VBoxContainer" parent="CanvasHUD/MarginContainer"]
+
+[node name="Score" type="Label" parent="CanvasHUD/MarginContainer/VBox"]
+theme_override_font_sizes/font_size = 22
+text = "SCORE 0"
+theme_override_colors/font_color = Color(0.85, 1, 1, 1)
+
+[node name="Combo" type="Label" parent="CanvasHUD/MarginContainer/VBox"]
+theme_override_font_sizes/font_size = 18
+text = "COMBO x1 (0)"
+theme_override_colors/font_color = Color(1, 0.85, 0.45, 1)
+
+[node name="Wave" type="Label" parent="CanvasHUD/MarginContainer/VBox"]
+theme_override_font_sizes/font_size = 18
+text = "CLEAR 0 / 0"
+theme_override_colors/font_color = Color(0.75, 0.95, 0.55, 1)
+
+[node name="CanvasRank" type="CanvasLayer" parent="."]
+visible = false
+layer = 30
+
+[node name="Panel" type="PanelContainer" parent="CanvasRank"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -200.0
+offset_right = 220.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CanvasRank/Panel"]
+theme_override_constants/separation = 10
+
+[node name="Rank" type="Label" parent="CanvasRank/Panel/VBox"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 48
+text = "S"
+theme_override_colors/font_color = Color(1, 0.45, 0.75, 1)
+
+[node name="Detail" type="Label" parent="CanvasRank/Panel/VBox"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+text = "LEVEL 1 CLEARED"
+
+[node name="Coins" type="Label" parent="CanvasRank/Panel/VBox"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+text = "COINS 0"
+
+[node name="HBox" type="HBoxContainer" parent="CanvasRank/Panel/VBox"]
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="Next" type="Button" parent="CanvasRank/Panel/VBox/HBox"]
+text = "NEXT WAVE"
+
+[node name="Shop" type="Button" parent="CanvasRank/Panel/VBox/HBox"]
+text = "SHOP"
+
+[node name="Menu" type="Button" parent="CanvasRank/Panel/VBox/HBox"]
+text = "MENU"
+
+[node name="CanvasGameOver" type="CanvasLayer" parent="."]
+layer = 30
+visible = false
+
+[node name="Panel" type="PanelContainer" parent="CanvasGameOver"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -120.0
+offset_right = 200.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CanvasGameOver/Panel"]
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="CanvasGameOver/Panel/VBox"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+text = "RUN OVER"
+
+[node name="Score" type="Label" parent="CanvasGameOver/Panel/VBox"]
+horizontal_alignment = 1
+text = "SCORE 0"
+
+[node name="HBox" type="HBoxContainer" parent="CanvasGameOver/Panel/VBox"]
+alignment = 1
+
+[node name="Retry" type="Button" parent="CanvasGameOver/Panel/VBox/HBox"]
+text = "RETRY"
+
+[node name="Menu" type="Button" parent="CanvasGameOver/Panel/VBox/HBox"]
+text = "MENU"
+
+[node name="CanvasLeaderboard" type="CanvasLayer" parent="."]
+layer = 30
+visible = false
+
+[node name="Panel" type="PanelContainer" parent="CanvasLeaderboard"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 120.0
+offset_right = -40.0
+offset_bottom = -120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLeaderboard/Panel"]
+
+[node name="Title" type="Label" parent="CanvasLeaderboard/Panel/VBox"]
+text = "TOP SCORES (LOCAL)"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="CanvasLeaderboard/Panel/VBox"]
+autowrap_mode = 2
+size_flags_vertical = 3
+
+[node name="Close" type="Button" parent="CanvasLeaderboard/Panel/VBox"]
+text = "CLOSE"
