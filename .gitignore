@@ -6,3 +6,6 @@ npm-debug.log*
 educoach.db
 educoach.db-shm
 educoach.db-wal
+
+# Projet dropshipping séparé (dépôt Git autonome — ne pas versionner dans EduCoach)
+dropship-automation-2ab9/
