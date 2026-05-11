@@ -1,6 +1,8 @@
 extends CharacterBody2D
 ## Energy bubble: traps first enemy hit, floats upward, acts as temporary platform.
 
+const _NeonArt := preload("res://scripts/neon_runtime_art.gd")
+
 signal enemy_trapped(bubble: Node, enemy: Node)
 signal bubble_popped(bubble: Node, world_pos: Vector2)
 
@@ -24,6 +26,7 @@ func _ready() -> void:
 	collision_mask = 1 + 4 # world + enemy
 	if visual:
 		visual.color = Color(0.35, 1.0, 0.92, 0.75)
+	_NeonArt.attach_bubble_sprite(visual, "bubble_base")
 	var lm := get_tree().current_scene.get_node_or_null("GameWorld/World/LevelManager")
 	if lm and lm.has_method("_on_bubble_trapped"):
 		enemy_trapped.connect(lm._on_bubble_trapped)
@@ -45,6 +48,9 @@ func configure(
 		visual.color = visual.color.lerp(Color(1.0, 0.55, 0.95), 0.35 if giant else 0.0)
 		if electric:
 			visual.color = Color(1.0, 0.95, 0.35, 0.85)
+	var spr := get_node_or_null("NeonSprite") as Sprite2D
+	if spr:
+		spr.modulate = visual.color
 
 
 func _physics_process(_delta: float) -> void:
@@ -81,7 +87,22 @@ func _try_trap(enemy: Node) -> void:
 
 func _enable_platform() -> void:
 	_platform_enabled = true
-	collision_layer = 8
+	# Stop the round body from snagging the player; ride only the one-way plate.
+	collision_layer = 0
+	if collider:
+		collider.disabled = true
+	var plate := StaticBody2D.new()
+	plate.name = "RidePlate"
+	plate.collision_layer = 8
+	plate.collision_mask = 0
+	var cs := CollisionShape2D.new()
+	var sh := RectangleShape2D.new()
+	sh.size = Vector2(54.0 * scale.x, 12.0)
+	cs.shape = sh
+	cs.one_way_collision = true
+	cs.position = Vector2(0, -11.0 * scale.y)
+	plate.add_child(cs)
+	add_child(plate)
 
 
 func pop() -> void:

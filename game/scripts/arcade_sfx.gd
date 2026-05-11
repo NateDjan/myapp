@@ -35,6 +35,16 @@ func play_hurt() -> void:
 	_tone(140.0, 0.12, 0.28)
 
 
+func play_land() -> void:
+	_tone(210.0, 0.05, 0.1)
+	_tone(120.0, 0.04, 0.08)
+
+
+func play_combo_spike(pitch_mul: float = 1.0) -> void:
+	_tone(720.0 * pitch_mul, 0.03, 0.1)
+	_tone(960.0 * pitch_mul, 0.04, 0.12)
+
+
 func _tone(freq: float, duration: float, volume: float) -> void:
 	if _playback == null:
 		return

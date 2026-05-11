@@ -2,6 +2,7 @@ extends CharacterBody2D
 ## Minimal controls: move, jump, shoot; powerups tweak cadence and bubble style.
 
 const BUBBLE_SCENE := preload("res://scenes/bubble.tscn")
+const _NeonArt := preload("res://scripts/neon_runtime_art.gd")
 
 @export var base_speed: float = 260.0
 @export var jump_velocity: float = -420.0
@@ -35,6 +36,8 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1 + 8 # world + bubble platforms
 	apply_skin(UpgradeStore.selected_skin if UpgradeStore else "default")
+	if visual:
+		_NeonArt.attach_blob_sprite(visual, "player")
 
 
 func _physics_process(delta: float) -> void:
@@ -53,7 +56,8 @@ func _physics_process(delta: float) -> void:
 		visual.scale.x = facing
 	velocity.x = move_toward(velocity.x, dir * sp, sp * 10.0 * delta)
 
-	if not is_on_floor():
+	var on_floor_before := is_on_floor()
+	if not on_floor_before:
 		velocity.y += 980.0 * grav_scale * delta
 	else:
 		if _consume_jump():
@@ -61,6 +65,8 @@ func _physics_process(delta: float) -> void:
 			velocity.y = jv
 
 	move_and_slide()
+	if not on_floor_before and is_on_floor() and ArcadeSfx:
+		ArcadeSfx.play_land()
 
 	if _consume_shoot() and _shoot_cd <= 0.0:
 		_shoot_bubbles()
@@ -72,11 +78,15 @@ func _read_move_axis() -> float:
 	var x := Input.get_axis("ui_left", "ui_right")
 	if absf(x) < 0.2:
 		x = 0.0
+	if TouchInput and absf(TouchInput.move_axis) > 0.08:
+		x = TouchInput.move_axis
 	return x
 
 
 func _consume_jump() -> bool:
 	if Input.is_action_just_pressed("ui_accept"):
+		return true
+	if TouchInput and TouchInput.consume_jump():
 		return true
 	if _jump_pressed:
 		_jump_pressed = false
@@ -86,6 +96,8 @@ func _consume_jump() -> bool:
 
 func _consume_shoot() -> bool:
 	if Input.is_action_just_pressed("ui_select"):
+		return true
+	if TouchInput and TouchInput.consume_shoot():
 		return true
 	if _shoot_pressed:
 		_shoot_pressed = false
@@ -156,6 +168,9 @@ func apply_skin(skin: String) -> void:
 			visual.color = Color(0.55, 1.0, 0.35, 1.0)
 		_:
 			visual.color = Color(0.25, 0.95, 0.95, 1.0)
+	var spr := get_node_or_null("NeonSprite") as Sprite2D
+	if spr:
+		spr.modulate = visual.color
 
 
 func is_slow_active() -> bool:

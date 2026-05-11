@@ -1,6 +1,8 @@
 extends CharacterBody2D
 ## Simple chase AI; can be bubbled, floated, and popped for score.
 
+const _NeonArt := preload("res://scripts/neon_runtime_art.gd")
+
 signal popped(enemy: Node, points: int)
 signal trapped_state_changed(enemy: Node, bubbled: bool)
 
@@ -14,7 +16,6 @@ const POP_DISTANCE := 30.0
 
 var state: State = State.ROAM
 var hp: int = 1
-var _bubble: Node2D = null
 var _wander_dir: float = 1.0
 var _freeze_timer: float = 0.0
 var _player: CharacterBody2D
@@ -27,6 +28,7 @@ func _ready() -> void:
 	hp = max_hp
 	if visual:
 		_tint_from_seed()
+		_NeonArt.attach_blob_sprite(visual, "enemy_%d" % get_instance_id())
 
 
 func bind_player(p: CharacterBody2D) -> void:
@@ -47,7 +49,6 @@ func enter_bubble(bubble: Node2D) -> void:
 	if state == State.BUBBLED:
 		return
 	state = State.BUBBLED
-	_bubble = bubble
 	collision_layer = 0
 	collision_mask = 0
 	trapped_state_changed.emit(self, true)

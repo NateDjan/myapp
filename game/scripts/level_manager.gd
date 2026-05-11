@@ -181,9 +181,12 @@ func _juice_at(p: Vector2) -> void:
 	var cam: Node = get_viewport().get_camera_2d()
 	if cam and cam.has_method("add_shake"):
 		cam.call("add_shake", 0.18)
-	if ArcadeSfx:
-		ArcadeSfx.play_pop(1.0 + rng.randf() * 0.15)
 	var mult := ComboManager.multiplier if ComboManager else 1
+	if ArcadeSfx:
+		if mult >= 4:
+			ArcadeSfx.play_combo_spike(1.0 + rng.randf() * 0.08)
+		else:
+			ArcadeSfx.play_pop(1.0 + rng.randf() * 0.15)
 	FloatingPopup.spawn(
 		vfx_holder,
 		p,
@@ -213,7 +216,9 @@ func _trigger_game_over() -> void:
 	if ArcadeSfx:
 		ArcadeSfx.play_hurt()
 	if Leaderboard:
-		Leaderboard.submit_local("YOU", sc, "daily" if run_mode == 1 else "arcade")
+		var mode := "daily" if run_mode == 1 else "arcade"
+		Leaderboard.submit_local("YOU", sc, mode)
+		Leaderboard.submit_remote("YOU", sc, mode)
 	game_over.emit(sc)
 
 

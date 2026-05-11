@@ -1,6 +1,8 @@
 extends Node
 ## Boot flow: menu, HUD, rank / upgrades, leaderboard, and world wiring.
 
+const TOUCH_HUD_SCENE := preload("res://scenes/touch_hud.tscn")
+
 @onready var title_layer: CanvasLayer = $CanvasTitle
 @onready var hud_layer: CanvasLayer = $CanvasHUD
 @onready var rank_layer: CanvasLayer = $CanvasRank
@@ -11,6 +13,7 @@ extends Node
 @onready var level_manager: Node = $GameWorld/World/LevelManager
 @onready var player: CharacterBody2D = $GameWorld/World/Player
 var _follow_cam: Camera2D
+var _touch_hud: CanvasLayer
 
 
 func _ready() -> void:
@@ -31,6 +34,10 @@ func _ready() -> void:
 	_connect_rank_buttons()
 	_connect_go_buttons()
 	_connect_lb_buttons()
+	_touch_hud = TOUCH_HUD_SCENE.instantiate()
+	add_child(_touch_hud)
+	if Leaderboard:
+		Leaderboard.remote_updated.connect(_on_leaderboard_remote)
 	_refresh_hud()
 
 
@@ -77,6 +84,8 @@ func _start_daily() -> void:
 func _begin_game() -> void:
 	title_layer.hide()
 	game_world.visible = true
+	if _touch_hud and _touch_hud.has_method("set_gameplay_active"):
+		_touch_hud.set_gameplay_active(true)
 	if is_instance_valid(player):
 		player.global_position = Vector2(360, 900)
 		player.velocity = Vector2.ZERO
@@ -89,6 +98,8 @@ func _begin_game() -> void:
 func _back_menu() -> void:
 	Engine.time_scale = 1.0
 	game_world.visible = false
+	if _touch_hud and _touch_hud.has_method("set_gameplay_active"):
+		_touch_hud.set_gameplay_active(false)
 	hud_layer.hide()
 	rank_layer.hide()
 	game_over_layer.hide()
@@ -96,13 +107,24 @@ func _back_menu() -> void:
 
 
 func _open_leaderboard() -> void:
-	var body: Label = leaderboard_layer.get_node("Panel/VBox/Body")
-	body.text = Leaderboard.top_display() if Leaderboard else ""
+	_refresh_leaderboard_body()
+	if Leaderboard:
+		Leaderboard.fetch_remote_preview()
 	leaderboard_layer.show()
 
 
 func _close_leaderboard() -> void:
 	leaderboard_layer.hide()
+
+
+func _refresh_leaderboard_body() -> void:
+	var body: Label = leaderboard_layer.get_node("Panel/VBox/Body")
+	body.text = Leaderboard.top_display() if Leaderboard else ""
+
+
+func _on_leaderboard_remote() -> void:
+	if leaderboard_layer.visible:
+		_refresh_leaderboard_body()
 
 
 func _cycle_skin() -> void:
@@ -136,6 +158,8 @@ func _refresh_hud() -> void:
 
 
 func _on_level_cleared(level: int, rank: String, score: int) -> void:
+	if _touch_hud and _touch_hud.has_method("set_gameplay_active"):
+		_touch_hud.set_gameplay_active(false)
 	rank_layer.get_node("Panel/VBox/Rank").text = rank
 	rank_layer.get_node("Panel/VBox/Detail").text = "LEVEL %d CLEARED\nSCORE %d" % [level, score]
 	rank_layer.get_node("Panel/VBox/Coins").text = "COINS %d" % (UpgradeStore.coins if UpgradeStore else 0)
@@ -145,6 +169,8 @@ func _on_level_cleared(level: int, rank: String, score: int) -> void:
 func _on_rank_next() -> void:
 	rank_layer.hide()
 	level_manager.continue_next_level()
+	if _touch_hud and _touch_hud.has_method("set_gameplay_active") and game_world.visible:
+		_touch_hud.set_gameplay_active(true)
 
 
 func _on_rank_shop() -> void:
@@ -164,12 +190,19 @@ func _on_rank_shop() -> void:
 
 
 func _on_game_over(final_score: int) -> void:
+	if _touch_hud and _touch_hud.has_method("set_gameplay_active"):
+		_touch_hud.set_gameplay_active(false)
 	game_over_layer.get_node("Panel/VBox/Score").text = "SCORE %d" % final_score
 	game_over_layer.show()
 
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_F3:
+		if _touch_hud and _touch_hud.has_method("toggle_debug_touch"):
+			_touch_hud.toggle_debug_touch()
+			if _touch_hud.has_method("set_gameplay_active"):
+				_touch_hud.set_gameplay_active(game_world.visible)
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		if rank_layer.visible:
 			_on_rank_next()
 		elif game_over_layer.visible:

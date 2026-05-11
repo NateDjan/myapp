@@ -10,6 +10,7 @@ height = 24.0
 collision_layer = 2
 collision_mask = 9
 floor_stop_on_slope = true
+floor_snap_length = 36.0
 script = ExtResource("1_player")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

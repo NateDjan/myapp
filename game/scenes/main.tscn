@@ -109,7 +109,8 @@ theme_override_colors/font_color = Color(0.4, 1, 0.9, 1)
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 16
 text = "Arrows / WASD move · Space jump · Z shoot
-Trap enemies in bubbles, touch to pop, chain combos."
+Trap enemies in bubbles, touch to pop, chain combos.
+Touch: on-screen stick + buttons · F3: force touch UI (desktop)"
 
 [node name="Arcade" type="Button" parent="CanvasTitle/CenterContainer/VBoxContainer"]
 text = "INFINITE ARCADE"
