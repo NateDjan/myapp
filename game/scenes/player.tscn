@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
+radius = 12.0
+height = 24.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 9
+floor_stop_on_slope = true
+floor_snap_length = 36.0
+script = ExtResource("1_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("CapsuleShape2D_player")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+color = Color(0.25, 0.95, 0.95, 1)
+polygon = PackedVector2Array(-14, -20, 14, -20, 16, 22, -16, 22)
+
+[node name="Muzzle" type="Marker2D" parent="."]
+position = Vector2(22, -4)
