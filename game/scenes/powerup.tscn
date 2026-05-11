@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/powerup.gd" id="1_powerup"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pu"]
+radius = 14.0
+
+[node name="Powerup" type="Area2D"]
+collision_layer = 16
+collision_mask = 2
+monitoring = true
+monitorable = false
+script = ExtResource("1_powerup")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_pu")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+color = Color(0.4, 0.95, 1, 1)
+polygon = PackedVector2Array(-10, -12, 10, -12, 12, 8, 0, 14, -12, 8)
