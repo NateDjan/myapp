@@ -56,31 +56,25 @@ offset_left = -120.0
 offset_top = -120.0
 offset_right = 840.0
 offset_bottom = 1400.0
-color = Color(0.05, 0.06, 0.1, 1)
-
-[node name="NeonGrid" type="Line2D" parent="GameWorld/World"]
-z_index = -4
-width = 1.5
-default_color = Color(0.2, 0.85, 0.75, 0.12)
-points = PackedVector2Array(0, 260, 720, 260, 0, 520, 720, 520, 0, 780, 720, 780)
+color = Color(0.07, 0.11, 0.22, 1)
 
 [node name="Platforms" type="StaticBody2D" parent="GameWorld/World"]
 collision_layer = 1
 
 [node name="P_L" type="CollisionShape2D" parent="GameWorld/World/Platforms"]
-position = Vector2(170, 738)
+position = Vector2(170, 886)
 shape = SubResource("Rect_plat_long")
 
 [node name="P_R" type="CollisionShape2D" parent="GameWorld/World/Platforms"]
-position = Vector2(550, 738)
+position = Vector2(550, 886)
 shape = SubResource("Rect_plat_long")
 
 [node name="P_MID" type="CollisionShape2D" parent="GameWorld/World/Platforms"]
-position = Vector2(360, 578)
+position = Vector2(360, 752)
 shape = SubResource("Rect_plat_wide")
 
 [node name="P_TOP" type="CollisionShape2D" parent="GameWorld/World/Platforms"]
-position = Vector2(360, 418)
+position = Vector2(360, 618)
 shape = SubResource("Rect_plat_mid")
 
 [node name="SpawnPoints" type="Node2D" parent="GameWorld/World"]
@@ -95,19 +89,19 @@ position = Vector2(520, 968)
 position = Vector2(360, 968)
 
 [node name="L1" type="Marker2D" parent="GameWorld/World/SpawnPoints"]
-position = Vector2(170, 708)
+position = Vector2(170, 848)
 
 [node name="R1" type="Marker2D" parent="GameWorld/World/SpawnPoints"]
-position = Vector2(550, 708)
+position = Vector2(550, 848)
 
 [node name="M1" type="Marker2D" parent="GameWorld/World/SpawnPoints"]
-position = Vector2(360, 548)
+position = Vector2(360, 708)
 
 [node name="M2" type="Marker2D" parent="GameWorld/World/SpawnPoints"]
-position = Vector2(240, 548)
+position = Vector2(240, 708)
 
 [node name="T1" type="Marker2D" parent="GameWorld/World/SpawnPoints"]
-position = Vector2(360, 388)
+position = Vector2(360, 578)
 
 [node name="Player" parent="GameWorld/World" instance=ExtResource("4_pl")]
 position = Vector2(360, 965)
@@ -168,9 +162,8 @@ text = "Hommage gameplay « bubble cage » — graphismes & niveaux originaux (p
 [node name="Hint" type="Label" parent="CanvasTitle/CenterContainer/VBoxContainer"]
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 15
-text = "Flèches / WASD · Espace saut · Z tirer une bulle
-Saute sur les bulles · Chaîne les éclats pour multiplier ton score
-Tactile : stick + boutons · F3 affiche le HUD tactile sur PC"
+text = "Les bulles montent (pas que gauche/droite). Saut plus haut pour les étages.
+Flèches / WASD · Espace · Z bulle · Tactile : F3 sur PC"
 
 [node name="Arcade" type="Button" parent="CanvasTitle/CenterContainer/VBoxContainer"]
 text = "INFINITE ARCADE"

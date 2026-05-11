@@ -109,7 +109,7 @@ func _spawn_boss() -> void:
 	e.hp = e.max_hp
 	enemies_holder.add_child(e)
 	_bind_enemy(e)
-	e.global_position = Vector2(360, 368)
+	e.global_position = Vector2(360, 548)
 
 
 func _spawn_enemy(_is_extra: bool) -> void:

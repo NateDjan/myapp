@@ -1,19 +1,22 @@
 extends CharacterBody2D
-## Bubble Bobble–style bubble: thick outline, trapped monster floats upward.
+## Bulle qui **monte** : dérive vers le haut + tir en diagonale haute (pas ping-pong horizontal infini).
 
 signal enemy_trapped(bubble: Node, enemy: Node)
 signal bubble_popped(bubble: Node, world_pos: Vector2)
 
-const FLOAT_SPEED := 52.0
+const FLOAT_SPEED := 56.0
 const ENEMY_STATE_BUBBLED := 2
+const BUOY_STEER := 0.11 ## Vers où on pousse la direction chaque frame (vers le haut).
+const HORIZ_DAMP := 0.985 ## Réduit peu à peu le va-et-vient horizontal.
 
 var dir: Vector2 = Vector2.RIGHT
-var speed: float = 340.0
+var speed: float = 300.0
 var electric: bool = false
 var trapped_enemy: Node = null
 var _alive: bool = true
 var _platform_enabled: bool = false
 var _pulse_t: float = 0.0
+var _flight_time: float = 0.0
 
 @onready var collider: CollisionShape2D = $CollisionShape2D
 @onready var visual: Polygon2D = $Polygon2D
@@ -36,14 +39,14 @@ func _build_ring() -> void:
 	if ring == null:
 		return
 	var pts: PackedVector2Array = []
-	var segs := 20
-	var rad := 22.0
+	var segs := 24
+	var rad := 24.0
 	for i in segs + 1:
 		var a := TAU * float(i) / float(segs)
 		pts.append(Vector2(cos(a), sin(a)) * rad)
 	ring.points = pts
-	ring.width = 4.0
-	ring.default_color = Color(0.55, 1.0, 0.95, 0.95)
+	ring.width = 5.0
+	ring.default_color = Color(0.95, 1.0, 1.0, 1.0)
 	ring.closed = true
 
 
@@ -52,9 +55,8 @@ func _process(delta: float) -> void:
 		return
 	_pulse_t += delta
 	if ring:
-		var w := 3.6 + sin(_pulse_t * 7.0) * 1.3
+		var w := 4.2 + sin(_pulse_t * 6.0) * 1.5
 		ring.width = w
-		ring.default_color = ring.default_color.lerp(Color(0.85, 1.0, 1.0, 1.0), 0.03)
 
 
 func configure(
@@ -63,42 +65,66 @@ func configure(
 	giant: bool,
 	is_electric: bool
 ) -> void:
+	_flight_time = 0.0
 	dir = shot_dir.normalized()
+	# Forcer une composante vers le haut si le tir est trop plat
+	if dir.y > -0.15:
+		dir = Vector2(dir.x, -0.65).normalized()
 	speed = shot_speed
 	electric = is_electric
 	if giant:
-		scale = Vector2(1.65, 1.65)
-		speed *= 0.9
+		scale = Vector2(1.55, 1.55)
+		speed *= 0.92
 	if visual:
 		visual.color = visual.color.lerp(Color(1.0, 0.55, 0.95), 0.35 if giant else 0.0)
 		if electric:
 			visual.color = Color(1.0, 0.95, 0.35, 0.65)
 	if ring:
 		if giant:
-			ring.scale = Vector2(1.15, 1.15)
-		ring.default_color = Color(1.0, 0.65, 0.95, 0.95) if giant else Color(0.55, 1.0, 0.95, 0.95)
+			ring.scale = Vector2(1.12, 1.12)
+		ring.default_color = Color(1.0, 0.65, 0.95, 0.95) if giant else Color(0.85, 1.0, 1.0, 1.0)
 		if electric:
 			ring.default_color = Color(1.0, 0.95, 0.35, 1.0)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not _alive:
 		return
 	if trapped_enemy != null:
-		velocity = Vector2(0, -FLOAT_SPEED)
+		velocity = Vector2(0.0, -FLOAT_SPEED)
 		move_and_slide()
 		return
 
+	_flight_time += delta
+	# Monte toujours un peu : objectif diagonale haut + vers le côté du dernier rebond
+	var side := signf(dir.x)
+	if absf(side) < 0.1:
+		side = 1.0
+	var up_bias := Vector2(side * 0.42, -1.0).normalized()
+	dir = dir.lerp(up_bias, BUOY_STEER * 60.0 * delta).normalized()
+	dir.x *= HORIZ_DAMP
+	dir = dir.normalized()
+	if dir.length_squared() < 0.04:
+		dir = Vector2(side * 0.45, -0.92).normalized()
+
 	velocity = dir * speed
 	move_and_slide()
+
 	for i in get_slide_collision_count():
 		var col := get_slide_collision(i)
 		var collider_node := col.get_collider()
 		if collider_node and collider_node.is_in_group("enemies"):
 			_try_trap(collider_node)
-			break
+			return
 		var n := col.get_normal()
-		dir = dir.bounce(n).normalized()
+		if absf(n.x) > 0.52:
+			dir.x *= -1.0
+			dir.y = minf(dir.y, -0.38)
+			dir = dir.normalized()
+
+	# Sécurité : pas de bulle piégée en ping-pong 40s
+	if _flight_time > 36.0:
+		queue_free()
 
 
 func _try_trap(enemy: Node) -> void:
@@ -124,10 +150,10 @@ func _enable_platform() -> void:
 	plate.collision_mask = 0
 	var cs := CollisionShape2D.new()
 	var sh := RectangleShape2D.new()
-	sh.size = Vector2(56.0 * scale.x, 12.0)
+	sh.size = Vector2(58.0 * scale.x, 12.0)
 	cs.shape = sh
 	cs.one_way_collision = true
-	cs.position = Vector2(0, -13.0 * scale.y)
+	cs.position = Vector2(0, -14.0 * scale.y)
 	plate.add_child(cs)
 	add_child(plate)
 

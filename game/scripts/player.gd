@@ -3,8 +3,8 @@ extends CharacterBody2D
 
 const BUBBLE_SCENE := preload("res://scenes/bubble.tscn")
 
-@export var base_speed: float = 300.0
-@export var jump_velocity: float = -400.0
+@export var base_speed: float = 290.0
+@export var jump_velocity: float = -640.0
 @export var shoot_cooldown: float = 0.26
 
 ## Invulnérabilité après dégât (réglée par LevelManager).
@@ -22,14 +22,11 @@ var _shoot_pressed: bool = false
 
 @onready var muzzle: Marker2D = $Muzzle
 @onready var flip: Node2D = $Flip
+@onready var outline: Line2D = $Flip/Outline
 @onready var tail_poly: Polygon2D = $Flip/Tail
 @onready var body_poly: Polygon2D = $Flip/Body
 @onready var belly_poly: Polygon2D = $Flip/Belly
 @onready var head_poly: Polygon2D = $Flip/Head
-@onready var snout_poly: Polygon2D = $Flip/Snout
-@onready var horn_poly: Polygon2D = $Flip/Horn
-@onready var foot_l: Polygon2D = $Flip/FootL
-@onready var foot_r: Polygon2D = $Flip/FootR
 
 
 func _input(event: InputEvent) -> void:
@@ -70,7 +67,7 @@ func _physics_process(delta: float) -> void:
 	if dir != 0.0:
 		facing = signf(dir)
 	if muzzle:
-		muzzle.position.x = 34.0 * facing
+		muzzle.position.x = 38.0 * facing
 	if flip:
 		flip.scale.x = facing
 	velocity.x = move_toward(velocity.x, dir * sp, sp * 14.0 * delta)
@@ -126,8 +123,9 @@ func _consume_shoot() -> bool:
 
 func _shoot_bubbles() -> void:
 	var count := maxi(1, _multi_shots)
-	var spread := deg_to_rad(10.0)
-	var base_dir := Vector2(facing, 0)
+	var spread := deg_to_rad(8.0)
+	# Tir diagonale **haute** (monte tout seul), pas horizontal pur.
+	var base_dir := Vector2(facing * 0.42, -0.91).normalized()
 	for i in count:
 		var ang := spread * (float(i) - float(count - 1) * 0.5)
 		var d := base_dir.rotated(ang)
@@ -148,7 +146,7 @@ func _spawn_bubble(d: Vector2) -> void:
 	else:
 		get_parent().add_child(bubble)
 	bubble.global_position = muzzle.global_position
-	var spd := 340.0 * (0.92 if _slow_timer > 0.0 else 1.0)
+	var spd := 290.0 * (0.92 if _slow_timer > 0.0 else 1.0)
 	if bubble.has_method("configure"):
 		bubble.call("configure", d, spd, _next_giant, _next_electric)
 	_next_giant = false
@@ -203,12 +201,10 @@ func apply_skin(skin: String) -> void:
 func _set_dragon_colors(body: Color, belly: Color, tail_dark: Color) -> void:
 	body_poly.color = body
 	belly_poly.color = belly
-	head_poly.color = body.lightened(0.06)
-	snout_poly.color = body.lightened(0.1)
-	horn_poly.color = Color(0.95, 0.52, 0.28, 1.0)
+	head_poly.color = body.lightened(0.08)
 	tail_poly.color = tail_dark
-	foot_l.color = tail_dark.darkened(0.05)
-	foot_r.color = tail_dark.darkened(0.05)
+	if outline:
+		outline.default_color = tail_dark.darkened(0.25)
 
 
 func is_damage_invulnerable() -> bool:

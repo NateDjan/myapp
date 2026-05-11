@@ -20,8 +20,6 @@ var _stomp_cd: float = 0.0
 var _player: CharacterBody2D
 
 @onready var visual: Polygon2D = $Body
-@onready var eye_l: Polygon2D = $EyeL
-@onready var eye_r: Polygon2D = $EyeR
 
 
 func _ready() -> void:
@@ -144,10 +142,6 @@ func _tint_from_seed() -> void:
 	var hue := fposmod(float(hash(str(global_position))), 1.0)
 	var body_col := Color.from_hsv(hue, 0.85, 1.0, 1.0)
 	visual.color = body_col
-	if eye_l:
-		eye_l.color = Color(1.0, 1.0, 1.0, 1.0)
-	if eye_r:
-		eye_r.color = Color(1.0, 1.0, 1.0, 1.0)
 	if is_boss:
 		visual.color = Color(1.0, 0.25, 0.45, 1.0)
 		scale = Vector2(2.4, 2.4)
